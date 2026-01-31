@@ -11,7 +11,8 @@ WORKDIR /app/frontend
 # Copy package files first for better layer caching
 COPY frontend/package*.json ./
 
-# Install dependencies
+# Install dependencies with increased memory for production builds
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN npm ci --silent
 
 # Copy frontend source
@@ -74,5 +75,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8007}/health || exit 1
 
 # Run the application - uses PORT env var for Railway compatibility
-# Using shell form to allow environment variable expansion
-CMD uv run uvicorn extension_shield.api.main:app --host 0.0.0.0 --port ${PORT:-8007}
+CMD ["sh", "-c", "uv run uvicorn extension_shield.api.main:app --host 0.0.0.0 --port ${PORT:-8007}"]
