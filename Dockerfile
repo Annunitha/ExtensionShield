@@ -63,12 +63,16 @@ ENV EXTENSION_STORAGE_PATH=/app/extensions_storage \
     DATABASE_PATH=/app/data/extension-shield.db \
     LLM_PROVIDER=openai
 
+# Default port (Railway will override with PORT env var)
+ENV PORT=8007
+
 # Expose the API port
 EXPOSE 8007
 
-# Health check
+# Health check - uses PORT env var that Railway injects
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8007/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8007}/health || exit 1
 
-# Run the application
-CMD ["uv", "run", "uvicorn", "extension_shield.api.main:app", "--host", "0.0.0.0", "--port", "8007"]
+# Run the application - uses PORT env var for Railway compatibility
+# Using shell form to allow environment variable expansion
+CMD uv run uvicorn extension_shield.api.main:app --host 0.0.0.0 --port ${PORT:-8007}

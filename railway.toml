@@ -12,7 +12,10 @@ numReplicas = 1
 
 # Health check configuration
 healthcheckPath = "/health"
-healthcheckTimeout = 10
+healthcheckTimeout = 60
+
+# Start command timeout - give more time for Python/UV to initialize
+startCommand = ""
 
 # Restart policy
 restartPolicyType = "on_failure"
@@ -25,7 +28,7 @@ restartPolicyMaxRetries = 3
 [env]
 # Default environment variables
 # Secrets should be set in Railway dashboard, not here
-PORT = "8007"
+# Note: Do NOT set PORT here - Railway will inject it automatically
 PYTHONDONTWRITEBYTECODE = "1"
 PYTHONUNBUFFERED = "1"
 LLM_PROVIDER = "openai"
