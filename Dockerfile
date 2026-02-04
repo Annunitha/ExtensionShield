@@ -8,12 +8,15 @@ FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
+# Install build dependencies for node-gyp and native modules
+RUN apk add --no-cache python3 make g++
+
 # Copy package files first for better layer caching
 COPY frontend/package*.json ./
 
 # Install dependencies with increased memory for production builds
 ENV NODE_OPTIONS="--max-old-space-size=4096"
-RUN npm ci --silent
+RUN npm ci
 
 # Copy frontend source
 COPY frontend/ ./
