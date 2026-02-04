@@ -807,27 +807,43 @@ const HomePage = () => {
       {/* Pricing Section */}
       <section className="pricing-section">
         <div className="pricing-header">
-          <h2>Simple, Credit-Based Pricing</h2>
-          <p>Pay for what you scan. No subscriptions. Credits never expire.</p>
+          <h2>Simple, Transparent Pricing</h2>
+          <p>Start free, upgrade for ongoing protection. Only pay for new extension scans—cached lookups are always free.</p>
         </div>
 
         <div className="pricing-grid">
-          {/* Value */}
+          {/* Free Plan */}
           <div className="pricing-card">
             <div className="pricing-card-header">
-              <h3>Value</h3>
-              <p>Protect yourself</p>
+              <h3>Free</h3>
+              <p>Get started with security scanning</p>
             </div>
             <div className="pricing-amount">
-              <span className="price">$1.99</span>
-              <span className="credits">5 scans</span>
+              <span className="price">$0</span>
+              <span className="credits">10 scans</span>
             </div>
             <div className="scan-credit-note">
-              Scan credits are only used for new extension versions (new build hash).
-              If we've already scanned that exact build, it's an instant free lookup.
+              10 free deep scans on signup (lifetime). Scans are only used for new extension builds—if we've already analyzed that exact version, it's an instant free lookup.
             </div>
-            <div className="price-per-scan">~$0.40 per scan</div>
             <ul className="pricing-features">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                <span>10 free deep scans (lifetime)</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                <span>Unlimited free cached lookups</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                <span>Full security reports (not blurred)</span>
+              </li>
               <li>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20 6L9 17l-5-5" />
@@ -838,110 +854,85 @@ const HomePage = () => {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
-                <span>Full security reports</span>
+                <span>VirusTotal & threat intel</span>
               </li>
             </ul>
-            <button className="pricing-btn">Get Started</button>
+            <button className="pricing-btn">Get Started Free</button>
           </div>
 
           {/* Pro - Popular */}
           <div className="pricing-card popular">
-            <div className="popular-badge">MOST POPULAR</div>
+            <div className="popular-badge">BEST VALUE</div>
             <div className="pricing-card-header">
               <h3>Pro</h3>
-              <p>Protect yourself better</p>
+              <p>Ongoing protection & monitoring</p>
             </div>
             <div className="pricing-amount">
               <span className="price">$4.99</span>
               <span className="price-period">/month</span>
-              <span className="credits">30 scans</span>
             </div>
             <div className="scan-credit-note">
-              Scan credits are only used for new extension versions (new build hash).
-              If we've already scanned that exact build, it's an instant free lookup.
+              Pro is ongoing protection, not credits. Monitor extensions, get alerts, and see what changed when extensions update.
             </div>
-            <div className="price-per-scan">~$0.17 per scan</div>
             <ul className="pricing-features">
               <li>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
-                <span>Everything in Value</span>
+                <span>Everything in Free</span>
               </li>
               <li>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
-                <span>Bulk scan uploads</span>
+                <span><strong>Extension monitoring:</strong> watch for updates</span>
               </li>
               <li>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
-                <span>Safe extension recommendations</span>
+                <span><strong>Auto-rescan & alerts</strong> when risk changes</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                <span><strong>"What changed" diff:</strong> permissions, domains, patterns</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                <span><strong>Blocklist & warning list</strong> management</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                <span><strong>Safer alternatives</strong> recommendations</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                <span>Email & in-app notifications</span>
               </li>
             </ul>
-            <button className="pricing-btn popular-btn">Get Pro</button>
-          </div>
-
-          {/* Power */}
-          <div className="pricing-card">
-            <div className="pricing-card-header">
-              <h3>Power</h3>
-              <p>We help you find better extensions</p>
-            </div>
-            <div className="pricing-amount">
-              <span className="price">$7.99</span>
-              <span className="credits">50 scans</span>
-            </div>
-            <div className="scan-credit-note">
-              Scan credits are only used for new extension versions (new build hash).
-              If we've already scanned that exact build, it's an instant free lookup.
-            </div>
-            <div className="price-per-scan">~$0.16 per scan</div>
-            <ul className="pricing-features">
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-                <span>Everything in Pro</span>
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-                <span>Suggest safe extensions</span>
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-                <span>Webhook integrations</span>
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-                <span>Team sharing</span>
-              </li>
-            </ul>
-            <button className="pricing-btn">Get Power</button>
+            <button className="pricing-btn popular-btn">Upgrade to Pro</button>
           </div>
         </div>
 
-        {/* Overage Packs */}
-        <div className="overage-section">
-          <div className="overage-card">
-            <div className="overage-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M12 4v16m8-8H4" />
-              </svg>
-            </div>
-            <div className="overage-content">
-              <h4>Need more scans?</h4>
-              <p>Add <strong>+25 scans</strong> anytime for just <strong>$2.99</strong></p>
-            </div>
-            <button className="overage-btn">Add Scans</button>
+        {/* How Scans Work */}
+        <div className="pricing-info-box">
+          <div className="info-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
+            </svg>
+          </div>
+          <div className="info-content">
+            <h4>How Scans Work</h4>
+            <p>A <strong>"new scan"</strong> only happens when we encounter a new extension version (new build hash). If we've already scanned that exact build, you get an instant <strong>free lookup</strong>—no credits used. Deep scans include LLM analysis, VirusTotal checks, and advanced heuristics.</p>
           </div>
         </div>
 

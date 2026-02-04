@@ -30,7 +30,7 @@ class SecurityScorer:
         'permissions': 30,     # Permission risks (reduced from 35)
         'virustotal': 50,      # VirusTotal detections
         'entropy': 30,         # Obfuscation detection
-        'chromestats': 28,     # Behavioral threat intelligence (NEW)
+        'chromestats': 31,     # Behavioral threat intelligence (increased rating weight from 5→8)
         'webstore': 5,         # Webstore reputation (reduced from 10)
         'manifest': 5,         # Manifest issues
     }

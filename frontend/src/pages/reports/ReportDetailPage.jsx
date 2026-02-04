@@ -4,11 +4,121 @@ import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Card, CardContent } from "../../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
-import { Download, X } from "lucide-react";
+import { Download, X, Clock, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import FileViewerModal from "../../components/FileViewerModal";
 import realScanService from "../../services/realScanService";
 import databaseService from "../../services/databaseService";
+import { getRiskLevel } from "../../utils/signalMapper";
 import "./ReportDetailPage.scss";
+
+// Version History Component
+const VersionHistorySection = ({ currentVersion, currentScore, extensionId, scanHistory }) => {
+  // Format date
+  const formatDate = (timestamp) => {
+    if (!timestamp) return "Unknown";
+    const date = new Date(timestamp);
+    return date.toLocaleDateString(undefined, { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Calculate score delta indicator
+  const getScoreDelta = (currentScore, previousScore) => {
+    if (previousScore === null || previousScore === undefined) return null;
+    const delta = currentScore - previousScore;
+    if (delta > 0) return { direction: 'up', value: delta, icon: <TrendingUp size={14} /> };
+    if (delta < 0) return { direction: 'down', value: Math.abs(delta), icon: <TrendingDown size={14} /> };
+    return { direction: 'same', value: 0, icon: <Minus size={14} /> };
+  };
+
+  // If no history, show empty state
+  if (!scanHistory || scanHistory.length <= 1) {
+    return (
+      <div className="version-history-section">
+        <h3 className="section-title">
+          <Clock size={18} />
+          Version & Risk History
+        </h3>
+        <div className="version-empty-state">
+          <div className="empty-icon">📊</div>
+          <h4>No version history available</h4>
+          <p>When this extension is scanned again with a different version, you'll see changes tracked here.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="version-history-section">
+      <h3 className="section-title">
+        <Clock size={18} />
+        Version & Risk History
+      </h3>
+      
+      <div className="version-timeline">
+        {scanHistory.map((scan, index) => {
+          const isLatest = index === 0;
+          const previousScan = scanHistory[index + 1];
+          const scoreDelta = previousScan ? getScoreDelta(scan.score, previousScan.score) : null;
+          const riskLevel = getRiskLevel(scan.score);
+
+          return (
+            <div key={scan.timestamp || index} className={`version-item ${isLatest ? 'latest' : ''}`}>
+              <div className="version-marker">
+                <div className="marker-dot" />
+                {index < scanHistory.length - 1 && <div className="marker-line" />}
+              </div>
+              
+              <div className="version-content">
+                <div className="version-header">
+                  <span className="version-badge">v{scan.version || 'Unknown'}</span>
+                  {isLatest && <span className="latest-badge">Current</span>}
+                  <span className="version-date">{formatDate(scan.timestamp)}</span>
+                </div>
+                
+                <div className="version-stats">
+                  <div className={`score-pill risk-${riskLevel.toLowerCase()}`}>
+                    <span className="score-value">{scan.score ?? '—'}</span>
+                    <span className="score-label">/100</span>
+                    {scoreDelta && (
+                      <span className={`score-delta delta-${scoreDelta.direction}`}>
+                        {scoreDelta.icon}
+                        {scoreDelta.value > 0 && scoreDelta.value}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <span className={`risk-label risk-${riskLevel.toLowerCase()}`}>
+                    {riskLevel}
+                  </span>
+                </div>
+
+                {/* Show what changed if we have previous scan data */}
+                {previousScan && scoreDelta && scoreDelta.value !== 0 && (
+                  <div className="version-changes">
+                    <span className="changes-label">Changes from v{previousScan.version}:</span>
+                    <ul className="changes-list">
+                      {scoreDelta.direction === 'up' && (
+                        <li className="change-positive">Security score improved by {scoreDelta.value} points</li>
+                      )}
+                      {scoreDelta.direction === 'down' && (
+                        <li className="change-negative">Security score decreased by {scoreDelta.value} points</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 // Permission to capability mapping with icons
 const CAPABILITY_MAP = {
@@ -42,6 +152,7 @@ const ReportDetailPage = () => {
   const [error, setError] = useState(null);
   const [showInfoPopup, setShowInfoPopup] = useState(null);
   const [fileViewerModal, setFileViewerModal] = useState({ isOpen: false, file: null });
+  const [versionHistory, setVersionHistory] = useState([]);
 
   useEffect(() => {
     loadReportData(reportId);
@@ -58,6 +169,19 @@ const ReportDetailPage = () => {
         results = realScanService.formatRealResults(results);
       }
       setScanResults(results);
+      
+      // Build version history from current scan (in future, this could come from API)
+      // For now, we show current version as the only entry
+      const currentHistory = [{
+        version: results?.version || results?.manifest?.version || 'Unknown',
+        score: results?.overall_security_score || results?.securityScore || 0,
+        timestamp: results?.timestamp,
+        risk_level: results?.overall_risk || results?.riskLevel,
+        permissions_count: results?.permissions?.length || 0,
+        findings_count: results?.total_findings || results?.totalFindings || 0
+      }];
+      setVersionHistory(currentHistory);
+      
       setError(null);
     } catch (err) {
       setError("Failed to load report data");
@@ -178,7 +302,7 @@ const ReportDetailPage = () => {
         <div className="report-nav">
           <Link to="/reports" className="back-link">← Back to Reports</Link>
           <div className="nav-actions">
-            <Button variant="outline" size="sm" onClick={() => navigate(`/scanner/results/${reportId}`)}>
+            <Button variant="outline" size="sm" onClick={() => navigate(`/reports/${reportId}`)}>
               Full Analysis
             </Button>
             <Button variant="outline" size="sm" onClick={handleExportPDF}>
@@ -273,7 +397,7 @@ const ReportDetailPage = () => {
 
         {/* Tabs for Details - Right after Trust Score */}
         <Tabs defaultValue="summary" className="results-tabs">
-          <TabsList className="tabs-list">
+          <TabsList className="tabs-list tabs-list-5">
             <TabsTrigger value="summary" className="tab-with-icon">
               <span className="tab-icon">📋</span>
               <span className="tab-label">Summary</span>
@@ -285,6 +409,10 @@ const ReportDetailPage = () => {
             <TabsTrigger value="security" className="tab-with-icon">
               <span className="tab-icon">🛡️</span>
               <span className="tab-label">Security</span>
+            </TabsTrigger>
+            <TabsTrigger value="history" className="tab-with-icon">
+              <span className="tab-icon">📊</span>
+              <span className="tab-label">History</span>
             </TabsTrigger>
             <TabsTrigger value="actions" className="tab-with-icon">
               <span className="tab-icon">✅</span>
@@ -408,6 +536,16 @@ const ReportDetailPage = () => {
                 </div>
               </div>
             </div>
+          </TabsContent>
+
+          {/* History Tab */}
+          <TabsContent value="history" className="tab-content">
+            <VersionHistorySection 
+              currentVersion={scanResults?.version || scanResults?.manifest?.version}
+              currentScore={scanResults?.securityScore || scanResults?.overall_security_score || 0}
+              extensionId={reportId}
+              scanHistory={versionHistory}
+            />
           </TabsContent>
 
           {/* Actions Tab */}

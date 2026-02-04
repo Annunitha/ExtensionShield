@@ -4,12 +4,19 @@ Signal Extractor - Stage 4 of Governance Pipeline
 Extracts governance signals from facts and security findings.
 Signals are high-level risk indicators used by the Rules Engine.
 
+Now supports the 3-Layer Scoring Architecture:
+- Layer 0 (Signal Extraction): Uses SignalPack from tool adapters
+- Layer 1 (Risk Scoring): Deterministic scoring from normalized signals
+- Layer 2 (Decision): Final governance verdict
+
 MVP Signal Types:
 - HOST_PERMS_BROAD: Extension requests broad host permissions (<all_urls>, *://*/*)
 - SENSITIVE_API: Extension uses sensitive Chrome APIs (webRequest, proxy, debugger)
 - ENDPOINT_FOUND: External endpoint/URL detected in code
 - DATAFLOW_TRACE: Potential data exfiltration pattern detected
 - OBFUSCATION: Code obfuscation or packing detected
+- VIRUSTOTAL_HIT: VirusTotal malicious/suspicious detection
+- SAST_CRITICAL: Critical SAST findings detected
 
 Output: signals.json
 """
@@ -17,11 +24,13 @@ Output: signals.json
 import logging
 import re
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, TYPE_CHECKING
 from uuid import uuid4
 
 from .schemas import Signal, Signals, Facts
 
+if TYPE_CHECKING:
+    from .signal_pack import SignalPack
 
 logger = logging.getLogger(__name__)
 
@@ -32,11 +41,21 @@ logger = logging.getLogger(__name__)
 
 class SignalType:
     """Signal type constants."""
+    # Original MVP signal types
     HOST_PERMS_BROAD = "HOST_PERMS_BROAD"
     SENSITIVE_API = "SENSITIVE_API"
     ENDPOINT_FOUND = "ENDPOINT_FOUND"
     DATAFLOW_TRACE = "DATAFLOW_TRACE"
     OBFUSCATION = "OBFUSCATION"
+    
+    # Layer 0 signal types (from SignalPack)
+    VIRUSTOTAL_HIT = "VIRUSTOTAL_HIT"
+    SAST_CRITICAL = "SAST_CRITICAL"
+    SAST_HIGH = "SAST_HIGH"
+    LOW_WEBSTORE_TRUST = "LOW_WEBSTORE_TRUST"
+    CHROMESTATS_RISK = "CHROMESTATS_RISK"
+    HIGH_ENTROPY = "HIGH_ENTROPY"
+    UNREASONABLE_PERMISSIONS = "UNREASONABLE_PERMISSIONS"
 
 
 # Sensitive Chrome APIs that warrant review
@@ -356,4 +375,327 @@ class SignalExtractor:
             json.dump(signals.model_dump(mode="json"), f, indent=2, default=str)
         
         logger.info("Signals saved to %s", output_path)
+    
+    # =========================================================================
+    # LAYER 0: SIGNAL PACK EXTRACTION METHODS
+    # =========================================================================
+    
+    def extract_from_signal_pack(self, signal_pack: "SignalPack") -> Signals:
+        """
+        Extract signals from a SignalPack (Layer 0 output).
+        
+        This is the new 3-layer architecture approach. Uses normalized
+        signals from tool adapters instead of raw facts.
+        
+        Args:
+            signal_pack: SignalPack from Layer 0 (tool adapters)
+            
+        Returns:
+            Signals object with extracted signals and evidence refs
+        """
+        logger.info("Extracting signals from SignalPack for scan_id=%s", signal_pack.scan_id)
+        
+        self._signal_counter = 0
+        signals_list: List[Signal] = []
+        
+        # Extract signals from each tool pack
+        signals_list.extend(self._extract_sast_signals(signal_pack))
+        signals_list.extend(self._extract_virustotal_signals(signal_pack))
+        signals_list.extend(self._extract_entropy_signals(signal_pack))
+        signals_list.extend(self._extract_permissions_signals(signal_pack))
+        signals_list.extend(self._extract_webstore_signals(signal_pack))
+        signals_list.extend(self._extract_chromestats_signals(signal_pack))
+        
+        # Link evidence to signals
+        signals_list = self._link_evidence_to_signals(signal_pack, signals_list)
+        
+        logger.info(
+            "Extracted %d signals from SignalPack: %s",
+            len(signals_list),
+            [s.type for s in signals_list]
+        )
+        
+        return Signals(scan_id=signal_pack.scan_id, signals=signals_list)
+    
+    def _extract_sast_signals(self, signal_pack: "SignalPack") -> List[Signal]:
+        """Extract signals from SAST findings in SignalPack."""
+        signals = []
+        sast = signal_pack.sast
+        
+        # Critical SAST findings
+        if sast.counts_by_severity.get("CRITICAL", 0) > 0:
+            count = sast.counts_by_severity["CRITICAL"]
+            signals.append(Signal(
+                signal_id=self._next_signal_id(),
+                type=SignalType.SAST_CRITICAL,
+                confidence=sast.confidence,
+                evidence_refs=[],
+                description=f"{count} critical SAST finding(s) detected",
+                severity="critical",
+            ))
+        
+        # High/Error SAST findings
+        error_count = sast.counts_by_severity.get("ERROR", 0)
+        if error_count >= 3:
+            signals.append(Signal(
+                signal_id=self._next_signal_id(),
+                type=SignalType.SAST_HIGH,
+                confidence=sast.confidence,
+                evidence_refs=[],
+                description=f"{error_count} high-severity SAST finding(s) detected",
+                severity="high",
+            ))
+        
+        # Check for endpoint/external API findings
+        endpoint_findings = [
+            f for f in sast.deduped_findings
+            if any(kw in f.check_id.lower() or kw in f.message.lower()
+                   for kw in ["endpoint", "fetch", "external", "api", "http"])
+        ]
+        if endpoint_findings:
+            signals.append(Signal(
+                signal_id=self._next_signal_id(),
+                type=SignalType.ENDPOINT_FOUND,
+                confidence=0.85,
+                evidence_refs=[],
+                description=f"External API calls detected in {len(endpoint_findings)} finding(s)",
+                severity="medium",
+            ))
+        
+        # Check for data flow issues
+        dataflow_findings = [
+            f for f in sast.deduped_findings
+            if any(kw in f.check_id.lower() or kw in f.message.lower()
+                   for kw in ["exfil", "leak", "send", "transmit", "dataflow"])
+        ]
+        if dataflow_findings:
+            signals.append(Signal(
+                signal_id=self._next_signal_id(),
+                type=SignalType.DATAFLOW_TRACE,
+                confidence=0.85,
+                evidence_refs=[],
+                description=f"Potential data exfiltration pattern in {len(dataflow_findings)} finding(s)",
+                severity="high",
+            ))
+        
+        return signals
+    
+    def _extract_virustotal_signals(self, signal_pack: "SignalPack") -> List[Signal]:
+        """Extract signals from VirusTotal results in SignalPack."""
+        signals = []
+        vt = signal_pack.virustotal
+        
+        if not vt.enabled:
+            return signals
+        
+        if vt.malicious_count > 0:
+            severity = "critical" if vt.malicious_count >= 3 else "high"
+            families = ", ".join(vt.malware_families[:3]) if vt.malware_families else "Unknown"
+            
+            signals.append(Signal(
+                signal_id=self._next_signal_id(),
+                type=SignalType.VIRUSTOTAL_HIT,
+                confidence=0.95,
+                evidence_refs=[],
+                description=f"VirusTotal: {vt.malicious_count} malicious detection(s). Families: {families}",
+                severity=severity,
+            ))
+        elif vt.suspicious_count > 0:
+            signals.append(Signal(
+                signal_id=self._next_signal_id(),
+                type=SignalType.VIRUSTOTAL_HIT,
+                confidence=0.80,
+                evidence_refs=[],
+                description=f"VirusTotal: {vt.suspicious_count} suspicious detection(s)",
+                severity="medium",
+            ))
+        
+        return signals
+    
+    def _extract_entropy_signals(self, signal_pack: "SignalPack") -> List[Signal]:
+        """Extract signals from entropy analysis in SignalPack."""
+        signals = []
+        entropy = signal_pack.entropy
+        
+        if entropy.obfuscated_count > 0:
+            files = entropy.suspected_obfuscation_files[:3]
+            files_str = ", ".join(files)
+            if len(entropy.suspected_obfuscation_files) > 3:
+                files_str += "..."
+            
+            signals.append(Signal(
+                signal_id=self._next_signal_id(),
+                type=SignalType.OBFUSCATION,
+                confidence=0.80,
+                evidence_refs=[],
+                description=f"Code obfuscation detected in {entropy.obfuscated_count} file(s): {files_str}",
+                severity="medium",
+            ))
+        
+        if entropy.overall_risk == "high":
+            signals.append(Signal(
+                signal_id=self._next_signal_id(),
+                type=SignalType.HIGH_ENTROPY,
+                confidence=0.75,
+                evidence_refs=[],
+                description="High entropy detected across analyzed files",
+                severity="medium",
+            ))
+        
+        return signals
+    
+    def _extract_permissions_signals(self, signal_pack: "SignalPack") -> List[Signal]:
+        """Extract signals from permissions analysis in SignalPack."""
+        signals = []
+        perms = signal_pack.permissions
+        
+        # Broad host permissions
+        if perms.has_broad_host_access:
+            patterns = ", ".join(perms.broad_host_patterns)
+            signals.append(Signal(
+                signal_id=self._next_signal_id(),
+                type=SignalType.HOST_PERMS_BROAD,
+                confidence=0.95,
+                evidence_refs=[],
+                description=f"Broad host permissions detected: {patterns}",
+                severity="high",
+            ))
+        
+        # Sensitive APIs
+        sensitive_apis = [
+            p for p in perms.api_permissions
+            if p in SENSITIVE_APIS
+        ]
+        if sensitive_apis:
+            severity = "critical" if any(p in ["debugger", "proxy"] for p in sensitive_apis) else "high"
+            signals.append(Signal(
+                signal_id=self._next_signal_id(),
+                type=SignalType.SENSITIVE_API,
+                confidence=0.90,
+                evidence_refs=[],
+                description=f"Sensitive APIs detected: {', '.join(sensitive_apis)}",
+                severity=severity,
+            ))
+        
+        # Unreasonable permissions
+        if len(perms.unreasonable_permissions) >= 3:
+            signals.append(Signal(
+                signal_id=self._next_signal_id(),
+                type=SignalType.UNREASONABLE_PERMISSIONS,
+                confidence=0.85,
+                evidence_refs=[],
+                description=f"{len(perms.unreasonable_permissions)} unreasonable permission(s) detected",
+                severity="medium",
+            ))
+        
+        return signals
+    
+    def _extract_webstore_signals(self, signal_pack: "SignalPack") -> List[Signal]:
+        """Extract signals from webstore stats in SignalPack."""
+        signals = []
+        stats = signal_pack.webstore_stats
+        reviews = signal_pack.webstore_reviews
+        
+        # Low trust indicators
+        low_trust_reasons = []
+        
+        if stats.installs is not None and stats.installs < 1000:
+            low_trust_reasons.append(f"low installs ({stats.installs})")
+        
+        if stats.rating_avg is not None and stats.rating_avg < 3.5:
+            low_trust_reasons.append(f"low rating ({stats.rating_avg})")
+        
+        if not stats.has_privacy_policy:
+            low_trust_reasons.append("no privacy policy")
+        
+        if len(low_trust_reasons) >= 2:
+            signals.append(Signal(
+                signal_id=self._next_signal_id(),
+                type=SignalType.LOW_WEBSTORE_TRUST,
+                confidence=0.75,
+                evidence_refs=[],
+                description=f"Low webstore trust: {', '.join(low_trust_reasons)}",
+                severity="medium",
+            ))
+        
+        # Review manipulation flags
+        if reviews.manipulation_flags:
+            signals.append(Signal(
+                signal_id=self._next_signal_id(),
+                type=SignalType.LOW_WEBSTORE_TRUST,
+                confidence=0.70,
+                evidence_refs=[],
+                description=f"Review manipulation indicators: {', '.join(reviews.manipulation_flags)}",
+                severity="medium",
+            ))
+        
+        return signals
+    
+    def _extract_chromestats_signals(self, signal_pack: "SignalPack") -> List[Signal]:
+        """Extract signals from Chrome Stats in SignalPack."""
+        signals = []
+        cs = signal_pack.chromestats
+        
+        if not cs.enabled:
+            return signals
+        
+        if cs.overall_risk_level in ["high", "critical"]:
+            indicators = cs.risk_indicators[:3]
+            signals.append(Signal(
+                signal_id=self._next_signal_id(),
+                type=SignalType.CHROMESTATS_RISK,
+                confidence=0.80,
+                evidence_refs=[],
+                description=f"ChromeStats risk: {cs.overall_risk_level}. Indicators: {', '.join(indicators)}",
+                severity="high" if cs.overall_risk_level == "critical" else "medium",
+            ))
+        
+        return signals
+    
+    def _link_evidence_to_signals(
+        self,
+        signal_pack: "SignalPack",
+        signals_list: List[Signal],
+    ) -> List[Signal]:
+        """
+        Link evidence from SignalPack to extracted signals.
+        
+        Args:
+            signal_pack: SignalPack with evidence
+            signals_list: Extracted signals
+            
+        Returns:
+            Signals with evidence_refs populated
+        """
+        # Group evidence by tool
+        evidence_by_tool: Dict[str, List[str]] = {}
+        for ev in signal_pack.evidence:
+            tool = ev.tool_name
+            if tool not in evidence_by_tool:
+                evidence_by_tool[tool] = []
+            evidence_by_tool[tool].append(ev.evidence_id)
+        
+        # Map signal types to tools
+        signal_to_tool = {
+            SignalType.SAST_CRITICAL: "sast",
+            SignalType.SAST_HIGH: "sast",
+            SignalType.ENDPOINT_FOUND: "sast",
+            SignalType.DATAFLOW_TRACE: "sast",
+            SignalType.VIRUSTOTAL_HIT: "virustotal",
+            SignalType.OBFUSCATION: "entropy",
+            SignalType.HIGH_ENTROPY: "entropy",
+            SignalType.HOST_PERMS_BROAD: "permissions",
+            SignalType.SENSITIVE_API: "permissions",
+            SignalType.UNREASONABLE_PERMISSIONS: "permissions",
+            SignalType.LOW_WEBSTORE_TRUST: "webstore_stats",
+            SignalType.CHROMESTATS_RISK: "chromestats",
+        }
+        
+        # Link evidence to signals
+        for signal in signals_list:
+            tool = signal_to_tool.get(signal.type)
+            if tool and tool in evidence_by_tool:
+                signal.evidence_refs = evidence_by_tool[tool][:10]  # Limit refs
+        
+        return signals_list
 

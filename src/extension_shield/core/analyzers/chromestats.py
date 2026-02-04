@@ -183,7 +183,7 @@ class ChromeStatsAnalyzer(BaseAnalyzer):
             'fake_review_probability': fake_review_probability,
             'recent_negative_percentage': negative_count / len(recent_reviews) if recent_reviews else 0,
             'risk_indicators': risk_indicators,
-            'risk_score': min(5, risk_score),
+            'risk_score': min(8, risk_score),
             'risk_level': 'high' if risk_score >= 4 else 'medium' if risk_score >= 2 else 'low'
         }
 
