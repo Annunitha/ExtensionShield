@@ -8,6 +8,7 @@ import {
   getSignalColorClass,
   SIGNAL_LEVELS
 } from "../utils/signalMapper";
+import { EXTENSION_ICON_PLACEHOLDER } from "../utils/constants";
 import "./ScanHistoryPage.scss";
 
 // Tooltip component for signal chips
@@ -93,15 +94,12 @@ const ScanHistoryPage = () => {
   // API base URL - use environment variable or same-origin
   const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
-  // Placeholder image for extension icons
-  const extensionPlaceholder = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxMiIgZmlsbD0iIzJBMkEzNSIvPgogIDxwYXRoIGQ9Ik0zMiAxNkMyNC4yNjggMTYgMTggMjIuMjY4IDE4IDMwQzE4IDMxLjY1NyAxOC4zMjEgMzMuMjI5IDE4LjkwOSAzNC42NjdMMjIuOTg0IDM0LjY2N0MyMy43MyAzNC42NjcgMjQuMzMzIDM1LjI3IDI0LjMzMyAzNi4wMTZWNDAuMDkxQzI0LjMzMyA0MC44MzggMjMuNzMgNDEuNDQxIDIyLjk4NCA0MS40NDFIMTguOTA5QzIwLjU3MSA0NS42ODcgMjQuMzMzIDQ5LjIyNCAyOC45NTkgNTAuNDg2VjQ2LjQxMUMyOC45NTkgNDUuNjY1IDI5LjU2MiA0NS4wNjIgMzAuMzA4IDQ1LjA2MkgzNC4zODNDMzUuMTMgNDUuMDYyIDM1LjczMyA0NC40NTkgMzUuNzMzIDQzLjcxM1YzOS42MzhDMzUuNzMzIDM4Ljg5MSAzNi4zMzYgMzguMjg4IDM3LjA4MyAzOC4yODhINDEuMTU3QzQxLjkwNCAzOC4yODggNDIuNTA3IDM3LjY4NSA0Mi41MDcgMzYuOTM4VjMyLjg2NEM0Mi41MDcgMzIuMTE3IDQzLjExIDMxLjUxNCA0My44NTcgMzEuNTE0SDQ3LjkzMkM0Ny45NzggMzEuMDE1IDQ4IDMwLjUxIDQ4IDMwQzQ4IDIyLjI2OCA0MS43MzIgMTYgMzIgMTZaIiBmaWxsPSIjNEE5MEU2Ii8+CiAgPGNpcmNsZSBjeD0iMjYiIGN5PSIyNiIgcj0iMyIgZmlsbD0iI0ZGRkZGRiIvPgo8L3N2Zz4=";
-
   // Helper function to get proper image source
   const getIconSrc = (extensionId) => {
     if (extensionId) {
       return `${API_BASE_URL}/api/scan/icon/${extensionId}`;
     }
-    return extensionPlaceholder;
+    return EXTENSION_ICON_PLACEHOLDER;
   };
 
   useEffect(() => {
@@ -518,7 +516,7 @@ const ScanHistoryPage = () => {
                             className="extension-icon"
                             onError={(e) => {
                               e.target.onerror = null;
-                              e.target.src = extensionPlaceholder;
+                              e.target.src = EXTENSION_ICON_PLACEHOLDER;
                             }}
                           />
                           <div className="extension-details">

@@ -93,8 +93,6 @@ export const AuthProvider = ({ children }) => {
         const { data } = supabase.auth.onAuthStateChange((event, nextSession) => {
           if (!isMounted) return;
           
-          console.log("Auth state changed:", event, nextSession?.user?.email);
-          
           setSession(nextSession || null);
           setUser(toUiUser(nextSession?.user));
           

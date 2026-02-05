@@ -175,17 +175,10 @@ export const footerConfig = {
   ]
 };
 
-/**
- * Footer Links (backward compatibility)
- * @deprecated Use footerConfig.links instead
- */
-export const footerLinks = footerConfig.links;
-
 export default {
   topNavItems,
   megaMenuConfig,
   userMenuItems,
-  footerConfig,
-  footerLinks // backward compatibility
+  footerConfig
 };
 

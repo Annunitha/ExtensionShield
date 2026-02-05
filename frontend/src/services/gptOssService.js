@@ -28,11 +28,9 @@ class GPTOSSService {
       }
 
       const health = await response.json();
-      console.log("Backend health:", health);
 
       // Get provider status
       const providers = await this.getProviderStatus();
-      console.log("Available providers:", providers);
 
       return {
         healthy: true,
@@ -73,10 +71,6 @@ class GPTOSSService {
    */
   async analyzeFileContent(fileContent, fileName, fileType, provider = "auto") {
     try {
-      console.log(
-        `Starting file analysis: ${fileName} (${fileType}) using ${provider}`,
-      );
-
       // Create form data
       const formData = new FormData();
       formData.append("file_content", fileContent);
@@ -98,7 +92,6 @@ class GPTOSSService {
       }
 
       const result = await response.json();
-      console.log("Analysis completed:", result);
 
       return {
         success: true,
@@ -120,10 +113,6 @@ class GPTOSSService {
    */
   async uploadAndAnalyzeFile(file, provider = "auto") {
     try {
-      console.log(
-        `Uploading file for analysis: ${file.name} using ${provider}`,
-      );
-
       // Create form data
       const formData = new FormData();
       formData.append("file", file);
@@ -143,7 +132,6 @@ class GPTOSSService {
       }
 
       const result = await response.json();
-      console.log("Upload analysis completed:", result);
 
       return {
         success: true,
@@ -181,7 +169,6 @@ class GPTOSSService {
    * Simulate analysis for development/testing
    */
   simulateAnalysis(fileContent, fileName, fileType) {
-    console.log("Simulating GPT-OSS analysis...");
 
     // Simulate processing time
     return new Promise((resolve) => {

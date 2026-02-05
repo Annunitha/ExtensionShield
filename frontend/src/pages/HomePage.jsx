@@ -34,13 +34,6 @@ const HomePage = () => {
   const animationRef = useRef(null);
   const badgesRef = useRef([]);
 
-  // Scan counter - TODO: Replace with real API call to get actual count
-  // When ready: fetch('/api/stats').then(data => setScanCount(data.totalScans))
-  useEffect(() => {
-    // TODO: Fetch real scan count from API
-    // Example: fetch('/api/stats').then(res => res.json()).then(data => setScanCount(data.totalScans));
-  }, []);
-
   // Scroll reveal observer
   useEffect(() => {
     const observer = new IntersectionObserver(
