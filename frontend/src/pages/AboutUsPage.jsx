@@ -46,20 +46,26 @@ const AboutUsPage = () => {
             <div className="story-section">
               <h2>Why I Built This</h2>
               <p>
-                ExtensionShield was born from a personal experience—installing a browser extension that seemed harmless, only to discover it had permissions that didn't align with its purpose. I realized there wasn't an easy-to-use tool to help answer: "Is this extension actually safe?"
+                ExtensionShield started with a mistake I made: I installed a browser extension that looked harmless—then noticed it requested permissions that didn't match what it claimed to do.
               </p>
               <p>
-                My journey started with <strong>Google Summer of Code</strong> contributing to <strong>Drupal</strong> (<a href="https://www.drupal.org/u/stanzin" target="_blank" rel="noopener noreferrer">drupal.org/u/stanzin</a>). When I encountered extension permission issues, I built ExtensionShield—combining security analysis, privacy assessment, and compliance into one actionable tool.
+                I went looking for a simple, consumer-friendly way to answer one question: "Is this extension actually safe?"
+              </p>
+              <p>
+                I couldn't find one that combined security analysis, privacy risk, and compliance into a clear, actionable verdict—so I built it.
               </p>
             </div>
 
             <div className="story-section">
               <h2>Background</h2>
               <p>
-                My experience spans both <strong>insurance and tech</strong>—I built the entire site for Educators Insurance Company (under Hanover Insurance) and worked at companies like Randstad. This dual background gives me a unique perspective on <strong>security and compliance</strong> from both sides: understanding regulatory requirements from insurance and technical implementation from tech.
+                My engineering journey began through <strong>Google Summer of Code</strong> with Drupal (<a href="https://www.drupal.org/u/stanzin" target="_blank" rel="noopener noreferrer">drupal.org/u/stanzin</a>), where I contributed to core and modules and learned how to build systems that are transparent, testable, and community-reviewed.
               </p>
               <p>
-                I've also contributed through <strong>Google Summer of Code</strong> with Drupal, and completed internships at Wartburg, Megabyte, and Coding Blocks. ExtensionShield is a solo project—every feature comes from one perspective, but I'm always open to collaboration. Check out our <Link to="/contribute">contribute page</Link> or <Link to="/open-source">open source repo</Link>.
+                Professionally, I've architected and shipped enterprise platforms in regulated environments, including insurance—where security, privacy, and compliance aren't "nice to have," they're non-negotiable. That mix of real-world compliance exposure + hands-on engineering shaped how ExtensionShield works: evidence-driven analysis, explainable findings, and practical remediation.
+              </p>
+              <p>
+                ExtensionShield is currently a solo-built project. If you want to collaborate, contribute, or help review the approach, check out the <Link to="/contribute">Contribute page</Link> or the <Link to="/open-source">open-source repo</Link>.
               </p>
             </div>
 
