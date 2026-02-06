@@ -29,15 +29,19 @@ const RocketGame = ({ isActive = true, statusLabel = "Running the scan..." }) =>
     particles: [],
   });
 
-  // Initialize stars
+  // Initialize stars - more stars for larger screens
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const w = canvas.clientWidth || 600;
     const h = canvas.clientHeight || 400;
+    const screenArea = w * h;
+    
+    // More stars for larger screens
+    const numStars = Math.min(50 + Math.floor(screenArea / 10000), 150);
     
     const stars = [];
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < numStars; i++) {
       stars.push({
         x: Math.random() * w,
         y: Math.random() * h,
@@ -48,7 +52,7 @@ const RocketGame = ({ isActive = true, statusLabel = "Running the scan..." }) =>
     gameRef.current.stars = stars;
   }, []);
 
-  // Resize canvas
+  // Resize canvas and focus for keyboard input
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -75,6 +79,13 @@ const RocketGame = ({ isActive = true, statusLabel = "Running the scan..." }) =>
     };
 
     resize();
+    
+    // Make canvas focusable and focus it when game is active
+    if (isActive) {
+      canvas.setAttribute('tabindex', '0');
+      canvas.focus();
+    }
+    
     const ro = new ResizeObserver(resize);
     ro.observe(canvas.parentElement);
     window.addEventListener("resize", resize);
@@ -82,27 +93,45 @@ const RocketGame = ({ isActive = true, statusLabel = "Running the scan..." }) =>
       ro.disconnect();
       window.removeEventListener("resize", resize);
     };
-  }, []);
+  }, [isActive]);
 
-  // Keyboard input
+  // Keyboard input - prevent scrolling with arrow keys
   useEffect(() => {
     if (!isActive) return;
 
     const onDown = (e) => {
-      if ([" ", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d"].includes(e.key.toLowerCase())) {
+      const key = e.key.toLowerCase();
+      // Prevent default for all game keys to stop page scrolling
+      if ([" ", "arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d", "enter"].includes(key)) {
         e.preventDefault();
+        e.stopPropagation();
       }
-      keysDownRef.current.add(e.key.toLowerCase());
+      keysDownRef.current.add(key);
     };
+    
     const onUp = (e) => {
-      keysDownRef.current.delete(e.key.toLowerCase());
+      const key = e.key.toLowerCase();
+      if ([" ", "arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d", "enter"].includes(key)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      keysDownRef.current.delete(key);
     };
 
-    window.addEventListener("keydown", onDown, { passive: false });
-    window.addEventListener("keyup", onUp);
+    // Use capture phase to catch events early
+    document.addEventListener("keydown", onDown, { passive: false, capture: true });
+    document.addEventListener("keyup", onUp, { passive: false, capture: true });
+    
+    // Also prevent wheel/scroll events when game is focused
+    const preventScroll = (e) => {
+      if (e.target.closest('.rocket-game')) {
+        e.preventDefault();
+      }
+    };
+    
     return () => {
-      window.removeEventListener("keydown", onDown);
-      window.removeEventListener("keyup", onUp);
+      document.removeEventListener("keydown", onDown, { capture: true });
+      document.removeEventListener("keyup", onUp, { capture: true });
     };
   }, [isActive]);
 
@@ -194,19 +223,38 @@ const RocketGame = ({ isActive = true, statusLabel = "Running the scan..." }) =>
           });
         }
 
-        // Spawn targets
+        // Spawn targets - adaptive based on screen size and difficulty
         g.nextTargetSpawn -= dt;
         if (g.nextTargetSpawn <= 0) {
-          const targetSize = 20 + Math.random() * 20;
-          g.targets.push({
-            x: w + 20,
-            y: Math.random() * (h - targetSize - 40) + 20,
-            w: targetSize,
-            h: targetSize,
-            speed: 80 + Math.random() * 60,
-            color: `hsl(${Math.random() * 60 + 0}, 70%, 60%)`, // Red to orange
-          });
-          g.nextTargetSpawn = 1.5 + Math.random() * 1.5;
+          // Calculate difficulty multiplier based on score (increases over time)
+          const difficultyMultiplier = 1 + (g.score / 500); // Gets harder as score increases
+          
+          // Calculate how many targets to spawn based on screen size
+          // Larger screens get more targets
+          const screenArea = w * h;
+          const baseTargets = screenArea > 800000 ? 3 : screenArea > 400000 ? 2 : 1; // 3 for large, 2 for medium, 1 for small
+          const numTargets = Math.min(baseTargets + Math.floor(g.score / 200), 5); // Max 5 targets at once
+          
+          // Spawn multiple targets
+          for (let i = 0; i < numTargets; i++) {
+            const targetSize = 15 + Math.random() * 25;
+            const minSpeed = 60 * difficultyMultiplier;
+            const maxSpeed = 120 * difficultyMultiplier;
+            
+            g.targets.push({
+              x: w + 20 + (i * 40), // Stagger spawn positions
+              y: Math.random() * (h - targetSize - 40) + 20,
+              w: targetSize,
+              h: targetSize,
+              speed: minSpeed + Math.random() * (maxSpeed - minSpeed),
+              color: `hsl(${Math.random() * 60 + 0}, 70%, 60%)`, // Red to orange
+            });
+          }
+          
+          // Spawn rate decreases (more frequent) as difficulty increases, but with a minimum
+          const baseSpawnRate = 1.2;
+          const minSpawnRate = 0.4; // Don't spawn faster than every 0.4 seconds
+          g.nextTargetSpawn = Math.max(minSpawnRate, baseSpawnRate / difficultyMultiplier) + Math.random() * 0.3;
         }
 
         // Update bullets
@@ -245,7 +293,10 @@ const RocketGame = ({ isActive = true, statusLabel = "Running the scan..." }) =>
               }
               g.bullets.splice(i, 1);
               g.targets.splice(j, 1);
-              g.score += 10;
+              // Points based on target size - smaller targets worth more
+              const basePoints = 10;
+              const sizeBonus = Math.max(0, 30 - target.w); // Smaller = more points
+              g.score += basePoints + Math.floor(sizeBonus / 2);
               break;
             }
           }

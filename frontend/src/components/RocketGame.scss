@@ -2,6 +2,17 @@
   width: 100%;
   max-width: 700px;
   margin: 0 auto;
+  /* Prevent scrolling when game is active */
+  touch-action: none;
+  -webkit-overflow-scrolling: touch;
+  
+  /* Fullscreen mode when inside game-container-fullscreen */
+  .game-container-fullscreen & {
+    max-width: 100%;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+  }
 }
 
 .rocket-game-frame {
@@ -13,6 +24,14 @@
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  
+  /* Fullscreen mode */
+  .game-container-fullscreen & {
+    height: 100%;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
 }
 
 .rocket-game-canvas {
@@ -23,6 +42,11 @@
   image-rendering: crisp-edges;
   image-rendering: -moz-crisp-edges;
   image-rendering: -webkit-optimize-contrast;
+  /* Make canvas focusable and prevent default behaviors */
+  outline: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .sr-only {

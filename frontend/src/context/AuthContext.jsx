@@ -39,6 +39,8 @@ export const AuthProvider = ({ children }) => {
   // Load session on mount + subscribe to auth changes
   useEffect(() => {
     let isMounted = true;
+    let timeoutId = null;
+    let fallbackTimeout = null;
 
     const load = async () => {
       try {
@@ -63,8 +65,38 @@ export const AuthProvider = ({ children }) => {
           window.history.replaceState({}, document.title, window.location.pathname);
         }
         
-        // Get current session (this will include OAuth session if redirect just happened)
-        const { data, error: sessionError } = await supabase.auth.getSession();
+        // Get current session with timeout to prevent hanging
+        // Use a race between the session check and a timeout
+        const sessionPromise = supabase.auth.getSession();
+        let timeoutFired = false;
+        
+        const timeoutPromise = new Promise((_, reject) => {
+          timeoutId = setTimeout(() => {
+            timeoutFired = true;
+            reject(new Error("Session check timeout - taking too long"));
+          }, 5000);
+        });
+        
+        let sessionResult;
+        try {
+          sessionResult = await Promise.race([sessionPromise, timeoutPromise]);
+        } catch (error) {
+          // If timeout fired, we'll handle it gracefully
+          if (timeoutFired) {
+            console.warn("Session check timed out, continuing without session");
+            sessionResult = { data: { session: null }, error: null };
+          } else {
+            throw error;
+          }
+        } finally {
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+        }
+        
+        const { data, error: sessionError } = sessionResult;
+        
         if (sessionError) throw sessionError;
         if (!isMounted) return;
         
@@ -80,12 +112,28 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         console.error("Auth session load failed:", error);
         // Don't crash - just continue without auth
+        // Ensure we clear any stuck state
+        if (isMounted) {
+          setSession(null);
+          setUser(null);
+        }
       } finally {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
         if (isMounted) setIsLoading(false);
       }
     };
 
     load();
+
+    // Fallback timeout - ensure isLoading is always set to false after max 10 seconds
+    fallbackTimeout = setTimeout(() => {
+      if (isMounted) {
+        console.warn("Auth initialization taking too long, forcing completion");
+        setIsLoading(false);
+      }
+    }, 10000);
 
     let authStateSubscription;
     try {
@@ -116,6 +164,8 @@ export const AuthProvider = ({ children }) => {
 
     return () => {
       isMounted = false;
+      if (timeoutId) clearTimeout(timeoutId);
+      clearTimeout(fallbackTimeout);
       authStateSubscription?.subscription?.unsubscribe();
     };
   }, [toUiUser]);
@@ -229,6 +279,28 @@ export const AuthProvider = ({ children }) => {
     setAuthError(null);
   }, []);
 
+  // Manual refresh function to reset auth state if stuck
+  const refreshAuth = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error("Auth refresh failed:", error);
+        setSession(null);
+        setUser(null);
+      } else {
+        setSession(data.session || null);
+        setUser(toUiUser(data.session?.user));
+      }
+    } catch (error) {
+      console.error("Auth refresh error:", error);
+      setSession(null);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toUiUser]);
+
   const value = {
     user,
     session,
@@ -246,6 +318,7 @@ export const AuthProvider = ({ children }) => {
     openSignInModal,
     closeSignInModal,
     clearError,
+    refreshAuth,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
