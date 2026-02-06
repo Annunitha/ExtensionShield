@@ -1,0 +1,50 @@
+.car-runner {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto 2.5rem;
+}
+
+.car-runner-frame {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgba(2, 6, 23, 1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+.car-runner-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Screen-reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .car-runner-frame {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  }
+}
+
+@media (max-width: 768px) {
+  .car-runner-frame {
+    height: 220px;
+    border-radius: 16px;
+  }
+}
+
+
