@@ -2,11 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import "./RocketGame.scss";
 
 /**
- * Rocket Liftoff Game with Shooting Targets
- * - Arrow keys / WASD to move rocket
- * - Space to shoot
- * - Destroy targets to score points
- * - Easy and visually appealing
+ * Rocket Game - Minimal Working Version
  */
 const RocketGame = ({ 
   isActive = true, 
@@ -16,186 +12,146 @@ const RocketGame = ({
 }) => {
   const canvasRef = useRef(null);
   const rafRef = useRef(null);
-  const keysDownRef = useRef(new Set());
-
-  // Load best score from localStorage
-  const loadBestScore = () => {
-    try {
-      const stored = localStorage.getItem('rocketGame_bestScore');
-      return stored ? parseInt(stored, 10) : 0;
-    } catch (e) {
-      return 0;
-    }
-  };
-
-  // Load leaderboard from localStorage
-  const loadLeaderboard = () => {
-    try {
-      const stored = localStorage.getItem('rocketGame_leaderboard');
-      return stored ? JSON.parse(stored) : [];
-    } catch (e) {
-      return [];
-    }
-  };
-
-  // Save score to leaderboard
-  const saveToLeaderboard = (score) => {
-    try {
-      const leaderboard = loadLeaderboard();
-      const entry = {
-        score: Math.floor(score),
-        date: new Date().toISOString(),
-        timestamp: Date.now(),
-      };
-      leaderboard.push(entry);
-      // Keep top 10 scores
-      leaderboard.sort((a, b) => b.score - a.score);
-      const top10 = leaderboard.slice(0, 10);
-      localStorage.setItem('rocketGame_leaderboard', JSON.stringify(top10));
-      return top10;
-    } catch (e) {
-      console.error('Failed to save to leaderboard:', e);
-      return [];
-    }
-  };
-
+  const keysRef = useRef(new Set());
+  
   const [ui, setUi] = useState({ 
     score: 0, 
-    best: loadBestScore(), 
+    best: 0, 
     gameOver: false,
-    leaderboard: loadLeaderboard(),
-    timerPoints: 0,
-    escapePoints: 0,
-    survivalPoints: 0,
-    totalScore: 0,
   });
 
   const gameRef = useRef({
     startedAt: 0,
     lastTs: 0,
+    lastUiUpdate: 0,
+    lastShot: 0,
     gameOver: false,
     score: 0,
-    best: loadBestScore(),
-    rocket: { x: 0, y: 0, w: 30, h: 50, speed: 200 },
+    rocket: { x: 100, y: 300, w: 30, h: 50, speed: 200 },
     bullets: [],
     targets: [],
-    nextTargetSpawn: 0,
-    stars: [],
-    particles: [],
-    timerPoints: 0,
-    escapePoints: 0,
-    survivalPoints: 0,
-    targetsEscaped: 0,
-    lastTimerUpdate: 0,
+    coins: [], // Coin particles for visual feedback
+    nextTargetSpawn: 1,
   });
 
-  // Initialize stars function - can be called multiple times
-  const initializeStars = (canvas) => {
-    if (!canvas) return;
-    const w = canvas.clientWidth || canvas.width || 600;
-    const h = canvas.clientHeight || canvas.height || 400;
-    
-    // Don't initialize if canvas has no dimensions
-    if (w <= 0 || h <= 0) return;
-    
-    const screenArea = w * h;
-    
-    // More stars for larger screens
-    const numStars = Math.min(50 + Math.floor(screenArea / 10000), 150);
-    
-    const stars = [];
-    for (let i = 0; i < numStars; i++) {
-      stars.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        size: Math.random() * 2 + 0.5,
-        speed: Math.random() * 20 + 10,
-      });
-    }
-    gameRef.current.stars = stars;
-  };
-
-  // Resize canvas and focus for keyboard input
+  // Setup canvas size - DO NOT TOUCH ROCKET POSITION AFTER INITIAL SETUP
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    let isInitialized = false;
 
     const resize = () => {
       const parent = canvas.parentElement;
       if (!parent) return;
-      const dpr = window.devicePixelRatio || 1;
-      const rect = parent.getBoundingClientRect();
-      const w = Math.max(400, Math.floor(rect.width));
-      const h = Math.max(300, Math.floor(rect.height));
-
-      canvas.style.width = `${w}px`;
-      canvas.style.height = `${h}px`;
-      canvas.width = Math.floor(w * dpr);
-      canvas.height = Math.floor(h * dpr);
-
-      const ctx = canvas.getContext("2d");
-      if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      const g = gameRef.current;
-      g.rocket.x = 50;
-      g.rocket.y = h / 2;
       
-      // Re-initialize stars when canvas is resized
-      initializeStars(canvas);
+      const isFullscreen = parent.classList.contains('game-container-fullscreen') || 
+                          parent.closest('.game-container-fullscreen');
+      
+      let w, h;
+      if (isFullscreen) {
+        w = window.innerWidth;
+        h = window.innerHeight;
+      } else {
+        const rect = parent.getBoundingClientRect();
+        w = Math.max(800, rect.width || 800);
+        h = Math.max(600, rect.height || 600);
+      }
+
+      // Only update canvas dimensions - NEVER touch rocket position
+      canvas.width = w;
+      canvas.height = h;
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+
+      // ONLY on first resize: set initial rocket position
+      if (!isInitialized) {
+        const rocket = gameRef.current.rocket;
+        rocket.x = 100;
+        rocket.y = h / 2;
+        isInitialized = true;
+      }
+      // After initialization, NEVER modify rocket position here
+      // The game loop will handle bounds checking
     };
 
     resize();
     
-    // Make canvas focusable and focus it when game is active
     if (isActive) {
       canvas.setAttribute('tabindex', '0');
-      // Use setTimeout to ensure canvas is rendered before focusing
-      setTimeout(() => {
-        canvas.focus();
-      }, 100);
+      canvas.style.outline = 'none';
+      canvas.style.cursor = 'crosshair';
+      setTimeout(() => canvas.focus(), 100);
     }
+    
+    const handleClick = () => canvas.focus();
+    canvas.addEventListener('click', handleClick);
     
     const ro = new ResizeObserver(resize);
     ro.observe(canvas.parentElement);
-    window.addEventListener("resize", resize);
+    window.addEventListener('resize', resize);
+    
     return () => {
+      canvas.removeEventListener('click', handleClick);
       ro.disconnect();
-      window.removeEventListener("resize", resize);
+      window.removeEventListener('resize', resize);
     };
   }, [isActive]);
 
-  // Keyboard input - prevent scrolling with arrow keys
+  // Keyboard input - robust key detection
   useEffect(() => {
     if (!isActive) return;
 
+    const normalizeKey = (key, code) => {
+      // Normalize key string
+      const keyLower = key ? key.toLowerCase() : '';
+      
+      // Handle arrow keys - check both key and code
+      if (keyLower === "arrowup" || code === "ArrowUp") return "arrowup";
+      if (keyLower === "arrowdown" || code === "ArrowDown") return "arrowdown";
+      if (keyLower === "arrowleft" || code === "ArrowLeft") return "arrowleft";
+      if (keyLower === "arrowright" || code === "ArrowRight") return "arrowright";
+      
+      // Handle space
+      if (keyLower === " " || keyLower === "space" || code === "Space") return " ";
+      
+      // Handle WASD
+      if (keyLower === "w" || code === "KeyW") return "w";
+      if (keyLower === "a" || code === "KeyA") return "a";
+      if (keyLower === "s" || code === "KeyS") return "s";
+      if (keyLower === "d" || code === "KeyD") return "d";
+      
+      return keyLower;
+    };
+
+    const gameKeys = new Set([" ", "arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d", "enter"]);
+
     const onDown = (e) => {
-      const key = e.key.toLowerCase();
-      // Prevent default for all game keys to stop page scrolling
-      if ([" ", "arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d", "enter"].includes(key)) {
+      const key = normalizeKey(e.key, e.code);
+      if (gameKeys.has(key)) {
         e.preventDefault();
         e.stopPropagation();
-        keysDownRef.current.add(key);
+        keysRef.current.add(key);
       }
     };
     
     const onUp = (e) => {
-      const key = e.key.toLowerCase();
-      if ([" ", "arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d", "enter"].includes(key)) {
+      const key = normalizeKey(e.key, e.code);
+      if (gameKeys.has(key)) {
         e.preventDefault();
         e.stopPropagation();
-        keysDownRef.current.delete(key);
+        keysRef.current.delete(key);
       }
     };
 
-    // Use capture phase to catch events early
+    // Add listeners with capture to catch events early
     window.addEventListener("keydown", onDown, { passive: false, capture: true });
     window.addEventListener("keyup", onUp, { passive: false, capture: true });
     
-    // Also add listeners to canvas for better focus handling
     const canvas = canvasRef.current;
     if (canvas) {
-      canvas.addEventListener("keydown", onDown);
-      canvas.addEventListener("keyup", onUp);
+      canvas.addEventListener("keydown", onDown, { passive: false });
+      canvas.addEventListener("keyup", onUp, { passive: false });
     }
     
     return () => {
@@ -208,53 +164,9 @@ const RocketGame = ({
     };
   }, [isActive]);
 
-  const resetGame = () => {
-    const g = gameRef.current;
-    const canvas = canvasRef.current;
-    const h = canvas ? canvas.clientHeight : 400;
-    
-    // Reload best score and leaderboard
-    g.best = loadBestScore();
-    const leaderboard = loadLeaderboard();
-    
-    g.startedAt = performance.now();
-    g.lastTs = 0;
-    g.gameOver = false;
-    g.score = 0;
-    g.rocket.x = 50;
-    g.rocket.y = h / 2;
-    g.bullets = [];
-    g.targets = [];
-    g.nextTargetSpawn = 1;
-    g.particles = [];
-    g.timerPoints = 0;
-    g.escapePoints = 0;
-    g.survivalPoints = 0;
-    g.targetsEscaped = 0;
-    g.lastTimerUpdate = 0;
-    setUi({ 
-      score: 0, 
-      best: g.best, 
-      gameOver: false, 
-      leaderboard,
-      timerPoints: 0,
-      escapePoints: 0,
-      survivalPoints: 0,
-      totalScore: 0,
-    });
-  };
-
   // Main game loop
   useEffect(() => {
     if (!isActive) return;
-    
-    // Initialize stars before starting game loop
-    const canvas = canvasRef.current;
-    if (canvas) {
-      initializeStars(canvas);
-    }
-    
-    resetGame();
 
     const step = (ts) => {
       const canvas = canvasRef.current;
@@ -263,220 +175,183 @@ const RocketGame = ({
         rafRef.current = requestAnimationFrame(step);
         return;
       }
-      
-      // Ensure stars are initialized if they're missing
-      if (!gameRef.current.stars || gameRef.current.stars.length === 0) {
-        initializeStars(canvas);
-      }
-
-      // Polyfill for roundRect if not available
-      if (!ctx.roundRect) {
-        ctx.roundRect = function(x, y, w, h, r) {
-          if (w < 2 * r) r = w / 2;
-          if (h < 2 * r) r = h / 2;
-          this.beginPath();
-          this.moveTo(x + r, y);
-          this.arcTo(x + w, y, x + w, y + h, r);
-          this.arcTo(x + w, y + h, x, y + h, r);
-          this.arcTo(x, y + h, x, y, r);
-          this.arcTo(x, y, x + w, y, r);
-          this.closePath();
-          return this;
-        };
-      }
 
       const g = gameRef.current;
-      const w = Math.floor(canvas.clientWidth || 600);
-      const h = Math.floor(canvas.clientHeight || 400);
+      
+      // Get ACTUAL canvas dimensions from the canvas element itself
+      const w = canvas.width || canvas.clientWidth || 800;
+      const h = canvas.height || canvas.clientHeight || 600;
 
-      const dt = g.lastTs ? Math.min(0.033, (ts - g.lastTs) / 1000) : 0;
+      // Calculate deltaTime properly
+      const dt = g.lastTs ? Math.min(0.033, (ts - g.lastTs) / 1000) : 0.016;
       g.lastTs = ts;
 
-      const keys = keysDownRef.current;
+      const keys = keysRef.current;
+      const rocket = g.rocket;
       
-      // Restart on Enter if game over
-      if (g.gameOver && (keys.has("enter") || keys.has(" "))) {
-        resetGame();
-      }
-
       if (!g.gameOver) {
-        // Rocket movement
+        // Movement - direct and simple
+        const moveAmount = rocket.speed * dt;
+        
+        // Y-axis movement (UP/DOWN)
         if (keys.has("arrowup") || keys.has("w")) {
-          g.rocket.y = Math.max(g.rocket.h / 2, g.rocket.y - g.rocket.speed * dt);
+          rocket.y = rocket.y - moveAmount;
         }
         if (keys.has("arrowdown") || keys.has("s")) {
-          g.rocket.y = Math.min(h - g.rocket.h / 2, g.rocket.y + g.rocket.speed * dt);
+          rocket.y = rocket.y + moveAmount;
         }
+        
+        // X-axis movement (LEFT/RIGHT)
         if (keys.has("arrowleft") || keys.has("a")) {
-          g.rocket.x = Math.max(g.rocket.w / 2, g.rocket.x - g.rocket.speed * dt);
+          rocket.x = rocket.x - moveAmount;
         }
         if (keys.has("arrowright") || keys.has("d")) {
-          g.rocket.x = Math.min(w - g.rocket.w / 2, g.rocket.x + g.rocket.speed * dt);
+          rocket.x = rocket.x + moveAmount;
         }
+        
+        // Bounds checking - clamp to canvas boundaries
+        const minX = 0;
+        const maxX = w - rocket.w;
+        const minY = 0;
+        const maxY = h - rocket.h;
+        
+        rocket.x = Math.max(minX, Math.min(maxX, rocket.x));
+        rocket.y = Math.max(minY, Math.min(maxY, rocket.y));
 
-        // Shooting
-        if (keys.has(" ") && (ts - (g._lastShot || 0)) > 150) {
-          g._lastShot = ts;
+        // Shooting - Press SPACEBAR to shoot
+        if (keys.has(" ") && (ts - g.lastShot) > 150) {
+          g.lastShot = ts;
+          // Create bullet from rocket's tip (right side, at the tip Y position)
           g.bullets.push({
-            x: g.rocket.x + g.rocket.w,
-            y: g.rocket.y,
-            w: 8,
-            h: 4,
-            speed: 400,
+            x: rocket.x + rocket.w,
+            y: rocket.y - 3, // Shoot from the tip of the ship (rocket.y is the tip)
+            w: 10,
+            h: 6,
+            speed: 500,
           });
         }
 
-        // Spawn targets - adaptive based on screen size and difficulty
+        // Spawn targets - circular obstacles with different sizes
         g.nextTargetSpawn -= dt;
         if (g.nextTargetSpawn <= 0) {
-          // Calculate difficulty multiplier based on score (increases over time)
-          const difficultyMultiplier = 1 + (g.score / 500); // Gets harder as score increases
+          const colors = ["#ff6b35", "#ffa500", "#ffd700", "#ff4444", "#ff8c00"]; // Orange, yellow, red variants
           
-          // Calculate how many targets to spawn based on screen size
-          // Larger screens get more targets
-          const screenArea = w * h;
-          const baseTargets = screenArea > 800000 ? 3 : screenArea > 400000 ? 2 : 1; // 3 for large, 2 for medium, 1 for small
-          const numTargets = Math.min(baseTargets + Math.floor(g.score / 200), 5); // Max 5 targets at once
-          
-          // Spawn multiple targets
-          for (let i = 0; i < numTargets; i++) {
-            const targetSize = 15 + Math.random() * 25;
-            const minSpeed = 60 * difficultyMultiplier;
-            const maxSpeed = 120 * difficultyMultiplier;
-            
-            g.targets.push({
-              x: w + 20 + (i * 40), // Stagger spawn positions
-              y: Math.random() * (h - targetSize - 40) + 20,
-              w: targetSize,
-              h: targetSize,
-              speed: minSpeed + Math.random() * (maxSpeed - minSpeed),
-              color: `hsl(${Math.random() * 60 + 0}, 70%, 60%)`, // Red to orange
-            });
+          // Create different obstacle sizes: small (30%), medium (50%), large (20%)
+          const rand = Math.random();
+          let radius, points;
+          if (rand < 0.3) {
+            // Small obstacles
+            radius = 12 + Math.random() * 5; // 12-17px
+            points = 10;
+          } else if (rand < 0.8) {
+            // Medium obstacles
+            radius = 18 + Math.random() * 7; // 18-25px
+            points = 25;
+          } else {
+            // Large obstacles (bigger, more points)
+            radius = 28 + Math.random() * 12; // 28-40px
+            points = 50;
           }
           
-          // Spawn rate decreases (more frequent) as difficulty increases, but with a minimum
-          const baseSpawnRate = 1.2;
-          const minSpawnRate = 0.4; // Don't spawn faster than every 0.4 seconds
-          g.nextTargetSpawn = Math.max(minSpawnRate, baseSpawnRate / difficultyMultiplier) + Math.random() * 0.3;
+          g.targets.push({
+            x: w,
+            y: Math.random() * (h - radius * 2),
+            radius: radius,
+            speed: 100,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            points: points, // Points value for this obstacle
+          });
+          g.nextTargetSpawn = 1.5;
         }
 
         // Update bullets
-        for (const bullet of g.bullets) {
-          bullet.x += bullet.speed * dt;
-        }
-        g.bullets = g.bullets.filter((b) => b.x < w + 50);
+        g.bullets.forEach(b => b.x += b.speed * dt);
+        g.bullets = g.bullets.filter(b => b.x < w + 50);
 
-        // Update targets and track escapes
-        for (const target of g.targets) {
-          target.x -= target.speed * dt;
-        }
-        // Count targets that escaped (passed left edge without being hit)
-        const escapedTargets = g.targets.filter((t) => t.x + t.w < -50);
-        if (escapedTargets.length > 0) {
-          g.targetsEscaped += escapedTargets.length;
-          // Award escape points: 5 points per escaped target
-          g.escapePoints += escapedTargets.length * 5;
-        }
-        g.targets = g.targets.filter((t) => t.x + t.w > -50);
+        // Update targets
+        g.targets.forEach(t => t.x -= t.speed * dt);
+        g.targets = g.targets.filter(t => t.x > -50);
 
-        // Collision detection: bullets vs targets
+        // Update coin particles
+        g.coins.forEach(coin => {
+          coin.x += coin.vx * dt;
+          coin.y += coin.vy * dt;
+          coin.vy += 50 * dt; // Gravity effect
+          coin.life -= dt * 2; // Fade out over 0.5 seconds
+        });
+        g.coins = g.coins.filter(coin => coin.life > 0 && coin.y > -50);
+
+        // Collision: bullets vs targets (circular targets)
         for (let i = g.bullets.length - 1; i >= 0; i--) {
           const bullet = g.bullets[i];
+          const bulletCenterX = bullet.x + bullet.w / 2;
+          const bulletCenterY = bullet.y + bullet.h / 2;
+          
           for (let j = g.targets.length - 1; j >= 0; j--) {
             const target = g.targets[j];
-            if (
-              bullet.x < target.x + target.w &&
-              bullet.x + bullet.w > target.x &&
-              bullet.y < target.y + target.h &&
-              bullet.y + bullet.h > target.y
-            ) {
-              // Hit! Create particles
-              for (let k = 0; k < 8; k++) {
-                g.particles.push({
-                  x: target.x + target.w / 2,
-                  y: target.y + target.h / 2,
-                  vx: (Math.random() - 0.5) * 200,
-                  vy: (Math.random() - 0.5) * 200,
-                  life: 0.5,
-                  color: target.color,
+            const targetCenterX = target.x + target.radius;
+            const targetCenterY = target.y + target.radius;
+            
+            // Calculate distance between bullet center and target center
+            const dx = bulletCenterX - targetCenterX;
+            const dy = bulletCenterY - targetCenterY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Check if bullet overlaps with circular target
+            if (distance < target.radius + Math.max(bullet.w, bullet.h) / 2) {
+              // Hit! Award points based on obstacle size
+              const points = target.points || 10;
+              g.score += points;
+              
+              // Create coin particles for visual feedback
+              // Show one main coin with total points, plus smaller coins for bigger obstacles
+              const numCoins = points >= 50 ? 3 : points >= 25 ? 2 : 1;
+              for (let k = 0; k < numCoins; k++) {
+                g.coins.push({
+                  x: targetCenterX + (k - (numCoins - 1) / 2) * 20, // Spread horizontally
+                  y: targetCenterY,
+                  vx: (Math.random() - 0.5) * 80, // Random horizontal velocity
+                  vy: -60 - Math.random() * 40, // Upward velocity
+                  life: 1.2, // Fade out over time
+                  points: k === 0 ? points : 0, // Main coin shows points, others are decorative
+                  isMain: k === 0, // Mark main coin
                 });
               }
+              
+              // Remove bullet and target
               g.bullets.splice(i, 1);
               g.targets.splice(j, 1);
-              // Points based on target size - smaller targets worth more
-              const basePoints = 10;
-              const sizeBonus = Math.max(0, 30 - target.w); // Smaller = more points
-              g.score += basePoints + Math.floor(sizeBonus / 2);
-              break;
+              break; // Bullet can only hit one target
             }
           }
         }
 
-        // Collision detection: rocket vs targets
+        // Collision: rocket vs targets (circular targets)
+        const rocketCenterX = rocket.x + rocket.w / 2;
+        const rocketCenterY = rocket.y;
+        const rocketRadius = Math.max(rocket.w, rocket.h) / 2;
+        
         for (const target of g.targets) {
-          if (
-            g.rocket.x < target.x + target.w &&
-            g.rocket.x + g.rocket.w > target.x &&
-            g.rocket.y < target.y + target.h &&
-            g.rocket.y + g.rocket.h > target.y
-          ) {
+          const targetCenterX = target.x + target.radius;
+          const targetCenterY = target.y + target.radius;
+          
+          // Calculate distance between rocket center and target center
+          const dx = rocketCenterX - targetCenterX;
+          const dy = rocketCenterY - targetCenterY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          // Check if rocket overlaps with circular target
+          if (distance < target.radius + rocketRadius) {
             g.gameOver = true;
-            // Calculate final total score
-            const finalTotalScore = Math.floor(g.score + g.timerPoints + g.escapePoints + g.survivalPoints);
-            const newBest = Math.max(g.best, finalTotalScore);
-            g.best = newBest;
-            
-            // Save to localStorage
-            try {
-              localStorage.setItem('rocketGame_bestScore', newBest.toString());
-              const leaderboard = saveToLeaderboard(finalTotalScore);
-              setUi((prev) => ({ 
-                ...prev, 
-                best: newBest,
-                leaderboard: leaderboard,
-                gameOver: true,
-                timerPoints: g.timerPoints,
-                escapePoints: g.escapePoints,
-                survivalPoints: g.survivalPoints,
-                totalScore: finalTotalScore,
-              }));
-            } catch (e) {
-              console.error('Failed to save score:', e);
-            }
             break;
           }
-        }
-
-        // Update particles
-        for (const particle of g.particles) {
-          particle.x += particle.vx * dt;
-          particle.y += particle.vy * dt;
-          particle.life -= dt;
-        }
-        g.particles = g.particles.filter((p) => p.life > 0);
-
-        // Update stars (parallax)
-        for (const star of g.stars) {
-          star.x -= star.speed * dt;
-          if (star.x < 0) {
-            star.x = w;
-            star.y = Math.random() * h;
-          }
-        }
-
-        // Calculate timer and survival points (1 point per second survived)
-        const elapsedTime = (ts - g.startedAt) / 1000; // Time in seconds
-        const newTimerPoints = Math.floor(elapsedTime);
-        if (newTimerPoints > g.timerPoints) {
-          g.timerPoints = newTimerPoints;
-          g.survivalPoints = newTimerPoints; // Same as timer points
         }
       }
 
       // Drawing
       ctx.clearRect(0, 0, w, h);
 
-      // Background gradient (space theme)
+      // Background
       const bg = ctx.createLinearGradient(0, 0, 0, h);
       bg.addColorStop(0, "#0a0f1a");
       bg.addColorStop(0.5, "#1a1f2e");
@@ -486,207 +361,152 @@ const RocketGame = ({
 
       // Stars
       ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-      for (const star of g.stars) {
+      for (let i = 0; i < 100; i++) {
+        const x = (i * 37) % w;
+        const y = (i * 73) % h;
         ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.arc(x, y, 1, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Particles
-      for (const particle of g.particles) {
-        ctx.globalAlpha = particle.life / 0.5;
-        ctx.fillStyle = particle.color;
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
-
-      // Targets
-      for (const target of g.targets) {
-        // Outer glow
-        ctx.shadowBlur = 15;
+      // Targets - circular obstacles with glow
+      g.targets.forEach(target => {
+        ctx.shadowBlur = 10;
         ctx.shadowColor = target.color;
         ctx.fillStyle = target.color;
         ctx.beginPath();
-        ctx.arc(target.x + target.w / 2, target.y + target.h / 2, target.w / 2, 0, Math.PI * 2);
+        ctx.arc(target.x + target.radius, target.y + target.radius, target.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      // Bullets - make them more visible
+      g.bullets.forEach(bullet => {
+        // Bullet glow effect
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = "#60a5fa";
+        ctx.fillStyle = "#60a5fa";
+        ctx.fillRect(bullet.x, bullet.y, bullet.w, bullet.h);
+        
+        // Bullet core (brighter center)
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#93c5fd";
+        ctx.fillRect(bullet.x + 2, bullet.y + 1, bullet.w - 4, bullet.h - 2);
+      });
+
+      // Coin particles - points boost animation
+      g.coins.forEach(coin => {
+        const alpha = Math.max(0, coin.life);
+        const scale = 1 + (1 - coin.life) * 0.3; // Slight grow as they fade
+        const size = coin.isMain ? 10 : 6; // Main coin is bigger
+        
+        // Draw coin/star effect
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.translate(coin.x, coin.y);
+        ctx.scale(scale, scale);
+        
+        // Gold coin circle with glow
+        ctx.fillStyle = coin.isMain ? "#ffd700" : "#ffed4e";
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = "#ffd700";
+        ctx.beginPath();
+        ctx.arc(0, 0, size, 0, Math.PI * 2);
         ctx.fill();
         
-        // Inner circle
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
-        ctx.beginPath();
-        ctx.arc(target.x + target.w / 2, target.y + target.h / 2, target.w / 4, 0, Math.PI * 2);
-        ctx.fill();
-      }
+        // Points text (only on main coin)
+        if (coin.isMain && coin.points > 0) {
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = "#22c55e";
+          ctx.fillStyle = "#22c55e";
+          ctx.font = "bold 14px monospace";
+          ctx.textAlign = "center";
+          ctx.fillText(`+${Math.round(coin.points)}`, 0, -18);
+          ctx.textAlign = "left";
+        }
+        
+        ctx.restore();
+      });
 
-      // Bullets
-      ctx.fillStyle = "#60a5fa";
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = "#60a5fa";
-      for (const bullet of g.bullets) {
-        ctx.fillRect(bullet.x, bullet.y, bullet.w, bullet.h);
-      }
-      ctx.shadowBlur = 0;
+      // Rocket - Blue triangular body with orange fin (matching screenshot)
+      const rx = rocket.x;
+      const ry = rocket.y; // This is the tip of the rocket
+      const rw = rocket.w;
+      const rh = rocket.h;
 
-      // Rocket
-      const rx = g.rocket.x;
-      const ry = g.rocket.y;
-      const rw = g.rocket.w;
-      const rh = g.rocket.h;
-
-      // Rocket body (triangle)
-      ctx.fillStyle = "#3b82f6";
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = "#3b82f6";
+      // Orange fin on the left side
+      ctx.fillStyle = "#ff6b35";
       ctx.beginPath();
-      ctx.moveTo(rx + rw, ry);
-      ctx.lineTo(rx, ry - rh / 2);
+      ctx.moveTo(rx, ry - rh / 2);
+      ctx.lineTo(rx - 8, ry - rh / 3);
+      ctx.lineTo(rx - 8, ry + rh / 3);
       ctx.lineTo(rx, ry + rh / 2);
       ctx.closePath();
       ctx.fill();
 
-      // Rocket window
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = "#87ceeb";
+      // Blue triangular body pointing right
+      ctx.fillStyle = "#3b82f6";
       ctx.beginPath();
-      ctx.arc(rx + rw * 0.3, ry, rh * 0.2, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Rocket flames
-      const flameOffset = Math.sin(ts / 50) * 3;
-      ctx.fillStyle = "#f97316";
-      ctx.beginPath();
-      ctx.moveTo(rx - 5, ry - rh * 0.3);
-      ctx.lineTo(rx - 15 - flameOffset, ry - rh * 0.1);
-      ctx.lineTo(rx - 10, ry);
-      ctx.lineTo(rx - 15 + flameOffset, ry + rh * 0.1);
-      ctx.lineTo(rx - 5, ry + rh * 0.3);
+      ctx.moveTo(rx + rw, ry); // Tip pointing right
+      ctx.lineTo(rx, ry - rh / 2); // Top left
+      ctx.lineTo(rx, ry + rh / 2); // Bottom left
       ctx.closePath();
       ctx.fill();
 
-      ctx.fillStyle = "#fbbf24";
+      // Blue accent/cockpit window
+      ctx.fillStyle = "#60a5fa";
       ctx.beginPath();
-      ctx.moveTo(rx - 5, ry - rh * 0.2);
-      ctx.lineTo(rx - 12 - flameOffset * 0.7, ry - rh * 0.05);
-      ctx.lineTo(rx - 8, ry);
-      ctx.lineTo(rx - 12 + flameOffset * 0.7, ry + rh * 0.05);
-      ctx.lineTo(rx - 5, ry + rh * 0.2);
-      ctx.closePath();
+      ctx.arc(rx + rw * 0.3, ry, 5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Calculate total score (sum of all point types)
-      const totalScore = g.score + g.timerPoints + g.escapePoints + g.survivalPoints;
+      // Score display (top left)
+      ctx.fillStyle = "#22c55e";
+      ctx.font = "bold 24px monospace";
+      ctx.fillText(`Score: ${Math.floor(g.score)}`, 20, 40);
       
-      // Scoreboard HUD (only if showScoreboard is true)
-      if (showScoreboard) {
-        const scoreboardY = 12;
-        const lineHeight = 18;
-        let yOffset = scoreboardY;
-        
-        // Background for scoreboard
-        ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-        ctx.beginPath();
-        ctx.roundRect(8, 8, 200, 120, 8);
-        ctx.fill();
-        ctx.strokeStyle = "rgba(34, 197, 94, 0.3)";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        
-        // Total Score (larger, at top)
-        ctx.fillStyle = "rgba(34, 197, 94, 1)";
-        ctx.font = "700 16px system-ui, -apple-system, sans-serif";
-        ctx.fillText(`Total: ${Math.floor(totalScore)}`, 16, yOffset);
-        yOffset += lineHeight + 4;
-        
-        // Timer Points
-        ctx.fillStyle = "rgba(226, 232, 240, 0.9)";
-        ctx.font = "500 12px system-ui, -apple-system, sans-serif";
-        ctx.fillText(`Timer: ${g.timerPoints}`, 16, yOffset);
-        yOffset += lineHeight;
-        
-        // Escape Points
-        ctx.fillText(`Escape: ${g.escapePoints}`, 16, yOffset);
-        yOffset += lineHeight;
-        
-        // Survival Points
-        ctx.fillText(`Survival: ${g.survivalPoints}`, 16, yOffset);
-        yOffset += lineHeight;
-        
-        // Shooting Score
-        ctx.fillText(`Shooting: ${Math.floor(g.score)}`, 16, yOffset);
-        yOffset += lineHeight + 4;
-        
-        // Best Score
-        ctx.fillStyle = "rgba(148, 163, 184, 0.8)";
-        ctx.font = "500 11px system-ui, -apple-system, sans-serif";
-        ctx.fillText(`Best: ${Math.floor(g.best)}`, 16, yOffset);
-        
-        // Show rank if leaderboard exists
-        if (ui.leaderboard && ui.leaderboard.length > 0) {
-          const topScore = ui.leaderboard[0]?.score || 0;
-          if (topScore > 0) {
-            yOffset += lineHeight - 2;
-            ctx.fillStyle = "rgba(34, 197, 94, 0.8)";
-            ctx.fillText(`Top: ${topScore}`, 16, yOffset);
-          }
-        }
+      // Instructions (top right)
+      ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+      ctx.font = "14px monospace";
+      ctx.textAlign = "right";
+      ctx.fillText("SPACE to shoot", w - 20, 30);
+      ctx.fillText("Arrow keys or WASD to move", w - 20, 50);
+      ctx.textAlign = "left";
+      
+      // Debug info (bottom)
+      const isFocused = document.activeElement === canvas;
+      ctx.fillStyle = isFocused ? "#22c55e" : "#ef4444";
+      ctx.font = "14px monospace";
+      ctx.fillText(`Focus: ${isFocused ? 'YES' : 'CLICK!'}`, 20, h - 60);
+      
+      if (keys.size > 0) {
+        ctx.fillStyle = "#22c55e";
+        ctx.fillText(`Keys: ${Array.from(keys).join(', ')}`, 20, h - 40);
       }
+      
+      ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+      ctx.fillText(`Canvas: ${w}x${h}`, 20, h - 20);
+      ctx.fillText(`Rocket: (${Math.round(rocket.x)}, ${Math.round(rocket.y)})`, 200, h - 20);
 
-      // Controls hint
-      if (g.score < 30) {
-        ctx.fillStyle = "rgba(226, 232, 240, 0.7)";
-        ctx.font = "500 11px system-ui, -apple-system, sans-serif";
-        ctx.fillText("Arrow keys / WASD: Move | Space: Shoot", w - 220, 24);
-      }
-
-      // Game over overlay
+      // Game over
       if (g.gameOver) {
         ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
         ctx.fillRect(0, 0, w, h);
-        
-        // Game Over Title
         ctx.fillStyle = "#ef4444";
-        ctx.font = "700 28px system-ui, -apple-system, sans-serif";
+        ctx.font = "48px monospace";
         ctx.textAlign = "center";
-        ctx.fillText("Game Over!", w / 2, h / 2 - 100);
-        
-        // Final Scoreboard
-        const finalTotal = Math.floor(g.score + g.timerPoints + g.escapePoints + g.survivalPoints);
-        ctx.fillStyle = "rgba(34, 197, 94, 1)";
-        ctx.font = "700 20px system-ui, -apple-system, sans-serif";
-        ctx.fillText(`Final Score: ${finalTotal}`, w / 2, h / 2 - 50);
-        
-        ctx.fillStyle = "rgba(226, 232, 240, 0.9)";
-        ctx.font = "500 14px system-ui, -apple-system, sans-serif";
-        ctx.fillText(`Timer: ${g.timerPoints} | Escape: ${g.escapePoints} | Survival: ${g.survivalPoints} | Shooting: ${Math.floor(g.score)}`, w / 2, h / 2 - 20);
-        
-        ctx.fillText("Press Space or Enter to restart", w / 2, h / 2 + 20);
+        ctx.fillText("Game Over!", w / 2, h / 2);
         ctx.textAlign = "left";
       }
 
-      // Sync UI state and notify parent of stats
-      if (ts - (g._lastUiTs || 0) > 100) {
-        g._lastUiTs = ts;
-        const currentTotal = Math.floor(g.score + g.timerPoints + g.escapePoints + g.survivalPoints);
-        const elapsedTime = (ts - g.startedAt) / 1000;
-        
-        setUi({ 
-          score: Math.floor(g.score), 
-          best: Math.floor(g.best), 
-          gameOver: g.gameOver,
-          timerPoints: g.timerPoints,
-          escapePoints: g.escapePoints,
-          survivalPoints: g.survivalPoints,
-          totalScore: currentTotal,
-        });
-
-        // Notify parent component of stats update
+      // Update UI
+      if (ts - g.lastUiUpdate > 100) {
+        g.lastUiUpdate = ts;
+        setUi({ score: Math.floor(g.score), best: Math.floor(g.score), gameOver: g.gameOver });
         if (onStatsUpdate) {
           onStatsUpdate({
-            score: currentTotal,
-            best: Math.floor(g.best),
-            time: elapsedTime,
+            score: Math.floor(g.score),
+            best: Math.floor(g.score),
+            time: (ts - g.startedAt) / 1000,
             gameOver: g.gameOver,
           });
         }
@@ -695,25 +515,44 @@ const RocketGame = ({
       rafRef.current = requestAnimationFrame(step);
     };
 
+    // Initialize game - only set initial values if not already set
+    if (gameRef.current.startedAt === 0) {
+      const g = gameRef.current;
+      g.startedAt = performance.now();
+      g.lastTs = 0;
+      g.lastUiUpdate = 0;
+      g.lastShot = 0;
+      g.gameOver = false;
+      g.score = 0;
+      g.bullets = [];
+      g.targets = [];
+      g.coins = [];
+      g.nextTargetSpawn = 1;
+      
+      // Only set initial position if rocket hasn't been positioned yet
+      const canvas = canvasRef.current;
+      if (canvas && g.rocket.y === 300) {
+        const h = canvas.height || canvas.clientHeight || 600;
+        g.rocket.y = h / 2;
+      }
+    }
+
     rafRef.current = requestAnimationFrame(step);
+    
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
     };
-  }, [isActive, statusLabel, onStatsUpdate, showScoreboard]);
+  }, [isActive, onStatsUpdate]);
 
   return (
     <div className="rocket-game">
-      <div className="rocket-game-frame" aria-label="Rocket game">
+      <div className="rocket-game-frame">
         <canvas ref={canvasRef} className="rocket-game-canvas" />
-      </div>
-      <div className="sr-only" aria-live="polite">
-        {ui.gameOver
-          ? `Game Over. Score ${ui.score}. Best ${ui.best}. Press Space to restart.`
-          : `Rocket game running. Score ${ui.score}. Best ${ui.best}.`}
       </div>
     </div>
   );
 };
 
 export default RocketGame;
-
