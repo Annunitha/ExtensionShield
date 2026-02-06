@@ -223,9 +223,22 @@ def _require_admin_key(request: Request) -> None:
 
 
 def _deep_scan_limit_status(user_id: str) -> Dict[str, Any]:
+    """Get deep scan limit status. Returns unlimited in local/dev environments."""
+    settings = get_settings()
     now = datetime.now(timezone.utc)
     day_key = now.strftime("%Y-%m-%d")
     used = deep_scan_usage.get(user_id, {}).get(day_key, 0)
+    
+    # In development/local, return unlimited
+    if not settings.is_prod():
+        return {
+            "limit": 999999,
+            "used": used,
+            "remaining": 999999,
+            "day_key": day_key,
+            "reset_at": (datetime(now.year, now.month, now.day, tzinfo=timezone.utc) + timedelta(days=1)).isoformat(),
+        }
+    
     remaining = max(0, DAILY_DEEP_SCAN_LIMIT - used)
     reset_at = datetime(now.year, now.month, now.day, tzinfo=timezone.utc) + timedelta(days=1)
     return {
@@ -1156,18 +1169,20 @@ async def trigger_scan(scan_request: ScanRequest, background_tasks: BackgroundTa
             "status": "running",
         }
 
-    # Enforce daily deep-scan limit (placeholder)
-    user_id = _get_user_id(request)
-    limit_status = _deep_scan_limit_status(user_id)
-    if limit_status["remaining"] <= 0:
-        raise HTTPException(
-            status_code=429,
-            detail={
-                "error_code": "DAILY_DEEP_SCAN_LIMIT",
-                "message": "Daily deep-scan limit reached. Cached lookups are still unlimited.",
-                **limit_status,
-            },
-        )
+    # Enforce daily deep-scan limit (placeholder) - skip in development
+    settings = get_settings()
+    if settings.is_prod():
+        user_id = _get_user_id(request)
+        limit_status = _deep_scan_limit_status(user_id)
+        if limit_status["remaining"] <= 0:
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "error_code": "DAILY_DEEP_SCAN_LIMIT",
+                    "message": "Daily deep-scan limit reached. Cached lookups are still unlimited.",
+                    **limit_status,
+                },
+            )
 
     # Consume one deep scan since we are starting a new analysis run
     after_consume = _consume_deep_scan(user_id)
@@ -1248,18 +1263,20 @@ async def upload_and_scan(
     import uuid
     extension_id = str(uuid.uuid4())
 
-    # Enforce daily deep-scan limit (uploads are always deep scans)
+    # Enforce daily deep-scan limit (uploads are always deep scans) - skip in development
+    settings = get_settings()
     user_id = _get_user_id(request)
-    limit_status = _deep_scan_limit_status(user_id)
-    if limit_status["remaining"] <= 0:
-        raise HTTPException(
-            status_code=429,
-            detail={
-                "error_code": "DAILY_DEEP_SCAN_LIMIT",
-                "message": "Daily deep-scan limit reached. Cached lookups are still unlimited.",
-                **limit_status,
-            },
-        )
+    if settings.is_prod():
+        limit_status = _deep_scan_limit_status(user_id)
+        if limit_status["remaining"] <= 0:
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "error_code": "DAILY_DEEP_SCAN_LIMIT",
+                    "message": "Daily deep-scan limit reached. Cached lookups are still unlimited.",
+                    **limit_status,
+                },
+            )
     after_consume = _consume_deep_scan(user_id)
 
     # Save uploaded file to extensions_storage (use sanitized filename)

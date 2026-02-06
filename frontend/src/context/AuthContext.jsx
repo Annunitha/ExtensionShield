@@ -41,6 +41,7 @@ export const AuthProvider = ({ children }) => {
     let isMounted = true;
     let timeoutId = null;
     let fallbackTimeout = null;
+    let oauthCallbackResolved = false;
 
     const load = async () => {
       try {
@@ -55,6 +56,7 @@ export const AuthProvider = ({ children }) => {
         // Handle OAuth callback - check for hash fragments
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
         const error = hashParams.get('error');
         const errorDescription = hashParams.get('error_description');
         
@@ -63,10 +65,81 @@ export const AuthProvider = ({ children }) => {
           setAuthError(errorDescription || error || "Authentication failed");
           // Clean up URL
           window.history.replaceState({}, document.title, window.location.pathname);
+          if (isMounted) setIsLoading(false);
+          return;
         }
         
+        // If we have OAuth tokens in the hash, explicitly set the session
+        if (accessToken && refreshToken) {
+          console.log("Processing OAuth callback...");
+          oauthCallbackResolved = true;
+          
+          try {
+            // Extract all tokens from hash
+            const tokenType = hashParams.get('token_type') || 'bearer';
+            const expiresIn = hashParams.get('expires_in');
+            const expiresAt = hashParams.get('expires_at');
+            
+            // Construct session object for setSession
+            // expires_at should be a Unix timestamp in seconds
+            const sessionObj = {
+              access_token: accessToken,
+              refresh_token: refreshToken,
+              token_type: tokenType,
+            };
+            
+            // Add expires_at if available (as number, not string)
+            if (expiresAt) {
+              sessionObj.expires_at = parseInt(expiresAt, 10);
+            } else if (expiresIn) {
+              // Calculate expires_at from expires_in if not provided
+              sessionObj.expires_at = Math.floor(Date.now() / 1000) + parseInt(expiresIn, 10);
+            }
+            
+            // Set the session explicitly with the tokens from the hash
+            // This will trigger onAuthStateChange with SIGNED_IN event
+            const { data: sessionData, error: setSessionError } = await supabase.auth.setSession(sessionObj);
+            
+            if (setSessionError) {
+              console.error("Failed to set session from OAuth callback:", setSessionError);
+              setAuthError(setSessionError.message || "Failed to complete sign in");
+              if (isMounted) setIsLoading(false);
+            } else if (sessionData?.session) {
+              console.log("OAuth session set successfully, user:", sessionData.session.user?.email);
+              // The onAuthStateChange handler will update the state, but we set it here too for immediate feedback
+              setSession(sessionData.session);
+              setUser(toUiUser(sessionData.session.user));
+              setIsSignInModalOpen(false);
+              setAuthError(null);
+              // Clean up URL hash after successful session set
+              window.history.replaceState({}, document.title, window.location.pathname);
+              if (isMounted) setIsLoading(false);
+            } else {
+              console.warn("OAuth callback: setSession succeeded but no session returned");
+              // Wait a bit and check session again
+              setTimeout(async () => {
+                const { data: checkData } = await supabase.auth.getSession();
+                if (checkData?.session && isMounted) {
+                  setSession(checkData.session);
+                  setUser(toUiUser(checkData.session.user));
+                  setIsSignInModalOpen(false);
+                  setAuthError(null);
+                  window.history.replaceState({}, document.title, window.location.pathname);
+                }
+                if (isMounted) setIsLoading(false);
+              }, 500);
+            }
+          } catch (setSessionErr) {
+            console.error("Error setting OAuth session:", setSessionErr);
+            setAuthError("Failed to complete sign in. Please try again.");
+            if (isMounted) setIsLoading(false);
+          }
+          
+          return;
+        }
+        
+        // If no OAuth callback, get current session normally
         // Get current session with timeout to prevent hanging
-        // Use a race between the session check and a timeout
         const sessionPromise = supabase.auth.getSession();
         let timeoutFired = false;
         
@@ -102,13 +175,6 @@ export const AuthProvider = ({ children }) => {
         
         setSession(data.session || null);
         setUser(toUiUser(data.session?.user));
-        
-        // If we just got a session from OAuth, close the modal
-        if (data.session && accessToken) {
-          setIsSignInModalOpen(false);
-          // Clean up URL hash
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
       } catch (error) {
         console.error("Auth session load failed:", error);
         // Don't crash - just continue without auth
@@ -121,7 +187,7 @@ export const AuthProvider = ({ children }) => {
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
-        if (isMounted) setIsLoading(false);
+        if (isMounted && !oauthCallbackResolved) setIsLoading(false);
       }
     };
 
@@ -142,18 +208,30 @@ export const AuthProvider = ({ children }) => {
         const { data } = supabase.auth.onAuthStateChange((event, nextSession) => {
           if (!isMounted) return;
           
+          console.log("Auth state changed:", event, nextSession ? "has session" : "no session");
+          
           setSession(nextSession || null);
           setUser(toUiUser(nextSession?.user));
           
           // Close modal on successful sign in
           if (event === 'SIGNED_IN' && nextSession) {
+            console.log("User signed in successfully");
             setIsSignInModalOpen(false);
             setAuthError(null);
+            // Clean up URL hash if it still exists
+            if (window.location.hash.includes('access_token')) {
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
           }
           
           // Clear error on sign out
           if (event === 'SIGNED_OUT') {
             setAuthError(null);
+          }
+          
+          // If we were waiting for OAuth callback and now have a session, mark as resolved
+          if (oauthCallbackResolved && nextSession) {
+            setIsLoading(false);
           }
         });
         authStateSubscription = data;

@@ -71,7 +71,6 @@ const RiskBadge = ({ level, score }) => {
   return (
     <div className={`risk-badge ${colorClass}`}>
       <span className="risk-level">{level || "—"}</span>
-      <span className="risk-score">{score ?? "—"}/100</span>
     </div>
   );
 };

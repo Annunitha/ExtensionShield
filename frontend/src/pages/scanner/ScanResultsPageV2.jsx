@@ -163,30 +163,46 @@ const ScanResultsPageV2 = () => {
   }, [extensionIdForIcon]);
 
   // Loading state
-  if (isLoading) {
+  if (isLoading || isLoadingRef.current) {
     return (
       <div className="results-v2">
         <div className="results-v2-loading">
           <div className="loading-pulse" />
-          <h2>Analyzing Extension</h2>
-          <p>Running security scans...</p>
+          <h2>Loading Results</h2>
+          <p>Fetching scan data...</p>
           <code>{scanId}</code>
+          {error && (
+            <div className="loading-error" style={{ marginTop: '1rem', color: '#ef4444' }}>
+              {error}
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
   // No results
-  if (!scanResults && !isLoading) {
+  if (!scanResults && !isLoading && !isLoadingRef.current) {
     return (
       <div className="results-v2">
+        <nav className="results-v2-nav">
+          <Link to="/scan" className="nav-back">← Back</Link>
+        </nav>
         <div className="results-v2-empty">
           <div className="empty-icon">📋</div>
           <h2>No Results Found</h2>
-          <p>This extension hasn't been scanned yet.</p>
+          <p>This extension hasn't been scanned yet or the scan is still in progress.</p>
+          {error && (
+            <div className="empty-error" style={{ marginTop: '1rem', color: '#ef4444' }}>
+              {error}
+            </div>
+          )}
           <div className="empty-actions">
-            <Button onClick={() => navigate("/scanner")} variant="default">
+            <Button onClick={() => navigate("/scan")} variant="default">
               Start Scan
+            </Button>
+            <Button onClick={() => navigate(`/scan/progress/${scanId}`)} variant="outline" style={{ marginLeft: '0.5rem' }}>
+              Check Progress
             </Button>
           </div>
         </div>
@@ -226,8 +242,37 @@ const ScanResultsPageV2 = () => {
     );
   }
 
-  // Extract data from viewModel
-  const { meta, scores, factorsByLayer, keyFindings, permissions, evidenceIndex } = viewModel || {};
+  // Extract data from viewModel - provide safe defaults
+  const { meta, scores, factorsByLayer, keyFindings, permissions, evidenceIndex } = viewModel || {
+    meta: {},
+    scores: {},
+    factorsByLayer: {},
+    keyFindings: [],
+    permissions: {},
+    evidenceIndex: {}
+  };
+
+  // Safety check - if viewModel is null but we have scanResults, show a message
+  if (!viewModel && scanResults) {
+    return (
+      <div className="results-v2">
+        <nav className="results-v2-nav">
+          <Link to="/scan" className="nav-back">← Back</Link>
+        </nav>
+        <div className="results-v2-error">
+          <div className="error-icon">⚠️</div>
+          <h2>Unable to Display Results</h2>
+          <p>The scan data is available but couldn't be formatted for display.</p>
+          <div className="error-actions">
+            <Button onClick={() => navigate("/scan")}>Back to Scanner</Button>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="results-v2">
