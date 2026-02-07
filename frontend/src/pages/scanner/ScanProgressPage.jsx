@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import RocketGame from "../../components/RocketGame";
@@ -25,6 +25,7 @@ const ScanProgressPage = () => {
     error,
     setError,
     scanResults,
+    setScanResults,
     currentExtensionId,
   } = useScan();
   
@@ -35,11 +36,11 @@ const ScanProgressPage = () => {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [gameStarted, setGameStarted] = useState(false); // Track if game has started
   const [gameStats, setGameStats] = useState({ score: 0, best: 0, time: 0 });
   const [gameOver, setGameOver] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const completionShownRef = useRef(false);
   
   // Detect mobile
   useEffect(() => {
@@ -83,7 +84,11 @@ const ScanProgressPage = () => {
           setExtensionName(results.metadata.title);
         }
       } catch (e) {
-        // Silently fail - name will remain null
+        // Silently fail - results might not exist yet (scan still running)
+        // This is expected and not an error
+        if (e.message && !e.message.includes("No scan results found") && !e.message.includes("404")) {
+          console.warn("Failed to fetch extension info:", e);
+        }
       }
     };
     fetchExtensionInfo();
@@ -104,74 +109,65 @@ const ScanProgressPage = () => {
     setScanProgress(stageProgressMap[scanStage] || 0);
   }, [scanStage]);
 
-  // Check scan status on mount and start game if scan is active
+  // Poll scan status while on this page (supports direct refresh/back navigation)
   useEffect(() => {
     if (!scanId) return;
-    
+
+    let cancelled = false;
+    let intervalId = null;
+
     const checkStatus = async () => {
       try {
         const status = await realScanService.checkScanStatus(scanId);
+        if (cancelled) return;
+
         // Check for API key errors (401)
         if (status.error_code === 401 || (status.status === "failed" && (status.error?.includes("API key") || status.error?.includes("Connection is down")))) {
           setError("Connection is down try back in a while");
-          setGameStarted(true);
+          return;
+        }
+        if (status.status === "failed") {
+          // Non-auth failure: surface as error but keep game running
+          if (status.error) setError(status.error);
           return;
         }
         if (status.scanned) {
-          // Scan is complete, try to load results
+          setScanComplete(true);
+          if (!completionShownRef.current) {
+            completionShownRef.current = true;
+            setShowCompletionModal(true);
+          }
+
+          // Best-effort: fetch results and stash in context so "View Results" works immediately.
           try {
             const results = await realScanService.getRealScanResults(scanId);
             if (results) {
-              setScanComplete(true);
+              setScanResults(results);
             }
           } catch (e) {
-            // Results might not be ready yet
+            // Results might not be ready yet (404) — keep polling.
           }
-        } else if (status.status === "running") {
-          // Scan is running, start the game
-          setGameStarted(true);
-        } else {
-          // Scan might not have started yet, but show game anyway
-          setGameStarted(true);
         }
       } catch (e) {
         // Check if error is related to API key
         if (e.message?.includes("401") || e.message?.includes("API key") || e.message?.includes("Connection is down")) {
           setError("Connection is down try back in a while");
         }
-        // If status check fails, show game anyway
-        setGameStarted(true);
       }
     };
-    
+
+    // Kick once immediately and then poll
     checkStatus();
-  }, [scanId]);
+    intervalId = setInterval(checkStatus, 2500);
 
-  // Track when game should start (when scan begins)
-  useEffect(() => {
-    if (isScanning && currentExtensionId === scanId && !gameStarted) {
-      setGameStarted(true);
-    }
-  }, [isScanning, currentExtensionId, scanId, gameStarted]);
+    return () => {
+      cancelled = true;
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [scanId, setError, setScanResults]);
 
-  // Show game if we have an active scan OR if scan is complete but user hasn't exited yet
-  // OR if game has started (to keep it open even if errors occur)
-  // Also show game if scanId matches currentExtensionId (even if not actively scanning)
-  // OR if we have a scanId (default to showing game when on progress page)
-  const shouldShowGame = 
-    (isScanning && currentExtensionId === scanId) || 
-    (scanComplete && !userExited) ||
-    (gameStarted && !userExited) || // Game has started (from status check or scan context)
-    (currentExtensionId === scanId && !userExited) ||
-    (scanId && !userExited); // Default: show game if we have a scanId
-
-  // Track scan completion but don't auto-redirect - let user continue playing
-  useEffect(() => {
-    if (scanResults && !isScanning && currentExtensionId === scanId && !userExited) {
-      setScanComplete(true);
-      setShowCompletionModal(true);
-    }
-  }, [scanResults, isScanning, scanId, currentExtensionId, userExited]);
+  // Always show the game on the progress page until the user exits to view results.
+  const shouldShowGame = Boolean(scanId && !userExited);
 
   // Handle errors with modal (don't close game)
   useEffect(() => {

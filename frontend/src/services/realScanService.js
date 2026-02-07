@@ -156,11 +156,29 @@ class RealScanService {
       if (response.ok) {
         const results = await response.json();
         return this.formatRealResults(results);
-      } else {
-        throw new Error("No scan results found.");
       }
+
+      // 404 is expected while a scan is still running or results haven't been persisted yet.
+      if (response.status === 404) {
+        return null;
+      }
+
+      const data = await response.json().catch(() => ({}));
+      const detail = data?.detail;
+      const message =
+        (typeof detail === "string" && detail) ||
+        (typeof detail === "object" && (detail.message || detail.error || detail.detail)) ||
+        data?.message ||
+        "Failed to fetch scan results";
+      const err = new Error(message);
+      err.status = response.status;
+      err.detail = detail;
+      throw err;
     } catch (error) {
-      console.error("Failed to get real scan results:", error);
+      // Avoid noisy logs for expected "no results yet" behavior
+      if (error?.status !== 404 && error?.message !== "No scan results found.") {
+        console.error("Failed to get real scan results:", error);
+      }
       throw error;
     }
   }

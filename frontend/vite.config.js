@@ -14,7 +14,6 @@ export default defineConfig(({ mode }) => {
         "default-src 'self'",
         "base-uri 'self'",
         "object-src 'none'",
-        "frame-ancestors 'none'",
         "form-action 'self'",
         "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-eval needed for Vite
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // unsafe-inline for React
@@ -22,7 +21,8 @@ export default defineConfig(({ mode }) => {
         "img-src 'self' data: https:",
         "connect-src 'self' https://*.supabase.co https://*.supabase.io http://localhost:* ws://localhost:* wss://localhost:*",
         "frame-src 'self' https://*.supabase.co",
-        "worker-src 'self'",
+        // Vite creates workers from blob: URLs in dev
+        "worker-src 'self' blob:",
         "manifest-src 'self'",
       ].join('; ');
     } else {
@@ -31,7 +31,6 @@ export default defineConfig(({ mode }) => {
         "default-src 'self'",
         "base-uri 'self'",
         "object-src 'none'",
-        "frame-ancestors 'none'",
         "form-action 'self'",
         "upgrade-insecure-requests",
         "script-src 'self' https://static.cloudflareinsights.com", // No unsafe-eval or unsafe-inline in production

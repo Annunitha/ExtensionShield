@@ -150,11 +150,9 @@ const ScannerPage = () => {
   useEffect(() => {
     const loadScans = async () => {
       setLoading(true);
-      console.log("[ScannerPage] Starting to load scans...");
       
       // Safety timeout - force loading to false after 10 seconds
       const safetyTimeout = setTimeout(() => {
-        console.warn("[ScannerPage] Safety timeout triggered - forcing loading to false");
         setLoading(false);
       }, 10000);
       
@@ -166,13 +164,9 @@ const ScannerPage = () => {
         
         const historyPromise = databaseService.getRecentScans(100);
         const history = await Promise.race([historyPromise, timeoutPromise]);
-        
-        console.log("[ScannerPage] Received history:", history?.length || 0, "scans");
-        
+
         if (!history || history.length === 0) {
-          console.log("[ScannerPage] No recent scans found");
           setAllScans([]);
-          setLoading(false);
           return;
         }
 
@@ -261,14 +255,12 @@ const ScannerPage = () => {
           .map((result) => result.status === "fulfilled" ? result.value : null)
           .filter(Boolean);
         
-        console.log("[ScannerPage] Enriched scans:", enrichedScans.length);
         setAllScans(enrichedScans);
       } catch (error) {
-        console.error("[ScannerPage] Failed to load scans:", error);
+        console.error("Failed to load scans:", error);
         setAllScans([]);
       } finally {
         clearTimeout(safetyTimeout);
-        console.log("[ScannerPage] Setting loading to false");
         setLoading(false);
       }
     };

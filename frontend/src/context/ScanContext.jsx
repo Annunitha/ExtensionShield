@@ -153,37 +153,51 @@ export const ScanProvider = ({ children }) => {
           // If the limit check fails, fall back to backend enforcement.
         }
       }
-      
-      // Navigate to progress page
-      navigate(`/scan/progress/${extId}`);
 
+      // Navigate to the progress/game screen ASAP for best UX.
+      // The progress page will poll status until the scan is running/completed.
+      navigate(`/scan/progress/${extId}`);
+      
+      // Check status and trigger scan in the background
       const status = await realScanService.checkScanStatus(extId);
+      let scanTrigger = null;
 
       if (!status.scanned) {
-        const scanTrigger = await realScanService.triggerScan(urlToScan);
+        scanTrigger = await realScanService.triggerScan(urlToScan);
 
         // For cached lookups, backend may return status=completed + already_scanned=true
         if (!scanTrigger.already_scanned && scanTrigger.status !== "running") {
           throw new Error(scanTrigger.error || "Failed to start scan");
         }
-
-        if (!scanTrigger.already_scanned) {
-          await waitForScanCompletion(extId);
-        }
+      }
+      
+      if (!status.scanned && scanTrigger && !scanTrigger.already_scanned) {
+        await waitForScanCompletion(extId);
       }
 
-      const results = await realScanService.getRealScanResults(extId);
+      // Fetch results (may take a moment after status flips to scanned)
+      const maxAttempts = 10;
+      let results = null;
+      for (let i = 0; i < maxAttempts; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        results = await realScanService.getRealScanResults(extId);
+        if (results) break;
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
+
       setScanResults(results);
       setError("");
       setScanStage(null);
       setIsScanning(false);
-      
-      // Refresh stats and history
+
+      // Refresh stats and history (best-effort)
       await loadScanHistory();
       await loadDashboardStats();
-      
-      // Navigate to results page
-      navigate(`/scan/results/${extId}`);
+
+      // IMPORTANT: Do not auto-navigate to results.
+      // The progress page will show a "Scan complete" prompt allowing users
+      // to keep playing or view results.
     } catch (err) {
       // Check for API key errors (401) - show user-friendly message
       let errorMessage = err.message || "Failed to scan extension.";
@@ -237,7 +251,15 @@ export const ScanProvider = ({ children }) => {
 
       await waitForScanCompletion(extensionId);
 
-      const results = await realScanService.getRealScanResults(extensionId);
+      const maxAttempts = 10;
+      let results = null;
+      for (let i = 0; i < maxAttempts; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        results = await realScanService.getRealScanResults(extensionId);
+        if (results) break;
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
       setScanResults(results);
       setError("");
       setScanStage(null);
@@ -245,9 +267,7 @@ export const ScanProvider = ({ children }) => {
 
       await loadScanHistory();
       await loadDashboardStats();
-      
-      // Navigate to results page
-      navigate(`/scan/results/${extensionId}`);
+      // Do not auto-navigate; progress page will prompt.
     } catch (err) {
       setError(err.message || "Failed to upload and scan file.");
       setScanStage(null);
@@ -321,6 +341,7 @@ export const ScanProvider = ({ children }) => {
     isScanning,
     scanStage,
     scanResults,
+    setScanResults,
     error,
     setError,
     currentExtensionId,
