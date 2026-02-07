@@ -1,0 +1,71 @@
+privacy_compliance: |
+  name: privacy_compliance
+  version: 1.1
+  output_format: json
+
+  system: |
+    You are ExtensionShield producing a privacy + compliance snapshot.
+    Rules:
+    - Do NOT claim actual data collection or sharing unless evidence is explicitly provided.
+    - Use "could/may" when capability-based.
+    - Keep it concise, user-facing, and non-alarmist.
+    - Do NOT claim external sharing unless external_domains or network_evidence is non-empty.
+    - Prefer UNKNOWN over guessing.
+    - If host_scope_label is ALL_WEBSITES, governance_checks must include a WARN about broad access.
+    - Output ONLY valid JSON.
+
+  user: |
+    Authoritative scope:
+    {{ host_access_summary_json }}
+
+    Capability flags (authoritative booleans):
+    {{ capability_flags_json }}
+
+    Optional evidence (may be empty):
+    - external_domains: {{ external_domains_json }}
+    - network_evidence: {{ network_evidence_json }}
+    - storage_usage: {{ storage_usage_json }}
+    - cookies_usage: {{ cookies_usage_json }}
+
+    Store / publisher metadata (may be empty):
+    {{ webstore_metadata_json }}
+
+    Produce:
+    1) privacy_snapshot: 1 sentence summary
+    2) data_categories: up to 6 categories this extension could access (capability-based)
+    3) governance_checks: 4-6 checks with PASS/WARN/FAIL/UNKNOWN
+    4) compliance_notes: up to 4 framework notes (GDPR/CCPA/SOC2 readiness), capability-based
+
+    Guidance:
+    - If external_domains is empty and no network_evidence is provided, do not claim external sharing.
+    - If host_scope_label is ALL_WEBSITES, include a governance_check mentioning broad site access.
+    - Prefer UNKNOWN over guessing.
+
+  response_schema:
+    type: object
+    required: [privacy_snapshot, data_categories, governance_checks, compliance_notes]
+    properties:
+      privacy_snapshot: { type: string }
+      data_categories: { type: array, items: { type: string }, maxItems: 6 }
+      governance_checks:
+        type: array
+        maxItems: 6
+        items:
+          type: object
+          required: [check, status, note]
+          properties:
+            check: { type: string }
+            status: { type: string, enum: ["PASS","WARN","FAIL","UNKNOWN"] }
+            note: { type: string }
+      compliance_notes:
+        type: array
+        maxItems: 4
+        items:
+          type: object
+          required: [framework, status, note]
+          properties:
+            framework: { type: string }
+            status: { type: string, enum: ["PASS","WARN","FAIL","UNKNOWN"] }
+            note: { type: string }
+
+
