@@ -148,27 +148,34 @@ const ScannerPage = () => {
 
   // Load all scans on mount
   useEffect(() => {
+    let isMounted = true;
     const loadScans = async () => {
       setLoading(true);
       
-      // Safety timeout - force loading to false after 10 seconds
+      // Safety timeout - force loading to false after 3 seconds for faster UX
+      // This ensures the page renders even if API is slow/unavailable
       const safetyTimeout = setTimeout(() => {
-        setLoading(false);
-      }, 10000);
+        if (isMounted) {
+          setLoading(false);
+        }
+      }, 3000);
       
       try {
-        // Add timeout wrapper to prevent hanging
+        // Add timeout wrapper to prevent hanging - reduced to 5 seconds
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Request timeout")), 30000)
+          setTimeout(() => reject(new Error("Request timeout")), 5000)
         );
         
         const historyPromise = databaseService.getRecentScans(100);
         const history = await Promise.race([historyPromise, timeoutPromise]);
 
         if (!history || history.length === 0) {
-          setAllScans([]);
-          return;
-        }
+          if (isMounted) {
+            setAllScans([]);
+          }
+          // Don't return early - let finally block handle setLoading(false)
+          // This ensures loading state is always cleared
+        } else {
 
         // Fetch full details for each scan to get signals data
         // Use Promise.allSettled to prevent one failure from blocking all
@@ -255,16 +262,28 @@ const ScannerPage = () => {
           .map((result) => result.status === "fulfilled" ? result.value : null)
           .filter(Boolean);
         
-        setAllScans(enrichedScans);
+        if (isMounted) {
+          setAllScans(enrichedScans);
+        }
+        }
       } catch (error) {
         console.error("Failed to load scans:", error);
-        setAllScans([]);
+        if (isMounted) {
+          setAllScans([]);
+        }
       } finally {
         clearTimeout(safetyTimeout);
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
     loadScans();
+    
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Load deep-scan limit status (best-effort)
