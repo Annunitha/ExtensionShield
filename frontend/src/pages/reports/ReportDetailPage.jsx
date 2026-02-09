@@ -9,13 +9,15 @@ import FileViewerModal from "../../components/FileViewerModal";
 import SafetyLabelCard from "../../components/report/SafetyLabelCard";
 import ScenarioGrid from "../../components/report/ScenarioGrid";
 import TopDriversRow from "../../components/report/TopDriversRow";
+import { SummaryPanel, LayerModal, ReportScoreCard, EvidenceDrawer } from "../../components/report";
 import realScanService from "../../services/realScanService";
 import databaseService from "../../services/databaseService";
 import { getRiskLevel } from "../../utils/signalMapper";
 import { 
   normalizeScanResultSafe, 
   validateEvidenceIntegrity,
-  isDevelopmentMode 
+  isDevelopmentMode,
+  gateIdToLayer
 } from "../../utils/normalizeScanResult";
 import "./ReportDetailPage.scss";
 
@@ -30,12 +32,13 @@ const badgeVariantForRisk = (risk) => {
   return "outline";
 };
 
-const ReportViewModelDetail = ({ report, extensionId, onExportPdf }) => {
+const ReportViewModelDetail = ({ report, rawScanResult, extensionId, onExportPdf }) => {
   const [mode, setMode] = useState("simple"); // simple | advanced
+  const [layerModal, setLayerModal] = useState({ open: false, layer: null });
+  const [evidenceDrawer, setEvidenceDrawer] = useState({ open: false, evidenceIds: [] });
 
   const meta = report?.meta || {};
   const scorecard = report?.scorecard || {};
-  const highlights = report?.highlights || {};
   const impactCards = Array.isArray(report?.impact_cards) ? report.impact_cards : [];
   const privacy = report?.privacy_snapshot || {};
   const consumer = report?.consumer_insights || report?.consumerInsights || null;
@@ -44,11 +47,27 @@ const ReportViewModelDetail = ({ report, extensionId, onExportPdf }) => {
   const scenarios = Array.isArray(consumer?.scenarios) ? consumer.scenarios : [];
   const topDrivers = Array.isArray(consumer?.top_drivers) ? consumer.top_drivers : [];
 
-  const why = Array.isArray(highlights?.why_this_score) ? highlights.why_this_score : [];
-  const watch = Array.isArray(highlights?.what_to_watch) ? highlights.what_to_watch : [];
+  const handleEvidenceClick = (evidenceIds) => {
+    setEvidenceDrawer({ open: true, evidenceIds });
+  };
 
-  const handleEvidenceClick = (evidenceId) => {
-    console.log("evidence:", evidenceId);
+  const openLayerModal = (layer) => {
+    setLayerModal({ open: true, layer });
+  };
+
+  const closeLayerModal = () => {
+    setLayerModal({ open: false, layer: null });
+  };
+
+  // Re-normalize data for SummaryPanel/LayerModal if needed
+  // Or just use what we have from ReportViewModel
+  const factorsByLayer = report?.factorsByLayer || { security: [], privacy: [], governance: [] };
+  const scores = report?.scores || {
+    security: { score: report?.security_layer?.score, band: report?.security_layer?.risk_level },
+    privacy: { score: report?.privacy_layer?.score, band: report?.privacy_layer?.risk_level },
+    governance: { score: report?.governance_layer?.score, band: report?.governance_layer?.risk_level },
+    overall: { score: report?.scorecard?.score, band: report?.scorecard?.score_label },
+    reasons: report?.scorecard?.reasons || []
   };
 
   return (
@@ -108,36 +127,42 @@ const ReportViewModelDetail = ({ report, extensionId, onExportPdf }) => {
           </CardContent>
         </Card>
 
-        <div style={{ marginTop: "1rem", display: "grid", gridTemplateColumns: "1fr", gap: "1rem" }}>
-          <Card>
-            <CardHeader>
-              <CardTitle>Why this score</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {why.length > 0 ? (
-                <ul style={{ marginLeft: "1rem", listStyle: "disc" }}>
-                  {why.slice(0, 3).map((item, idx) => <li key={idx}>{item}</li>)}
-                </ul>
-              ) : (
-                <div style={{ opacity: 0.7 }}>No highlights available.</div>
-              )}
-            </CardContent>
-          </Card>
+        {/* Standardized Summary Panel */}
+        <div style={{ marginTop: "1rem" }}>
+          <SummaryPanel 
+            scores={scores}
+            factorsByLayer={factorsByLayer}
+            rawScanResult={rawScanResult}
+            onOpenModal={openLayerModal}
+          />
+        </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>What to watch</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {watch.length > 0 ? (
-                <ul style={{ marginLeft: "1rem", listStyle: "disc" }}>
-                  {watch.slice(0, 2).map((item, idx) => <li key={idx}>{item}</li>)}
-                </ul>
-              ) : (
-                <div style={{ opacity: 0.7 }}>No watch items.</div>
-              )}
-            </CardContent>
-          </Card>
+        {/* Layer Tiles Row */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginTop: "1rem" }}>
+          <div onClick={() => openLayerModal('security')} style={{ cursor: 'pointer' }}>
+            <ReportScoreCard 
+              title="Security"
+              score={scores.security?.score}
+              band={scores.security?.band || 'NA'}
+              contributors={factorsByLayer.security?.slice(0, 2)}
+            />
+          </div>
+          <div onClick={() => openLayerModal('privacy')} style={{ cursor: 'pointer' }}>
+            <ReportScoreCard 
+              title="Privacy"
+              score={scores.privacy?.score}
+              band={scores.privacy?.band || 'NA'}
+              contributors={factorsByLayer.privacy?.slice(0, 2)}
+            />
+          </div>
+          <div onClick={() => openLayerModal('governance')} style={{ cursor: 'pointer' }}>
+            <ReportScoreCard 
+              title="Governance"
+              score={scores.governance?.score}
+              band={scores.governance?.band || 'NA'}
+              contributors={factorsByLayer.governance?.slice(0, 2)}
+            />
+          </div>
         </div>
 
         {consumer && (
@@ -267,6 +292,61 @@ const ReportViewModelDetail = ({ report, extensionId, onExportPdf }) => {
               </CardContent>
             </Card>
           </div>
+        )}
+
+        {/* Evidence Drawer */}
+        <EvidenceDrawer 
+          open={evidenceDrawer.open}
+          evidenceIds={evidenceDrawer.evidenceIds}
+          evidenceIndex={report?.evidenceIndex || {}}
+          onClose={() => setEvidenceDrawer({ open: false, evidenceIds: [] })}
+        />
+
+        {/* Layer Modals */}
+        {layerModal.layer === 'security' && (
+          <LayerModal
+            open={layerModal.open}
+            onClose={closeLayerModal}
+            layer="security"
+            score={scores.security?.score}
+            band={scores.security?.band}
+            factors={factorsByLayer.security}
+            keyFindings={report?.keyFindings?.filter(f => f.layer === 'security') || []}
+            gateResults={rawScanResult?.scoring_v2?.gate_results?.filter(g => g.triggered && gateIdToLayer(g.gate_id) === 'security') || []}
+            layerReasons={scores.reasons?.filter(r => r.toLowerCase().includes('security') || r.toLowerCase().includes('sast')) || []}
+            onViewEvidence={handleEvidenceClick}
+          />
+        )}
+
+        {layerModal.layer === 'privacy' && (
+          <LayerModal
+            open={layerModal.open}
+            onClose={closeLayerModal}
+            layer="privacy"
+            score={scores.privacy?.score}
+            band={scores.privacy?.band}
+            factors={factorsByLayer.privacy}
+            permissions={report?.permissions}
+            keyFindings={report?.keyFindings?.filter(f => f.layer === 'privacy') || []}
+            gateResults={rawScanResult?.scoring_v2?.gate_results?.filter(g => g.triggered && gateIdToLayer(g.gate_id) === 'privacy') || []}
+            layerReasons={scores.reasons?.filter(r => r.toLowerCase().includes('privacy') || r.toLowerCase().includes('exfil')) || []}
+            onViewEvidence={handleEvidenceClick}
+          />
+        )}
+
+        {layerModal.layer === 'governance' && (
+          <LayerModal
+            open={layerModal.open}
+            onClose={closeLayerModal}
+            layer="governance"
+            score={scores.governance?.score}
+            band={scores.governance?.band}
+            factors={factorsByLayer.governance}
+            keyFindings={report?.keyFindings?.filter(f => f.layer === 'governance') || []}
+            gateResults={rawScanResult?.scoring_v2?.gate_results?.filter(g => g.triggered && gateIdToLayer(g.gate_id) === 'governance') || []}
+            layerReasons={scores.reasons?.filter(r => r.toLowerCase().includes('governance') || r.toLowerCase().includes('policy')) || []}
+            onViewEvidence={handleEvidenceClick}
+          />
         )}
       </div>
     </div>
@@ -622,6 +702,7 @@ const ReportDetailPage = () => {
     return (
       <ReportViewModelDetail
         report={uiReportViewModel}
+        rawScanResult={scanResults}
         extensionId={reportId}
         onExportPdf={handleExportPDF}
       />

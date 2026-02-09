@@ -13,7 +13,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from extension_shield.llm.prompts import get_prompts
 from extension_shield.llm.clients.fallback import invoke_with_fallback
-from extension_shield.llm.validators import validate_summary
+from extension_shield.llm.validators import validate_summary, validate_summary_not_generic
 from extension_shield.core.impact_analyzer import ImpactAnalyzer
 
 load_dotenv()
@@ -367,6 +367,12 @@ class SummaryGenerator:
                     host_scope_label=host_scope_label,
                     capability_flags=capability_flags,
                 )
+                
+                # Check for generic filler
+                if validation.ok:
+                    generic_validation = validate_summary_not_generic(summary)
+                    if not generic_validation.ok:
+                        validation = generic_validation
                 
                 if not validation.ok:
                     logger.warning(

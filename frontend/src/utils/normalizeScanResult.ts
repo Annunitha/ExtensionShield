@@ -40,7 +40,79 @@ import type {
   PermissionsVM,
   EvidenceItemVM,
   ConsumerInsights,
+  MetaVM,
+  ScoresVM,
+  FactorsByLayerVM,
+  KeyFindingVM,
+  PermissionsVM,
+  EvidenceItemVM,
 } from './reportTypes';
+
+/**
+ * Normalized highlights for UI display
+ */
+export interface NormalizedHighlights {
+  oneLiner: string;
+  keyPoints: string[];
+  whatToWatch: string[];
+}
+
+/**
+ * normalizeHighlights - Extracts one-liner, key points, and what-to-watch with proper priority
+ * 
+ * Priority for Key Points:
+ * 1. report_view_model.highlights.why_this_score (LLM) filtered for non-empty
+ * 2. report_view_model.highlights.key_points if exists
+ * 3. deterministic fallback from backend highlights
+ * 
+ * Priority for What to watch:
+ * 1. report_view_model.highlights.what_to_watch (LLM) filtered for non-empty
+ * 2. deterministic fallback from backend highlights
+ */
+export function normalizeHighlights(raw: RawScanResult | null | undefined): NormalizedHighlights {
+  const result: NormalizedHighlights = {
+    oneLiner: '',
+    keyPoints: [],
+    whatToWatch: []
+  };
+
+  if (!raw) return result;
+
+  const reportViewModel = raw.report_view_model;
+  const llmSummary = raw.summary || reportViewModel?.summary;
+
+  // 1. One-liner
+  result.oneLiner = reportViewModel?.scorecard?.one_liner 
+    || llmSummary?.one_liner 
+    || llmSummary?.summary
+    || '';
+
+  // 2. Key Points (why_this_score)
+  const llmWhy = reportViewModel?.highlights?.why_this_score || llmSummary?.why_this_score || llmSummary?.key_findings;
+  const llmKeyPoints = reportViewModel?.highlights?.key_points;
+  
+  if (Array.isArray(llmWhy) && llmWhy.length > 0) {
+    result.keyPoints = llmWhy.filter(p => p && typeof p === 'string' && p.trim() !== '');
+  } else if (Array.isArray(llmKeyPoints) && llmKeyPoints.length > 0) {
+    result.keyPoints = llmKeyPoints.filter(p => p && typeof p === 'string' && p.trim() !== '');
+  }
+
+  // 3. What to watch
+  const llmWatch = reportViewModel?.highlights?.what_to_watch || llmSummary?.what_to_watch || llmSummary?.recommendations;
+  if (Array.isArray(llmWatch) && llmWatch.length > 0) {
+    result.whatToWatch = llmWatch.filter(p => p && typeof p === 'string' && p.trim() !== '');
+  }
+
+  // If oneLiner is empty, use a placeholder based on decision
+  if (!result.oneLiner) {
+    const decision = raw.scoring_v2?.decision || raw.decision_v2 || raw.governance_verdict;
+    if (decision === 'BLOCK') result.oneLiner = 'This extension was blocked by automated security checks.';
+    else if (decision === 'WARN' || decision === 'NEEDS_REVIEW') result.oneLiner = 'This extension requires manual review before use.';
+    else result.oneLiner = 'This extension has been analyzed for security, privacy, and compliance risks.';
+  }
+
+  return result;
+}
 
 // =============================================================================
 // HELPER FUNCTIONS
@@ -66,23 +138,21 @@ function normalizeDecision(decision?: string | null): Decision {
 }
 
 /**
- * Get score band from decision
+ * Get score band from risk_level string (from backend scoring_v2)
+ * Maps: "low" -> GOOD, "medium" -> WARN, "high"/"critical" -> BAD
  */
-function bandFromDecision(decision: Decision): ScoreBand {
-  switch (decision) {
-    case 'ALLOW':
-      return 'GOOD';
-    case 'WARN':
-      return 'WARN';
-    case 'BLOCK':
-      return 'BAD';
-    default:
-      return 'NA';
-  }
+function bandFromRiskLevel(riskLevel: string | null | undefined): ScoreBand | null {
+  if (!riskLevel) return null;
+  const lower = riskLevel.toLowerCase();
+  if (lower === 'low' || lower === 'none') return 'GOOD';
+  if (lower === 'medium') return 'WARN';
+  if (lower === 'high' || lower === 'critical') return 'BAD';
+  return null;
 }
 
 /**
  * Get score band from score value
+ * Thresholds: >= 80 => LOW (GOOD), >= 60 => MEDIUM (WARN), else => HIGH (BAD)
  */
 function bandFromScore(score: number | null): ScoreBand {
   if (score === null) return 'NA';
@@ -98,6 +168,60 @@ function severityToFindingLevel(severity: number): FindingSeverity {
   if (severity >= 0.7) return 'high';
   if (severity >= 0.4) return 'medium';
   return 'low';
+}
+
+/**
+ * Map gate ID to layer classification
+ * Used for Key Findings categorization and gate-based band overrides
+ */
+export function gateIdToLayer(gateId: string): 'security' | 'privacy' | 'governance' {
+  const upper = gateId.toUpperCase();
+  // Security gates
+  if (upper === 'CRITICAL_SAST' || upper === 'VT_MALWARE') {
+    return 'security';
+  }
+  // Privacy gates
+  if (upper === 'SENSITIVE_EXFIL') {
+    return 'privacy';
+  }
+  // Governance gates
+  if (upper === 'PURPOSE_MISMATCH' || upper === 'TOS_VIOLATION') {
+    return 'governance';
+  }
+  // Default to security for unknown gates
+  return 'security';
+}
+
+/**
+ * Map gate decision to band severity
+ * BLOCK -> BAD, WARN/NEEDS_REVIEW -> WARN, ALLOW -> null (no override)
+ */
+function gateDecisionToBand(decision: string | null | undefined): ScoreBand | null {
+  if (!decision) return null;
+  const upper = (decision || '').toUpperCase();
+  if (upper === 'BLOCK') return 'BAD';
+  if (upper === 'WARN' || upper === 'NEEDS_REVIEW') return 'WARN';
+  return null;
+}
+
+/**
+ * Compute effective band by combining score-based band with gate-based band
+ * Uses ordering: GOOD < WARN < BAD
+ * Returns the more severe of the two bands
+ */
+function computeEffectiveBand(scoreBand: ScoreBand, gateBand: ScoreBand | null): ScoreBand {
+  if (!gateBand || gateBand === 'NA') return scoreBand;
+  if (scoreBand === 'NA') return gateBand;
+  
+  // Order: GOOD < WARN < BAD
+  const severity: Record<ScoreBand, number> = {
+    'GOOD': 1,
+    'WARN': 2,
+    'BAD': 3,
+    'NA': 0,
+  };
+  
+  return severity[gateBand] > severity[scoreBand] ? gateBand : scoreBand;
 }
 
 /**
@@ -268,14 +392,15 @@ function buildKeyFindings(
 ): KeyFindingVM[] {
   const findings: KeyFindingVM[] = [];
   
-  // 1. Add hard gates as high severity findings
+  // 1. Add hard gates as high severity findings with correct layer classification
   const hardGates = scoringV2?.hard_gates_triggered || [];
   hardGates.forEach((gate: string) => {
+    const layer = gateIdToLayer(gate);
     findings.push({
       title: gate,
       severity: 'high',
-      layer: 'security', // Hard gates are typically security-related
-      summary: `Security hard gate triggered: ${gate}`,
+      layer: layer,
+      summary: `${layer.charAt(0).toUpperCase() + layer.slice(1)} hard gate triggered: ${gate}`,
       evidenceIds: [],
     });
   });
@@ -491,9 +616,6 @@ export function normalizeScanResult(raw: RawScanResult): ReportViewModel {
     scoringV2?.decision || raw.decision_v2 || raw.governance_verdict
   );
   
-  // Use decision-based bands if decision exists, otherwise score-based
-  const useBandFromDecision = decision !== null;
-  
   // Get scores from scoring_v2 or fallback to legacy (also support formatted camelCase)
   const securityScore = scoringV2?.security_score ?? raw.security_score ?? raw.overall_security_score ?? formatted.securityScore ?? null;
   const privacyScore = scoringV2?.privacy_score ?? raw.privacy_score ?? null;
@@ -501,25 +623,86 @@ export function normalizeScanResult(raw: RawScanResult): ReportViewModel {
   const overallScore = scoringV2?.overall_score ?? raw.overall_security_score ?? formatted.securityScore ?? null;
   const overallConfidence = scoringV2?.overall_confidence ?? raw.overall_confidence ?? null;
   
+  // Helper: get band for a layer (prefer risk_level from scoring_v2, fallback to score thresholds)
+  const getLayerBand = (layer: RawLayerScore | null | undefined, score: number | null): ScoreBand => {
+    const riskLevelBand = bandFromRiskLevel(layer?.risk_level);
+    if (riskLevelBand !== null) return riskLevelBand;
+    return bandFromScore(score);
+  };
+  
+  // Helper: get overall band (prefer overall risk_level, fallback to score thresholds)
+  const getOverallBand = (): ScoreBand => {
+    const riskLevelBand = bandFromRiskLevel(scoringV2?.risk_level);
+    if (riskLevelBand !== null) return riskLevelBand;
+    return bandFromScore(overallScore);
+  };
+  
+  // Compute gate-based bands per layer
+  // Gate severity should visually affect the corresponding layer tile (without changing numeric score)
+  const gateResults = scoringV2?.gate_results || [];
+  const gateBandsByLayer: Record<'security' | 'privacy' | 'governance', ScoreBand | null> = {
+    security: null,
+    privacy: null,
+    governance: null,
+  };
+  
+  // Process gate results: if ANY BLOCK-level gate belongs to a layer -> BAD
+  // Else if ANY WARN/NEEDS_REVIEW gate belongs to that layer -> WARN
+  for (const gateResult of gateResults) {
+    if (!gateResult.gate_id || !gateResult.triggered) continue;
+    
+    const layer = gateIdToLayer(gateResult.gate_id);
+    const gateBand = gateDecisionToBand(gateResult.decision);
+    
+    if (gateBand) {
+      // Use the most severe gate band for this layer
+      const current = gateBandsByLayer[layer];
+      if (!current || current === 'NA') {
+        gateBandsByLayer[layer] = gateBand;
+      } else {
+        // Order: GOOD < WARN < BAD
+        const severity: Record<ScoreBand, number> = {
+          'GOOD': 1,
+          'WARN': 2,
+          'BAD': 3,
+          'NA': 0,
+        };
+        if (severity[gateBand] > severity[current]) {
+          gateBandsByLayer[layer] = gateBand;
+        }
+      }
+    }
+  }
+  
+  // Compute effective bands: max(scoreBand, gateBand) using ordering GOOD < WARN < BAD
+  const securityScoreBand = getLayerBand(scoringV2?.security_layer, securityScore);
+  const privacyScoreBand = getLayerBand(scoringV2?.privacy_layer, privacyScore);
+  const governanceScoreBand = getLayerBand(scoringV2?.governance_layer, governanceScore);
+  const overallScoreBand = getOverallBand();
+  
+  const securityEffectiveBand = computeEffectiveBand(securityScoreBand, gateBandsByLayer.security);
+  const privacyEffectiveBand = computeEffectiveBand(privacyScoreBand, gateBandsByLayer.privacy);
+  const governanceEffectiveBand = computeEffectiveBand(governanceScoreBand, gateBandsByLayer.governance);
+  
   const scores: ScoresVM = {
     security: {
       score: securityScore,
-      band: useBandFromDecision ? bandFromDecision(decision) : bandFromScore(securityScore),
+      band: securityEffectiveBand, // effectiveBand includes gate override
       confidence: scoringV2?.security_layer?.confidence ?? null,
     },
     privacy: {
       score: privacyScore,
-      band: useBandFromDecision ? bandFromDecision(decision) : bandFromScore(privacyScore),
+      band: privacyEffectiveBand, // effectiveBand includes gate override
       confidence: scoringV2?.privacy_layer?.confidence ?? null,
     },
     governance: {
       score: governanceScore,
-      band: useBandFromDecision ? bandFromDecision(decision) : bandFromScore(governanceScore),
+      band: governanceEffectiveBand, // effectiveBand includes gate override
       confidence: scoringV2?.governance_layer?.confidence ?? null,
     },
     overall: {
       score: overallScore,
-      band: useBandFromDecision ? bandFromDecision(decision) : bandFromScore(overallScore),
+      band: overallScoreBand, // Overall doesn't get gate override (it's a composite)
       confidence: overallConfidence,
     },
     decision,

@@ -9,14 +9,14 @@ import {
   FactorBars,
   EvidenceDrawer,
   PermissionsPanel,
-  ExecutiveSummary,
-  WhyThisScore,
+  SummaryPanel,
+  LayerModal,
 } from "../../components/report";
 import FileViewerModal from "../../components/FileViewerModal";
 import StatusMessage from "../../components/StatusMessage";
 import { useScan } from "../../context/ScanContext";
 import realScanService from "../../services/realScanService";
-import { normalizeScanResultSafe, validateEvidenceIntegrity } from "../../utils/normalizeScanResult";
+import { normalizeScanResultSafe, validateEvidenceIntegrity, gateIdToLayer } from "../../utils/normalizeScanResult";
 import "./ScanResultsPageV2.scss";
 
 /**
@@ -48,6 +48,12 @@ const ScanResultsPageV2 = () => {
   const [evidenceDrawer, setEvidenceDrawer] = useState({
     open: false,
     evidenceIds: [],
+  });
+
+  // Layer modal state
+  const [layerModal, setLayerModal] = useState({
+    open: false,
+    layer: null, // 'security' | 'privacy' | 'governance'
   });
 
   // Track which scanId we've loaded to prevent double loading
@@ -175,6 +181,14 @@ const ScanResultsPageV2 = () => {
 
   const closeEvidenceDrawer = () => {
     setEvidenceDrawer({ open: false, evidenceIds: [] });
+  };
+
+  const openLayerModal = (layer) => {
+    setLayerModal({ open: true, layer });
+  };
+
+  const closeLayerModal = () => {
+    setLayerModal({ open: false, layer: null });
   };
 
   const baseURL = import.meta.env.VITE_API_URL || "";
@@ -438,31 +452,43 @@ const ScanResultsPageV2 = () => {
 
       {/* Main Content */}
       <main className="results-v2-main">
-        {/* Executive Summary - First, sets context */}
-        {(scanResults?.executiveSummary || (scores?.reasons && scores.reasons.length > 0)) && (
-          <ExecutiveSummary 
-            summary={scanResults?.executiveSummary || null}
-            reasons={scores?.reasons || []}
-          />
-        )}
+        {/* Summary Panel - Single merged summary */}
+        <SummaryPanel 
+          scores={scores}
+          factorsByLayer={factorsByLayer}
+          rawScanResult={scanResults}
+          onOpenModal={openLayerModal}
+        />
 
-        {/* Score Cards Row - Equal Prominence */}
+        {/* Score Cards Row - Clickable tiles */}
         <section className="scores-section">
-          <ReportScoreCard 
-            title="Security"
-            score={scores?.security?.score}
-            band={scores?.security?.band || 'NA'}
-            confidence={scores?.security?.confidence}
-            contributors={factorsByLayer?.security?.slice(0, 2) || []}
-          />
-          {scores?.privacy?.score != null ? (
+          <div 
+            className="score-card-wrapper"
+            onClick={() => scores?.security?.score != null && openLayerModal('security')}
+            style={{ cursor: scores?.security?.score != null ? 'pointer' : 'default' }}
+          >
             <ReportScoreCard 
-              title="Privacy"
-              score={scores.privacy.score}
-              band={scores.privacy.band || 'NA'}
-              confidence={scores.privacy.confidence}
-              contributors={factorsByLayer?.privacy?.slice(0, 2) || []}
+              title="Security"
+              score={scores?.security?.score}
+              band={scores?.security?.band || 'NA'}
+              confidence={scores?.security?.confidence}
+              contributors={factorsByLayer?.security?.slice(0, 2) || []}
             />
+          </div>
+          {scores?.privacy?.score != null ? (
+            <div 
+              className="score-card-wrapper"
+              onClick={() => openLayerModal('privacy')}
+              style={{ cursor: 'pointer' }}
+            >
+              <ReportScoreCard 
+                title="Privacy"
+                score={scores.privacy.score}
+                band={scores.privacy.band || 'NA'}
+                confidence={scores.privacy.confidence}
+                contributors={factorsByLayer?.privacy?.slice(0, 2) || []}
+              />
+            </div>
           ) : (
             <div className="report-score-card band-na score-card-coming-soon">
               <div className="score-card-header">
@@ -476,13 +502,19 @@ const ScanResultsPageV2 = () => {
             </div>
           )}
           {scores?.governance?.score != null ? (
-            <ReportScoreCard 
-              title="Governance"
-              score={scores.governance.score}
-              band={scores.governance.band || 'NA'}
-              confidence={scores.governance.confidence}
-              contributors={factorsByLayer?.governance?.slice(0, 2) || []}
-            />
+            <div 
+              className="score-card-wrapper"
+              onClick={() => openLayerModal('governance')}
+              style={{ cursor: 'pointer' }}
+            >
+              <ReportScoreCard 
+                title="Governance"
+                score={scores.governance.score}
+                band={scores.governance.band || 'NA'}
+                confidence={scores.governance.confidence}
+                contributors={factorsByLayer?.governance?.slice(0, 2) || []}
+              />
+            </div>
           ) : (
             <div className="report-score-card band-na score-card-coming-soon">
               <div className="score-card-header">
@@ -497,63 +529,12 @@ const ScanResultsPageV2 = () => {
           )}
         </section>
 
-        {/* Why This Score - Top Contributors Explanation */}
-        <WhyThisScore 
-          scores={scores}
-          factorsByLayer={factorsByLayer}
-          onViewEvidence={openEvidenceDrawer}
-        />
-
-        {/* Key Findings - Issues that matter */}
+        {/* Key Findings - Top 2-3 items only */}
         {keyFindings && keyFindings.length > 0 && (
           <KeyFindings 
             findings={keyFindings}
             onViewEvidence={openEvidenceDrawer}
           />
-        )}
-
-        {/* Detailed Analysis - Full Width */}
-        {/* Security Analysis */}
-        {factorsByLayer?.security && factorsByLayer.security.length > 0 && (
-          <section className="analysis-section">
-            <FactorBars 
-              title="Security Analysis"
-              icon="🛡️"
-              factors={factorsByLayer.security}
-              onViewEvidence={openEvidenceDrawer}
-            />
-          </section>
-        )}
-
-        {/* Privacy Analysis - Equal Treatment */}
-        {factorsByLayer?.privacy && factorsByLayer.privacy.length > 0 && (
-          <section className="analysis-section">
-            <FactorBars 
-              title="Privacy Analysis"
-              icon="🔒"
-              factors={factorsByLayer.privacy}
-              onViewEvidence={openEvidenceDrawer}
-            />
-          </section>
-        )}
-
-        {/* Governance Analysis - Equal Treatment */}
-        {factorsByLayer?.governance && factorsByLayer.governance.length > 0 && (
-          <section className="analysis-section">
-            <FactorBars 
-              title="Governance Analysis"
-              icon="📋"
-              factors={factorsByLayer.governance}
-              onViewEvidence={openEvidenceDrawer}
-            />
-          </section>
-        )}
-
-        {/* Permissions */}
-        {permissions && Object.keys(permissions).length > 0 && (
-          <section className="analysis-section">
-            <PermissionsPanel permissions={permissions} />
-          </section>
         )}
       </main>
 
@@ -573,6 +554,59 @@ const ScanResultsPageV2 = () => {
         extensionId={meta?.extensionId || scanId}
         onGetFileContent={getFileContent}
       />
+
+      {/* Layer Modals */}
+      {layerModal.layer === 'security' && (
+        <LayerModal
+          open={layerModal.open}
+          onClose={closeLayerModal}
+          layer="security"
+          score={scores?.security?.score}
+          band={scores?.security?.band || 'NA'}
+          factors={factorsByLayer?.security || []}
+          powerfulPermissions={[
+            ...(permissions?.highRiskPermissions || []).filter(p => 
+              ['debugger', 'webRequestBlocking', 'nativeMessaging', 'proxy'].includes(p)
+            ),
+            ...(permissions?.broadHostPatterns || []),
+          ]}
+          keyFindings={keyFindings?.filter(f => f.layer === 'security') || []}
+          gateResults={scanResults?.scoring_v2?.gate_results?.filter(g => g.triggered && gateIdToLayer(g.gate_id) === 'security') || []}
+          layerReasons={scores?.reasons?.filter(r => r.toLowerCase().includes('security') || r.toLowerCase().includes('sast') || r.toLowerCase().includes('malware')) || []}
+          onViewEvidence={openEvidenceDrawer}
+        />
+      )}
+
+      {layerModal.layer === 'privacy' && (
+        <LayerModal
+          open={layerModal.open}
+          onClose={closeLayerModal}
+          layer="privacy"
+          score={scores?.privacy?.score}
+          band={scores?.privacy?.band || 'NA'}
+          factors={factorsByLayer?.privacy || []}
+          permissions={permissions}
+          keyFindings={keyFindings?.filter(f => f.layer === 'privacy') || []}
+          gateResults={scanResults?.scoring_v2?.gate_results?.filter(g => g.triggered && gateIdToLayer(g.gate_id) === 'privacy') || []}
+          layerReasons={scores?.reasons?.filter(r => r.toLowerCase().includes('privacy') || r.toLowerCase().includes('exfil') || r.toLowerCase().includes('tracking')) || []}
+          onViewEvidence={openEvidenceDrawer}
+        />
+      )}
+
+      {layerModal.layer === 'governance' && (
+        <LayerModal
+          open={layerModal.open}
+          onClose={closeLayerModal}
+          layer="governance"
+          score={scores?.governance?.score}
+          band={scores?.governance?.band || 'NA'}
+          factors={factorsByLayer?.governance || []}
+          keyFindings={keyFindings?.filter(f => f.layer === 'governance') || []}
+          gateResults={scanResults?.scoring_v2?.gate_results?.filter(g => g.triggered && gateIdToLayer(g.gate_id) === 'governance') || []}
+          layerReasons={scores?.reasons?.filter(r => r.toLowerCase().includes('governance') || r.toLowerCase().includes('policy') || r.toLowerCase().includes('tos') || r.toLowerCase().includes('disclosure')) || []}
+          onViewEvidence={openEvidenceDrawer}
+        />
+      )}
     </div>
   );
 };

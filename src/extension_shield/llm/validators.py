@@ -47,6 +47,31 @@ def _get_text_fields(output: Dict[str, Any], field_names: List[str]) -> List[str
     return texts
 
 
+def validate_summary_not_generic(output: Dict[str, Any]) -> ValidationResult:
+    """
+    Validate that the summary does not contain generic filler text.
+    """
+    reasons: List[str] = []
+    
+    banned_phrases = [
+        "score is based on",
+        "code signals",
+        "store metadata",
+        "this analysis",
+        "review the notes below",
+        "capabilities indicate what it could do",
+    ]
+    
+    all_text_fields = _get_text_fields(output, ["one_liner", "summary", "why_this_score", "key_findings", "what_to_watch", "recommendations"])
+    all_text = " ".join(all_text_fields).lower()
+    
+    for phrase in banned_phrases:
+        if phrase in all_text:
+            reasons.append(f"Summary contains generic filler phrase: '{phrase}'")
+            
+    return ValidationResult(ok=len(reasons) == 0, reasons=reasons)
+
+
 def validate_summary(
     output: Dict[str, Any],
     score_label: str,
@@ -71,8 +96,16 @@ def validate_summary(
     # Rule 1: score_label LOW RISK must not contain "high risk" or "critical"
     if score_label == "LOW RISK":
         all_text = " ".join(_get_text_fields(output, ["one_liner", "summary", "why_this_score", "key_findings", "what_to_watch", "recommendations"]))
-        if _contains_any(all_text, ["high risk", "critical", "critical risk", "high-risk"]):
-            reasons.append("LOW RISK score_label but output contains 'high risk' or 'critical'")
+        alarm_words = ["high risk", "critical", "critical risk", "high-risk", "avoid", "severe"]
+        if _contains_any(all_text, alarm_words):
+            reasons.append(f"LOW RISK score_label but output contains alarm words: {[w for w in alarm_words if w in all_text.lower()]}")
+            
+    # Additional Rule: HIGH RISK score_label must not contain "safe" or "low risk"
+    if score_label == "HIGH RISK":
+        all_text = " ".join(_get_text_fields(output, ["one_liner", "summary", "why_this_score", "key_findings", "what_to_watch", "recommendations"]))
+        safe_words = ["low risk", "low-risk", "safe", "no concerns", "no risk", "nothing to worry about"]
+        if _contains_any(all_text, safe_words):
+            reasons.append(f"HIGH RISK score_label but output contains safe words: {[w for w in safe_words if w in all_text.lower()]}")
 
     # Rule 2: host_scope_label ALL_WEBSITES must be mentioned in what_to_watch
     if host_scope_label == "ALL_WEBSITES":

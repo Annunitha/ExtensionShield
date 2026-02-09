@@ -170,6 +170,13 @@ class ScoringEngine:
             webstore_stats=signal_pack.webstore_stats,
             user_count=user_count,
         )
+        # Coverage sanity: track whether SAST coverage is missing.
+        # If no files were scanned and no findings exist, we treat coverage as limited
+        # and will apply a deterministic cap + review decision later.
+        sast_missing_coverage = (
+            signal_pack.sast.files_scanned == 0
+            and not signal_pack.sast.deduped_findings
+        )
         
         # Privacy factors (use network signal pack for exfiltration analysis)
         privacy_factors = normalize_privacy_factors(
@@ -239,6 +246,15 @@ class ScoringEngine:
             governance_score * layer_weights.get("governance", 0.2)
         )
         
+        # Coverage sanity: cap overall_score when critical analyzers are missing.
+        # Missing SAST coverage must not look like a perfectly safe 100/100.
+        coverage_reasons: List[str] = []
+        if sast_missing_coverage and overall_score > 80:
+            overall_score = 80
+            coverage_reasons.append(
+                "Limited analysis coverage (SAST missing) — review recommended"
+            )
+        
         logger.debug(
             "Layer scores: security=%d, privacy=%d, governance=%d, overall=%d",
             security_score,
@@ -277,6 +293,13 @@ class ScoringEngine:
             blocking_gates=blocking_gates,
             warning_gates=warning_gates,
         )
+        
+        # Apply coverage sanity: if coverage is limited and we didn't already
+        # BLOCK, ensure at least NEEDS_REVIEW and surface a clear reason.
+        if coverage_reasons:
+            reasons.extend(coverage_reasons)
+            if decision != Decision.BLOCK:
+                decision = Decision.NEEDS_REVIEW
         
         # =====================================================================
         # STEP 6: Build final result

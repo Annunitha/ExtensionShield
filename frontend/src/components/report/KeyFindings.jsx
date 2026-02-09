@@ -41,16 +41,29 @@ const KeyFindings = ({
     }
   };
 
+  // Sort by severity (high > medium > low) and take top 2-3
+  const sortedFindings = [...findings].sort((a, b) => {
+    const severityOrder = { high: 3, medium: 2, low: 1 };
+    return (severityOrder[b.severity] || 0) - (severityOrder[a.severity] || 0);
+  }).slice(0, 3);
+
+  // Don't render if no findings after filtering
+  if (sortedFindings.length === 0) {
+    return null;
+  }
+
   return (
     <section className="key-findings-section">
       <h2 className="section-title">
         <span className="title-icon">🔍</span>
         Key Findings
-        <span className="findings-count">{findings.length}</span>
+        {findings.length > sortedFindings.length && (
+          <span className="findings-count">{sortedFindings.length} of {findings.length}</span>
+        )}
       </h2>
 
       <div className="findings-list">
-        {findings.map((finding, idx) => (
+        {sortedFindings.map((finding, idx) => (
           <div 
             key={idx} 
             className={`finding-item severity-${finding.severity}`}

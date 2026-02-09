@@ -11,6 +11,7 @@ from unittest.mock import patch, MagicMock
 from extension_shield.llm.validators import (
     ValidationResult,
     validate_summary,
+    validate_summary_not_generic,
     validate_impact,
     validate_privacy,
 )
@@ -125,6 +126,44 @@ class TestValidateSummary:
             host_scope_label="ALL_WEBSITES",
             capability_flags={"can_read_cookies": True, "can_read_history": True},
         )
+        assert result.ok
+
+    def test_low_risk_forbids_alarm_words(self):
+        """Test that LOW RISK score_label forbids alarm words like 'severe' or 'avoid'."""
+        output = {
+            "one_liner": "Avoid this extension as it has severe issues.",
+            "why_this_score": ["Severe security flaws"],
+        }
+        result = validate_summary(
+            output=output,
+            score_label="LOW RISK",
+            host_scope_label="NONE",
+            capability_flags={},
+        )
+        assert not result.ok
+        assert any(word in str(result.reasons).lower() for word in ["avoid", "severe"])
+
+
+class TestValidateSummaryNotGeneric:
+    """Tests for validate_summary_not_generic validator."""
+
+    def test_generic_filler_rejected(self):
+        """Test that generic filler phrases are rejected."""
+        output = {
+            "one_liner": "Score is based on permissions and code signals.",
+            "why_this_score": ["This analysis checked metadata", "Review the notes below"],
+        }
+        result = validate_summary_not_generic(output)
+        assert not result.ok
+        assert len(result.reasons) >= 3
+
+    def test_non_generic_passes(self):
+        """Test that non-generic summary passes."""
+        output = {
+            "one_liner": "This extension manages your tabs efficiently.",
+            "why_this_score": ["Requests 'tabs' permission for functionality", "No data sent to external servers"],
+        }
+        result = validate_summary_not_generic(output)
         assert result.ok
 
 

@@ -249,7 +249,8 @@ describe('normalizeScanResult', () => {
       expect(result.scores.overall.score).toBe(74);
       expect(result.scores.overall.confidence).toBe(0.85);
       expect(result.scores.decision).toBe('ALLOW');
-      expect(result.scores.overall.band).toBe('GOOD');
+      // Score 74 < 80, so band is WARN (score-based, not decision-based)
+      expect(result.scores.overall.band).toBe('WARN');
       
       // Factors
       expect(result.factorsByLayer.security.length).toBeGreaterThan(0);
@@ -318,24 +319,28 @@ describe('normalizeScanResult', () => {
   });
 
   describe('band calculation', () => {
-    it('should use decision-based bands when decision exists', () => {
+    it('should use score-based bands (decision does not affect band)', () => {
+      // Score 50 < 60, so band is BAD regardless of decision
       const allowResult = normalizeScanResult({
         extension_id: 'test',
         scoring_v2: { decision: 'ALLOW', overall_score: 50 },
       });
-      expect(allowResult.scores.overall.band).toBe('GOOD');
+      expect(allowResult.scores.overall.band).toBe('BAD');
+      expect(allowResult.scores.decision).toBe('ALLOW'); // Decision is separate
 
+      // Score 70 >= 60 and < 80, so band is WARN
       const warnResult = normalizeScanResult({
         extension_id: 'test',
         scoring_v2: { decision: 'NEEDS_REVIEW', overall_score: 70 },
       });
       expect(warnResult.scores.overall.band).toBe('WARN');
 
+      // Score 80 >= 80, so band is GOOD (even if decision is BLOCK - gate override would apply to layer, not overall)
       const blockResult = normalizeScanResult({
         extension_id: 'test',
         scoring_v2: { decision: 'BLOCK', overall_score: 80 },
       });
-      expect(blockResult.scores.overall.band).toBe('BAD');
+      expect(blockResult.scores.overall.band).toBe('GOOD');
     });
 
     it('should use score-based bands when no decision exists', () => {
@@ -417,6 +422,53 @@ describe('normalizeScanResult', () => {
       expect(result.keyFindings.some(f => f.title === 'High')).toBe(true);
       // Low severity factor should not be (severity < 0.4)
       expect(result.keyFindings.some(f => f.title === 'Low')).toBe(false);
+    });
+
+    it('should map gates to correct layers (SENSITIVE_EXFIL -> privacy)', () => {
+      const result = normalizeScanResult({
+        extension_id: 'test',
+        scoring_v2: {
+          decision: 'WARN',
+          hard_gates_triggered: ['SENSITIVE_EXFIL'],
+          security_layer: { factors: [] },
+          privacy_layer: { factors: [] },
+          governance_layer: { factors: [] },
+        },
+      });
+      
+      const sensitiveExfilFinding = result.keyFindings.find(f => f.title === 'SENSITIVE_EXFIL');
+      expect(sensitiveExfilFinding).toBeDefined();
+      expect(sensitiveExfilFinding?.layer).toBe('privacy');
+    });
+
+    it('should apply gate-based band override to layer tiles (CRITICAL_SAST -> Security tile becomes BAD)', () => {
+      const result = normalizeScanResult({
+        extension_id: 'test',
+        scoring_v2: {
+          decision: 'BLOCK',
+          security_score: 75, // Score would normally be WARN (75 >= 60)
+          security_layer: {
+            score: 75,
+            risk_level: 'medium', // Would map to WARN
+            factors: [],
+          },
+          privacy_layer: { factors: [] },
+          governance_layer: { factors: [] },
+          gate_results: [
+            {
+              gate_id: 'CRITICAL_SAST',
+              decision: 'BLOCK',
+              triggered: true,
+              confidence: 0.9,
+              reasons: ['Critical SAST finding detected'],
+            },
+          ],
+        },
+      });
+      
+      // Security tile should be BAD (from gate) even though score is 75 (WARN)
+      expect(result.scores.security.score).toBe(75); // Numeric score unchanged
+      expect(result.scores.security.band).toBe('BAD'); // Band overridden by gate
     });
 
     it('should fallback to decision_reasons when no factors', () => {

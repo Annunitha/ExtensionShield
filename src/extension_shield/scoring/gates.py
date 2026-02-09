@@ -131,6 +131,28 @@ class GateConfig:
 DEFAULT_GATE_CONFIG = GateConfig()
 
 
+# ============================================================================
+# CRITICAL HIGH SAST PATTERNS
+# ============================================================================
+#
+# Some HIGH/ERROR SAST findings are dangerous enough to BLOCK even if the
+# total high-count is below the usual threshold. We match a small, pragmatic
+# allowlist of patterns in check_id/message/category/code_snippet and, when
+# seen in a HIGH/ERROR finding with sufficient confidence, we treat them as
+# critical-high signals.
+CRITICAL_HIGH_SAST_PATTERNS: Tuple[re.Pattern[str], ...] = tuple(
+    re.compile(p, re.IGNORECASE)
+    for p in (
+        r"eval\(|new\s+Function",  # dynamic code execution
+        r"keylog|keylogger|credential|password|login|form\s*(capture|intercept)",  # credential / keylogger
+        r"cookie|token|session",  # cookie/token/session exfil
+        r"remote\s*(script|code)|load\s*(remote|external)",  # remote code/script load
+        r"webrequestblocking|modify\s*(headers|request|response)",  # request/response interception
+        r"externally_connectable|message\s*relay|postMessage",  # broad relay / message relay
+    )
+)
+
+
 # =============================================================================
 # HARD GATES CLASS
 # =============================================================================
@@ -317,6 +339,8 @@ class HardGates:
         high_count = 0
         critical_findings: List[SastFindingNormalized] = []
         high_findings: List[SastFindingNormalized] = []
+        critical_high_hits = 0
+        critical_high_example_ids: List[str] = []
         
         for finding in sast.deduped_findings:
             severity = finding.severity.upper()
@@ -326,11 +350,26 @@ class HardGates:
             elif severity in ("HIGH", "ERROR"):
                 high_count += 1
                 high_findings.append(finding)
+                
+                # Check for critical-high patterns in HIGH/ERROR findings
+                text_parts = [
+                    finding.check_id,
+                    getattr(finding, "message", "") or "",
+                    getattr(finding, "category", "") or "",
+                    getattr(finding, "code_snippet", "") or "",
+                ]
+                combined_text = " ".join(t for t in text_parts if t)
+                for pattern in CRITICAL_HIGH_SAST_PATTERNS:
+                    if pattern.search(combined_text):
+                        critical_high_hits += 1
+                        critical_high_example_ids.append(finding.check_id)
+                        break
         
         # Check BLOCK thresholds
         should_block = (
             critical_count >= self.config.sast_critical_block_count or
-            high_count >= self.config.sast_high_block_count
+            high_count >= self.config.sast_high_block_count or
+            critical_high_hits >= 1
         )
         
         if should_block and sast.confidence >= self.config.sast_confidence_threshold:
@@ -350,6 +389,11 @@ class HardGates:
                 ])
                 reasons.append(f"{high_count} high-severity SAST finding(s) detected")
             
+            if critical_high_hits >= 1:
+                reasons.append(
+                    f"Critical HIGH SAST pattern matched in {critical_high_hits} high-severity finding(s)"
+                )
+            
             return GateResult(
                 gate_id=gate_id,
                 decision="BLOCK",
@@ -360,8 +404,10 @@ class HardGates:
                 details={
                     "critical_count": critical_count,
                     "high_count": high_count,
+                    "critical_high_hits": critical_high_hits,
                     "critical_findings": [f.check_id for f in critical_findings[:5]],
                     "high_findings": [f.check_id for f in high_findings[:5]],
+                    "critical_high_example_ids": critical_high_example_ids[:5],
                 },
             )
         

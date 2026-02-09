@@ -1,6 +1,6 @@
 summary_generation: |
   name: summary_generation
-  version: 4
+  version: 5
   output_format: json
 
   system: |
@@ -13,6 +13,10 @@ summary_generation: |
       - If host_scope_label is SINGLE_DOMAIN or MULTI_DOMAIN, you MAY say "limited".
     - Use calm, factual language.
     - Output ONLY valid JSON.
+    - FORBIDDEN PHRASES: "score is based on", "code signals", "store metadata", "this analysis", "review the notes below", "capabilities indicate what it could do".
+    - MUST BE SPECIFIC: Reference concrete signals (permissions, host scope, gate IDs like SENSITIVE_EXFIL, VT counts, etc.).
+    - NO METHODOLOGY: Do not explain how scoring works.
+    - LENGTH LIMITS: one_liner <= 120 chars, bullets <= 90 chars.
 
   user: |
     Source of truth (do not override):
@@ -30,25 +34,30 @@ summary_generation: |
     - webstore: {{ webstore_result_json }}
     - sast: {{ sast_result_json }}
 
-    Output:
-    - one_liner: 1 sentence
-    - why_this_score: exactly 3 short bullets
-    - what_to_watch: up to 2 short bullets (host_scope_label ALL_WEBSITES must be mentioned here)
-    - confidence: LOW/MEDIUM/HIGH
+    Instructions:
+    - one_liner: 1 sentence (<= 120 chars). Focus on the primary impact.
+    - why_this_score: exactly 3 bullets (each <= 90 chars). Each bullet MUST mention at least one concrete signal from inputs. If no signal for a bullet, return empty string.
+    - what_to_watch: up to 2 bullets (each <= 90 chars). Mention broad host access here if applicable.
+
+    Output Schema:
+    {
+      "one_liner": "Short summary",
+      "why_this_score": ["Specific point 1", "Specific point 2", "Specific point 3"],
+      "what_to_watch": ["Watch item 1", "Watch item 2"]
+    }
 
   response_schema:
     type: object
-    required: [one_liner, why_this_score, what_to_watch, confidence]
+    required: [one_liner, why_this_score, what_to_watch]
     properties:
-      one_liner: { type: string }
+      one_liner: { type: string, maxLength: 120 }
       why_this_score:
         type: array
-        items: { type: string }
+        items: { type: string, maxLength: 90 }
         minItems: 3
         maxItems: 3
       what_to_watch:
         type: array
-        items: { type: string }
+        items: { type: string, maxLength: 90 }
         minItems: 0
         maxItems: 2
-      confidence: { type: string, enum: ["LOW","MEDIUM","HIGH"] }

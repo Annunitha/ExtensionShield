@@ -109,23 +109,23 @@ const RiskDial = ({
       const progress = i / (tickCount - 1); // 0 to 1
       const angle = startAngle + progress * angleSpan;
       
-      // Color based on position: green -> yellow -> orange -> red
+      // Color zones aligned with score-band thresholds:
+      // riskProgress 0–0.20 = GREEN (score 80-100, LOW RISK)
+      // riskProgress 0.20–0.40 = YELLOW (score 60-80, MEDIUM)
+      // riskProgress 0.40–0.60 = ORANGE (score 40-60, ELEVATED)
+      // riskProgress 0.60–1.00 = RED (score 0-40, HIGH RISK)
       let color;
-      if (progress < 0.33) {
-        // Green zone (low risk / high score)
-        const t = progress / 0.33;
+      if (progress < 0.20) {
+        const t = progress / 0.20;
         color = interpolateColor('#22C55E', '#84CC16', t);
-      } else if (progress < 0.5) {
-        // Yellow zone
-        const t = (progress - 0.33) / 0.17;
+      } else if (progress < 0.40) {
+        const t = (progress - 0.20) / 0.20;
         color = interpolateColor('#84CC16', '#EAB308', t);
-      } else if (progress < 0.75) {
-        // Orange zone
-        const t = (progress - 0.5) / 0.25;
+      } else if (progress < 0.60) {
+        const t = (progress - 0.40) / 0.20;
         color = interpolateColor('#EAB308', '#F97316', t);
       } else {
-        // Red zone (high risk / low score)
-        const t = (progress - 0.75) / 0.25;
+        const t = (progress - 0.60) / 0.40;
         color = interpolateColor('#F97316', '#EF4444', t);
       }
       
@@ -143,19 +143,38 @@ const RiskDial = ({
 
   const displayScore = Math.round(animatedScore);
   
-  // Get risk label based on score
-  const getRiskLabel = () => {
-    if (clampedScore >= 80) return 'Low Risk';
-    if (clampedScore >= 60) return 'Medium';
-    if (clampedScore >= 40) return 'Elevated';
-    return 'High Risk';
+  // Shared helper: derive band from score using backend-aligned thresholds
+  // score >= 80 => GOOD (Low risk)
+  // 60 <= score < 80 => WARN (Medium risk)
+  // score < 60 => BAD (High risk)
+  const getBandFromScore = (scoreValue) => {
+    if (scoreValue == null) return 'NA';
+    if (scoreValue >= 80) return 'GOOD';
+    if (scoreValue >= 60) return 'WARN';
+    return 'BAD';
   };
 
-  const getRiskColor = () => {
-    if (clampedScore >= 80) return '#22C55E';
-    if (clampedScore >= 60) return '#EAB308';
-    if (clampedScore >= 40) return '#F97316';
-    return '#EF4444';
+  // Prefer explicit band prop; if it's NA, derive from score
+  const effectiveBand = band === 'NA' ? getBandFromScore(clampedScore) : band;
+
+  // Get risk label based on band
+  const getRiskLabel = () => {
+    switch (effectiveBand) {
+      case 'GOOD': return 'Low Risk';
+      case 'WARN': return 'Medium Risk';
+      case 'BAD':  return 'High Risk';
+      default:     return 'N/A';
+    }
+  };
+
+  // Band-driven color: use effectiveBand as source of truth for marker/needle
+  const getBandColor = () => {
+    switch (effectiveBand) {
+      case 'GOOD': return '#22C55E'; // green
+      case 'WARN': return '#EAB308'; // yellow/amber
+      case 'BAD':  return '#EF4444'; // red
+      default:     return '#6B7280'; // neutral for NA
+    }
   };
 
   const center = size / 2;
@@ -248,7 +267,7 @@ const RiskDial = ({
             cx={center}
             cy={center - innerRadius + size * 0.02}
             r={size * 0.02}
-            fill={getRiskColor()}
+            fill={getBandColor()}
             style={{ filter: `url(#${uniqueId}-glow)` }}
           />
         </g>
@@ -257,10 +276,10 @@ const RiskDial = ({
       {/* Center content */}
       <div className="dial-center-content">
         <div className="dial-main-label">{label}</div>
-        <div className="dial-score" style={{ color: getRiskColor() }}>
+        <div className="dial-score" style={{ color: getBandColor() }}>
           {score === null ? '--' : displayScore}
         </div>
-        <div className="dial-risk-label" style={{ color: getRiskColor() }}>
+        <div className="dial-risk-label" style={{ color: getBandColor() }}>
           {getRiskLabel()}
         </div>
       </div>
