@@ -87,17 +87,30 @@ class DatabaseService {
 
   /**
    * Get scan result by extension ID
+   * UNIFIED: Always calls GET /api/scan/results/${extensionId}
+   * Returns payload as-is from backend (no transformation)
    */
   async getScanResult(extensionId) {
     try {
-      const response = await fetch(`${this.API_BASE_URL}/scan/results/${extensionId}`);
+      const url = `${this.API_BASE_URL}/scan/results/${extensionId}`;
+      console.log("RESULTS_ENDPOINT", url);
+      
+      const response = await fetch(url, {
+        headers: {
+          ...this._authHeaders(),
+        },
+      });
+      
       if (!response.ok) {
         if (response.status === 404) {
           return null;
         }
         throw new Error("Failed to fetch scan result");
       }
-      return await response.json();
+      
+      const data = await response.json();
+      console.log("TOP_KEYS", Object.keys(data));
+      return data;
     } catch (error) {
       console.error("Error fetching scan result:", error);
       return null;
