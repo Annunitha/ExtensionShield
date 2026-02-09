@@ -20,6 +20,21 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 
+def _summary_contradicts_label(text: str, score_label: str) -> bool:
+    """
+    Check if executive summary text contradicts the authoritative score_label.
+
+    Returns True if the text contains wording that conflicts with the risk label,
+    e.g. a LOW RISK label paired with "high risk" language.
+    """
+    t = (text or "").lower()
+    if score_label == "LOW RISK":
+        return any(x in t for x in ["high risk", "high-risk", "critical", "avoid", "severe"])
+    if score_label == "HIGH RISK":
+        return any(x in t for x in ["low risk", "low-risk", "safe", "no concerns", "no risk"])
+    return False
+
+
 class SummaryGenerator:
     """Generates executive summaries from all analysis results."""
 
@@ -182,8 +197,9 @@ class SummaryGenerator:
             score_label = self._map_risk_label(scoring_result.risk_level.value)
         except Exception as exc:
             logger.warning("Failed to compute score context for summary: %s", exc)
+            # Default to MEDIUM RISK on error — never lie about risk direction.
             score = 0
-            score_label = "HIGH RISK"
+            score_label = "MEDIUM RISK"
 
         return score, score_label
 
@@ -358,6 +374,21 @@ class SummaryGenerator:
                         "; ".join(validation.reasons),
                     )
                     # Return deterministic fallback
+                    from extension_shield.core.report_view_model import _fallback_executive_summary
+                    return _fallback_executive_summary(
+                        score=score,
+                        score_label=score_label,
+                        host_scope_label=host_scope_label,
+                    )
+
+                # ── Post-LLM sanity check: one_liner must not contradict score_label ──
+                # Check BOTH keys: new format uses "one_liner", old format uses "summary"
+                one_liner = summary.get("one_liner", "") or summary.get("summary", "")
+                if _summary_contradicts_label(one_liner, score_label):
+                    logger.warning(
+                        "LLM one_liner contradicts score_label (%s). Discarding LLM summary.",
+                        score_label,
+                    )
                     from extension_shield.core.report_view_model import _fallback_executive_summary
                     return _fallback_executive_summary(
                         score=score,
