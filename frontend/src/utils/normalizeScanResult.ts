@@ -542,8 +542,8 @@ export function normalizeScanResult(raw: RawScanResult): ReportViewModel {
   // Build evidence index
   const evidenceIndex = buildEvidenceIndex(raw);
 
-  // Map consumer insights (from backend report_view_model)
-  const consumerRaw = raw?.report_view_model?.consumer_insights;
+  // Map consumer insights (from backend report_view_model or top-level fallback)
+  const consumerRaw = raw?.report_view_model?.consumer_insights || raw?.consumer_insights;
   const consumerInsights: ConsumerInsights | undefined = (
     consumerRaw && typeof consumerRaw === 'object'
   ) ? {
