@@ -662,6 +662,7 @@ def _extension_icon_placeholder_response() -> Response:
         headers={
             "Cache-Control": "public, max-age=3600",
             "Access-Control-Allow-Origin": "*",
+            "X-Extension-Icon-Source": "placeholder",
         },
     )
 

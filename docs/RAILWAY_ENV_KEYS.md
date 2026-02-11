@@ -1,109 +1,73 @@
-# Railway Environment Variables – ExtensionShield
+# Railway environment variables (source of truth: project `.env`)
 
-Use this list to configure your **Railway** project. Set these in the Railway dashboard: **Project → Variables** (or **Service → Variables**).
-
----
-
-## Build-time (Docker build – frontend)
-
-These are passed as **build arguments** during `docker build`. Set them in Railway as **Variables**; they are used when building the frontend inside the image.
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| **VITE_SUPABASE_URL** | Yes | Supabase project URL (e.g. `https://xxxx.supabase.co`). From Dashboard → Settings → API → Project URL. |
-| **VITE_SUPABASE_ANON_KEY** | Yes | Supabase **anon** (public) key. From Dashboard → Settings → API → anon key. |
-| **VITE_API_BASE_URL** | No | Optional. Leave empty when frontend is served by the same app (default). Set only if the API is on a different URL. |
+Use these **exact** variable names in Railway. The frontend (Vite) only sees variables that start with `VITE_`, and they are baked in at **build time**.
 
 ---
 
-## Runtime (backend / server)
+## Why Supabase broke
 
-These are read by the FastAPI app at **runtime**. Railway injects **PORT** automatically; do **not** set PORT yourself.
+- The **backend** uses `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+- The **frontend** needs `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+- `VITE_SUPABASE_ANON_KEY` is the **anon/public** key from Supabase (safe for the browser). It is **not** the same as `SUPABASE_SERVICE_ROLE_KEY` (server-only, never expose to the client).
+- If you only copied root `.env` into Railway, you had no `VITE_*` vars, so the frontend build had no Supabase config.
 
-### Required (production with Supabase)
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| **SUPABASE_URL** | Yes* | Same as VITE_SUPABASE_URL. Backend uses this for DB and Auth. |
-| **SUPABASE_SERVICE_ROLE_KEY** | Yes* | **Service role** key (secret). From Dashboard → Settings → API → “API settings” → service_role. Never use anon key here. |
-| **DB_BACKEND** | Yes* | Set to `supabase` when using Supabase. Omit or set to `sqlite` for SQLite (not recommended in prod). |
-| **LLM_PROVIDER** | Yes | One of: `openai`, `watsonx`, `rits`, `ollama`, `groq`. |
-| **OPENAI_API_KEY** | If OpenAI | Required when LLM_PROVIDER=openai or in fallback chain. |
-
-*Required when you use Supabase for the database (recommended for production).
-
-### LLM (choose one provider or use fallback)
-
-| Variable | When | Description |
-|----------|------|-------------|
-| **OPENAI_API_KEY** | openai | OpenAI API key. |
-| **LLM_MODEL** | Optional | e.g. `gpt-4o`, `gpt-4o-mini`. Defaults vary by provider. |
-| **LLM_FALLBACK_CHAIN** | Optional | Comma-separated, e.g. `openai,watsonx`. |
-| **LLM_PROVIDER_PRIMARY** | Optional | Override primary in fallback chain. |
-| **LLM_TIMEOUT_SECONDS** | Optional | Default `25`. |
-| **LLM_MAX_RETRIES_PER_PROVIDER** | Optional | Default `1`. |
-| **WATSONX_API_KEY** | watsonx | IBM Watsonx API key. |
-| **WATSONX_PROJECT_ID** | watsonx | Watsonx project ID. |
-| **WATSONX_API_ENDPOINT** | watsonx | e.g. `https://us-south.ml.cloud.ibm.com`. |
-| **RITS_API_KEY** | rits | Red Hat RITS API key. |
-| **RITS_API_BASE_URL** | rits | RITS API base URL. |
-| **GROQ_API_KEY** | groq | Groq API key. |
-| **OLLAMA_BASE_URL** | ollama | e.g. `http://localhost:11434`. |
-
-### Supabase (optional overrides)
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| **SUPABASE_SCAN_RESULTS_TABLE** | No | Default `scan_results`. |
-| **SUPABASE_JWT_AUD** | No | Default `authenticated`. |
-
-### Application
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| **PORT** | No | **Do not set.** Railway sets this automatically. |
-| **ENV** / **APP_ENV** / **EXTENSION_SHIELD_ENV** | No | `local` \| `dev` \| `prod`. Affects validation and defaults. |
-| **EXTENSION_STORAGE_PATH** | No | Default in Docker: `/app/extensions_storage`. |
-| **DATABASE_PATH** | No | Default in Docker: `/app/data/extension-shield.db`. Used only when DB_BACKEND=sqlite. |
-| **STORAGE_BACKEND** | No | `local` \| `supabase`. Default `local`. |
-| **CORS_ORIGINS** | No | Comma-separated origins, or `*`. e.g. `https://extensionshield.com,https://xxx.railway.app`. |
-| **CSP_REPORT_ONLY** | No | `true` to use report-only CSP. Default `false`. |
-| **RATE_LIMIT_ENABLED** | No | `true` \| `false`. Default `true`. |
-| **ADMIN_API_KEY** | No | Optional admin API key. |
-| **TELEMETRY_ADMIN_KEY** | No | Optional telemetry admin key. |
-
-### Optional integrations
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| **VIRUSTOTAL_API_KEY** | No | VirusTotal API key for malware checks. |
-| **CHROMESTATS_API_KEY** | No | Chrome Stats API key. |
-| **CHROMESTATS_API_URL** | No | Default `https://chrome-stats.com`. |
-| **CHROME_VERSION** | No | Default `118.0`. |
+**Fix:** Add the two `VITE_*` vars below. Get the anon key from: [Supabase Dashboard](https://app.supabase.com) → your project → **Settings** → **API** → copy the **anon** / **public** key (not the service_role key).
 
 ---
 
-## Checklist for Railway
+## Copy-paste list for Railway
 
-1. **Build-time (must be set before first deploy):**
-   - [ ] `VITE_SUPABASE_URL`
-   - [ ] `VITE_SUPABASE_ANON_KEY`
+Set these in Railway (Project or Service → Variables). Values below match your `.env` where present; the one you must fill from Supabase is noted.
 
-2. **Runtime – Supabase:**
-   - [ ] `SUPABASE_URL` (same value as VITE_SUPABASE_URL)
-   - [ ] `SUPABASE_SERVICE_ROLE_KEY`
-   - [ ] `DB_BACKEND=supabase`
+### Backend (API / server)
 
-3. **Runtime – LLM:**
-   - [ ] `LLM_PROVIDER` (e.g. `openai`)
-   - [ ] `OPENAI_API_KEY` (if using OpenAI)
+| Variable | Example / note |
+|----------|----------------|
+| `ENV` | `dev` (or `prod` for production) |
+| `PORT` | Railway sets this; optional override `8007` |
+| `DB_BACKEND` | `supabase` |
+| `SUPABASE_URL` | `https://exmwrsrwhzvxcnhcflwb.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Your existing service role key (from .env) |
+| `DATABASE_URL` | Your existing Postgres URL (from .env) |
+| `LLM_PROVIDER` | `openai` |
+| `LLM_MODEL` | `gpt-4o` |
+| `LLM_FALLBACK_CHAIN` | `openai,groq` |
+| `OPENAI_API_KEY` | Your OpenAI key (from .env) |
+| `GROQ_API_KEY` | Your Groq key (from .env) |
+| `WATSONX_API_KEY` | (from .env if using WatsonX) |
+| `WATSONX_API_ENDPOINT` | `https://us-south.ml.cloud.ibm.com` |
+| `WATSONX_PROJECT_ID` | (from .env if using WatsonX) |
+| `VIRUSTOTAL_API_KEY` | (from .env if using VirusTotal) |
+| `EXTENSION_STORAGE_PATH` | e.g. `/app/extensions_storage` (or Railway volume path) |
+| `DATABASE_PATH` | e.g. `/app/data/extension-shield.db` (used if DB_BACKEND were sqlite) |
+| `CORS_ORIGINS` | Optional. e.g. `https://your-app.up.railway.app` or `*` |
+| `RATE_LIMIT_ENABLED` | Optional. `true` or `false` |
+| `CSP_REPORT_ONLY` | Optional. `false` (or `true` for report-only CSP) |
 
-4. **Optional:**
-   - [ ] `CORS_ORIGINS` (your production + Railway domain)
-   - [ ] `ENV=production` or `APP_ENV=production`
-   - [ ] `VIRUSTOTAL_API_KEY`
-   - [ ] `LLM_FALLBACK_CHAIN`, `LLM_MODEL`, etc.
+### Frontend (must be set so they exist at build time)
 
-**Do not set:** `PORT` (Railway sets it).
+| Variable | Value / note |
+|----------|--------------|
+| `VITE_SUPABASE_URL` | **Same as SUPABASE_URL:** `https://exmwrsrwhzvxcnhcflwb.supabase.co` |
+| `VITE_SUPABASE_ANON_KEY` | **From Supabase Dashboard:** Settings → API → **anon** (public) key. Not the service_role key. |
 
-See also: `scripts/check_railway_env.sh`, `.env.example`, `frontend/.env.example`, and `docs/SUPABASE_KEYS_AND_CLI.md`.
+---
+
+## One-line summary
+
+- Backend: keep all your current keys (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, LLM keys, etc.).
+- Frontend: add **`VITE_SUPABASE_URL`** (same as `SUPABASE_URL`) and **`VITE_SUPABASE_ANON_KEY`** (anon key from Supabase API settings). Without these two, the frontend build has no Supabase config and you get the “Supabase is not configured” message.
+
+---
+
+## Optional (from .env.example / code)
+
+- `ADMIN_API_KEY`, `TELEMETRY_ADMIN_KEY` – if you use admin/telemetry endpoints  
+- `SUPABASE_SCAN_RESULTS_TABLE` – default `scan_results`  
+- `SUPABASE_JWT_AUD` – default `authenticated`  
+- `LLM_PROVIDER_PRIMARY`, `LLM_TIMEOUT_SECONDS`, `LLM_MAX_RETRIES_PER_PROVIDER`  
+- `OLLAMA_BASE_URL`, `RITS_API_BASE_URL`, `RITS_API_KEY` – if using those providers  
+- `VITE_API_URL` – only if frontend calls a different API origin (usually leave unset when served by same backend)  
+- `VITE_DEBUG_AUTH` – optional frontend auth debugging  
+- `VITE_CSP_REPORT_ONLY` – optional CSP report-only  
+- `CHROMESTATS_API_KEY`, `CHROMESTATS_API_URL`, `CHROME_VERSION` – if using Chrome stats

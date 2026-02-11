@@ -648,6 +648,22 @@ class Database:
             print(f"Error clearing results: {e}")
             return False
 
+    def delete_scans_before(self, cutoff_iso: str) -> int:
+        """Delete scan_results with timestamp strictly before cutoff (for cleanup). Returns count deleted."""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "DELETE FROM scan_results WHERE timestamp < ?",
+                    (cutoff_iso,),
+                )
+                n = cursor.rowcount
+                self._update_statistics()
+                return n
+        except Exception as e:
+            print(f"Error delete_scans_before: {e}")
+            return 0
+
     def _update_statistics(self):
         """Update aggregated statistics."""
         try:
@@ -1174,6 +1190,22 @@ class SupabaseDatabase:
         except Exception as e:
             print(f"Error clearing results (Supabase): {e}")
             return False
+
+    def delete_scans_before(self, cutoff_iso: str) -> int:
+        """Delete scan_results with scanned_at strictly before cutoff (for cleanup). Returns count deleted."""
+        try:
+            resp = (
+                self.client.table(self.table_scan_results)
+                .delete()
+                .lt("scanned_at", cutoff_iso)
+                .execute()
+            )
+            # PostgREST may return deleted rows in resp.data
+            data = getattr(resp, "data", None) or []
+            return len(data) if isinstance(data, list) else 0
+        except Exception as e:
+            print(f"Error delete_scans_before (Supabase): {e}")
+            return 0
 
     def get_risk_distribution(self) -> Dict[str, int]:
         dist = {"high": 0, "medium": 0, "low": 0}
