@@ -1,4 +1,4 @@
-.PHONY: help format lint test api frontend clean install analyze docker-build docker-up docker-down docker-logs migrate start validate-postgres lint-migrations supabase-diff supabase-push supabase-start supabase-stop supabase-reset supabase-migration-up
+.PHONY: help format lint test api frontend clean install analyze docker-build docker-up docker-down docker-logs migrate start validate-postgres clear-scans lint-migrations supabase-diff supabase-push supabase-start supabase-stop supabase-reset supabase-migration-up
 
 # Default target - show help
 help:
@@ -24,6 +24,7 @@ help:
 	@echo "  make migrate         - Run Supabase migrations (safe, prod only)"
 	@echo "  make start           - Run migrations (if Supabase) then start API"
 	@echo "  make validate-postgres - Validate local dev pulls from Supabase Postgres"
+	@echo "  make clear-scans       - Delete all scan results from DB (Supabase: set DB_BACKEND=supabase)"
 	@echo "  make analyze URL=... - Analyze extension from Chrome Web Store URL"
 	@echo "  make analyze-file FILE=... - Analyze local CRX/ZIP file"
 	@echo ""
@@ -88,6 +89,12 @@ api:
 validate-postgres:
 	@echo "Validating Supabase Postgres connection and scan_results..."
 	uv run python scripts/validate_postgres_local.py
+
+# Delete all scan results from DB. For Supabase: make clear-scans DB_BACKEND=supabase (requires .env)
+clear-scans:
+	@echo "Clearing all scan results from database..."
+	DB_BACKEND=$${DB_BACKEND:-supabase} PYTHONPATH=src uv run python scripts/clear_all_scans.py
+	@echo "Done."
 
 # Run Supabase migrations (prod only, safe to run multiple times)
 migrate:
