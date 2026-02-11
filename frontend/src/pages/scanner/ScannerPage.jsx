@@ -181,8 +181,6 @@ const ScannerPage = () => {
   const [allScans, setAllScans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortConfig, setSortConfig] = useState({ key: "timestamp", direction: "desc" });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [hoveredRow, setHoveredRow] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
   const tableWrapperRef = useRef(null);
@@ -191,7 +189,13 @@ const ScannerPage = () => {
   const [deepScanLimit, setDeepScanLimit] = useState(null);
   const [cachedAvailable, setCachedAvailable] = useState(false);
 
-  const initialLimit = 25;
+  // Teaser: show only 10 latest scans on /scan. Full browsing is at /scan/history.
+  const TEASER_LIMIT = 10;
+
+  // Clean the URL input on mount so previous extension ID doesn't persist
+  useEffect(() => {
+    setUrl("");
+  }, [setUrl]);
 
   // Shared load so we can refetch for live updates (visibility + polling)
   const loadScans = React.useCallback(async (showLoading = true) => {
@@ -201,7 +205,7 @@ const ScannerPage = () => {
         setTimeout(() => reject(new Error("Request timeout")), 10000)
       );
       const history = await Promise.race([
-        databaseService.getRecentScans(initialLimit),
+        databaseService.getRecentScans(TEASER_LIMIT),
         timeoutPromise,
       ]);
       if (!history || history.length === 0) {
@@ -351,7 +355,7 @@ const ScannerPage = () => {
     };
   }, [allScans]);
 
-  // Handle prefilled URL from homepage
+  // Legacy: if navigated with prefillUrl state (e.g. from old bookmarks), use it
   useEffect(() => {
     if (location.state?.prefillUrl) {
       setUrl(location.state.prefillUrl);
@@ -454,11 +458,9 @@ const ScannerPage = () => {
       });
     }
 
-    const startIndex = (currentPage - 1) * rowsPerPage;
-    return sorted.slice(startIndex, startIndex + rowsPerPage);
-  }, [allScans, sortConfig, currentPage, rowsPerPage]);
-
-  const totalPages = Math.ceil(allScans.length / rowsPerPage);
+    // Teaser: always show first TEASER_LIMIT rows, no pagination
+    return sorted.slice(0, TEASER_LIMIT);
+  }, [allScans, sortConfig]);
 
   // Actions: require sign-in before viewing report (then redirect to report after auth)
   const handleViewReport = (extId) => {
@@ -773,65 +775,24 @@ const ScannerPage = () => {
                 </table>
               </div>
 
-              {/* Pagination */}
+              {/* Teaser footer: point users to full history */}
               <div className="table-pagination">
                 <div className="pagination-info">
-                  Showing {(currentPage - 1) * rowsPerPage + 1} to{" "}
-                  {Math.min(currentPage * rowsPerPage, allScans.length)} of {allScans.length} rows
+                  Showing {Math.min(sortedAndPaginatedScans.length, allScans.length)} most recent scans
                 </div>
-                <div className="pagination-controls">
-                  <button
-                    className="pagination-btn"
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5" />
-                    </svg>
-                  </button>
-                  <button
-                    className="pagination-btn"
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M15 18l-6-6 6-6" />
-                    </svg>
-                  </button>
-                  <button
-                    className="pagination-btn"
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M9 18l6-6-6-6" />
-                    </svg>
-                  </button>
-                  <button
-                    className="pagination-btn"
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M13 17l5-5-5-5M6 17l5-5-5-5" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="pagination-rows">
-                  <label>Rows per page:</label>
-                  <select
-                    value={rowsPerPage}
-                    onChange={(e) => {
-                      setRowsPerPage(Number(e.target.value));
-                      setCurrentPage(1);
-                    }}
-                  >
-                    <option value={10}>10</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                </div>
+                <button
+                  className="view-all-history-btn"
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      sessionStorage.setItem("auth:returnTo", "/scan/history");
+                      openSignInModal();
+                      return;
+                    }
+                    navigate("/scan/history");
+                  }}
+                >
+                  View All History →
+                </button>
               </div>
             </>
           )}
