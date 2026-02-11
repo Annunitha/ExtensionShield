@@ -60,40 +60,52 @@ const ScanResultsPageV2 = () => {
   const loadedScanIdRef = useRef(null);
   const isLoadingRef = useRef(false);
 
-  // Reset loaded ref when scanId changes
+  // Clear stale local state immediately when scanId changes so previous
+  // extension's report never flashes while the new one loads.
   useEffect(() => {
     if (loadedScanIdRef.current !== scanId) {
       loadedScanIdRef.current = null;
       isLoadingRef.current = false;
+      // Reset local derived state so stale data from the previous extension
+      // is never shown while the new extension's data loads.
+      setViewModel(null);
+      setRawData(null);
+      setNormalizationError(null);
+      setShowHeroIcon(true);
     }
   }, [scanId]);
 
-  // Load results and normalize
+  // Load results - always fetch from API when scanId changes
   useEffect(() => {
+    let cancelled = false;
+
     const loadResults = async () => {
-      // Prevent double loading: check if we're already loading or if we've already loaded this scanId
+      // Prevent double loading for the same scanId
       if (isLoadingRef.current || loadedScanIdRef.current === scanId) {
         return;
       }
 
-      // Only load if we don't have results or if the current extension ID doesn't match
-      if (!scanResults || currentExtensionId !== scanId) {
-        isLoadingRef.current = true;
-        setIsLoading(true);
-        try {
-          await loadResultsById(scanId);
+      isLoadingRef.current = true;
+      setIsLoading(true);
+
+      try {
+        const data = await loadResultsById(scanId);
+        if (!cancelled) {
           loadedScanIdRef.current = scanId;
-        } finally {
+        }
+      } finally {
+        if (!cancelled) {
           isLoadingRef.current = false;
           setIsLoading(false);
         }
-      } else {
-        // We already have the correct results, just mark as loaded
-        loadedScanIdRef.current = scanId;
       }
     };
+
     loadResults();
-    // Only depend on scanId - remove scanResults and currentExtensionId to prevent circular updates
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scanId, loadResultsById]);
 
