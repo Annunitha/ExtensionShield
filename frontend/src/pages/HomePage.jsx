@@ -419,11 +419,11 @@ const HomePage = () => {
           </p>
         </div>
 
+        {/* Feature: hero content (mobile scanner device + floating hover cards) - hidden
         <div 
           ref={containerRef}
           className={`hero-content ${isVisible ? 'visible' : ''}`}
         >
-          {/* Floating Security Badges - Physics-based movement */}
           {badgePositions.map((badge) => (
             <div
               key={badge.id}
@@ -439,21 +439,16 @@ const HomePage = () => {
               </span>
             </div>
           ))}
-
-          {/* Central Scanner Device */}
           <div className="scanner-device">
             <div className="device-frame">
               <div className="device-notch" />
               <div className="device-screen">
-                {/* Scanner Header */}
                 <div className="scanner-header">
                   <div className="scanner-status">
                     <span className="status-dot" />
                     <span>Live Scan</span>
                   </div>
                 </div>
-
-                {/* Scanner Visualization */}
                 <div className="scanner-visual">
                   <div className="scan-rings">
                     <div className="ring ring-1" />
@@ -468,13 +463,9 @@ const HomePage = () => {
                   </div>
                   <div className="scan-line" style={{ transform: `rotate(${scanProgress * 3.6}deg)` }} />
                 </div>
-
-                {/* Current Check */}
                 <div className="scanner-status-text">
                   <span className="status-label">{SCAN_STATUS_MESSAGES[currentThreat]}</span>
                 </div>
-
-                {/* Threat Indicators */}
                 <div className="scanner-threats">
                   <div className="threat-row">
                     <span className="threat-icon safe">✓</span>
@@ -489,8 +480,6 @@ const HomePage = () => {
                     <span className="threat-name">Code Analysis</span>
                   </div>
                 </div>
-
-                {/* Bottom Action */}
                 <div className="scanner-action">
                   <div className="action-btn">
                     <span>View Full Report</span>
@@ -499,8 +488,8 @@ const HomePage = () => {
               </div>
             </div>
           </div>
-
         </div>
+        */}
 
         {/* Hero Actions - Search */}
         <div className={`hero-actions ${isVisible ? 'visible' : ''}`}>

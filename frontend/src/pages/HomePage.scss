@@ -40,7 +40,7 @@
   flex-direction: column;
   align-items: center;
   padding: 10rem 2rem 2rem;
-  padding-top: 250px;
+  padding-top: 200px;
   overflow: hidden;
   gap: 4rem;
 }
@@ -628,6 +628,7 @@
   width: 100%;
   padding: 0 2rem;
   margin: 0 auto;
+  /* margin-top: 0; */
   order: 2; // Desktop: second (between headline and device)
   opacity: 0;
   transform: translateY(20px);
