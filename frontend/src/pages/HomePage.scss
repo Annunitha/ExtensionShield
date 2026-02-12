@@ -459,6 +459,11 @@
   50% { opacity: 0.5; transform: scale(1.2); }
 }
 
+@keyframes typewriter-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
 /* Scanner Visualization */
 .scanner-visual {
   position: relative;
@@ -765,6 +770,16 @@
     font-variant-numeric: tabular-nums;
     min-width: 80px;
     text-align: center;
+
+    .typewriter-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      margin-left: 1px;
+      background: var(--atlas-text-primary);
+      animation: typewriter-blink 0.8s step-end infinite;
+      vertical-align: text-bottom;
+    }
   }
   
   &.live {

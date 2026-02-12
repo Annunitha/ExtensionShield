@@ -7,6 +7,7 @@
   background: var(--atlas-bg-primary, #030712);
   color: var(--atlas-text-primary, #f8fafc);
   position: relative;
+  overflow: hidden;
 }
 
 .open-source-bg {

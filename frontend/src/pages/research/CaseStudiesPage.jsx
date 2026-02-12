@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import RainfallDroplets from "../../components/RainfallDroplets";
 import "./CaseStudiesPage.scss";
 
 const CaseStudiesPage = () => {
@@ -49,6 +50,8 @@ const CaseStudiesPage = () => {
         <div className="case-studies-bg">
           <div className="bg-gradient" />
         </div>
+
+        <RainfallDroplets />
 
         <div className="case-studies-content">
           {/* Breadcrumb */}

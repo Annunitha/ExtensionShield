@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useScan } from "../context/ScanContext";
 import SEOHead from "../components/SEOHead";
+import TypewriterNumber from "../components/TypewriterNumber";
+import databaseService from "../services/databaseService";
 import "./HomePage.scss";
 
 // Static configuration - defined outside component to prevent recreation
@@ -35,6 +37,17 @@ const HomePage = () => {
   const containerRef = useRef(null);
   const animationRef = useRef(null);
   const badgesRef = useRef([]);
+
+  // Fetch extensions scanned count from API
+  useEffect(() => {
+    let cancelled = false;
+    databaseService.getStatistics().then((data) => {
+      if (!cancelled && data && typeof data.total_scans === "number") {
+        setScanCount(data.total_scans);
+      }
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   // Scroll reveal observer
   useEffect(() => {
@@ -533,7 +546,11 @@ const HomePage = () => {
         <div className={`stats-bar ${isVisible ? 'visible' : ''}`}>
           <div className="stat-item">
             <span className="stat-value counter">
-              {scanCount > 0 ? `${scanCount.toLocaleString()}+` : 'NEW'}
+              {scanCount > 0 ? (
+                <TypewriterNumber value={scanCount} suffix="+" charDelayMs={70} />
+              ) : (
+                "NEW"
+              )}
             </span>
             <span className="stat-label">Extensions Scanned</span>
           </div>

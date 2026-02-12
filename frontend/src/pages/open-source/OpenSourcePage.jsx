@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import RainfallDroplets from "../../components/RainfallDroplets";
 import "./OpenSourcePage.scss";
 
 const OpenSourcePage = () => {
@@ -16,6 +17,8 @@ const OpenSourcePage = () => {
         <div className="open-source-bg">
           <div className="bg-gradient" />
         </div>
+
+        <RainfallDroplets />
 
         <div className="open-source-content">
           <header className="open-source-header">
