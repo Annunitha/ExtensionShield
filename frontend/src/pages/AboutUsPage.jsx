@@ -2,7 +2,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import stanImage from "../assets/stanzin.png";
-import RainfallDroplets from "../components/RainfallDroplets";
 import "./AboutUsPage.scss";
 
 const AboutUsPage = () => {
@@ -15,8 +14,6 @@ const AboutUsPage = () => {
       </Helmet>
 
       <div className="about-us-page">
-        <RainfallDroplets />
-
         <div className="about-us-content">
           <div className="about-header">
             <div className="profile-image-container">

@@ -2,7 +2,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import RiskDial from "../../components/report/RiskDial";
-import RainfallDroplets from "../../components/RainfallDroplets";
 import "./MethodologyPage.scss";
 
 const MethodologyPage = () => {
@@ -19,8 +18,6 @@ const MethodologyPage = () => {
           <div className="bg-gradient" />
           <div className="bg-grid" />
         </div>
-
-        <RainfallDroplets />
 
         <div className="methodology-content">
           {/* Breadcrumb */}
