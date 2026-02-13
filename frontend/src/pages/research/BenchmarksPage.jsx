@@ -419,7 +419,7 @@ const BenchmarksPage = () => {
                   <p className="recommendation-reason">{rec.reason}</p>
                   <div className="recommendation-actions">
                     <a 
-                      href={rec.reportUrl || `/extension/${rec.name.toLowerCase().replace(/\s+/g, '-')}`} 
+                      href={rec.reportUrl || (rec.extensionId ? `/scan/results/${rec.extensionId}` : "#")} 
                       className="recommendation-link primary"
                     >
                       View report →

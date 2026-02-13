@@ -19,7 +19,20 @@ import { normalizeHighlights } from '../../utils/normalizeScanResult';
  * topFindings: Array of { title, summary } - Top 3 findings for instant proof (one line each)
  * onViewRiskyPermissions, onViewNetworkDomains: Optional click handlers for action buttons
  */
-const SummaryPanel = ({ 
+
+// Factor names from scoring engine that are not actionable by themselves (no user-facing finding)
+const FACTOR_ONLY_NAMES = new Set(['Maintenance', 'Webstore', 'Manifest']);
+const CONTRIBUTION_ONLY = /^Contribution: \d+%$/;
+
+function isActionableFinding(f) {
+  if (!f || (!f.title && !f.summary)) return false;
+  const title = (f.title || '').trim();
+  const summary = (f.summary || '').trim();
+  const isFactorOnly = FACTOR_ONLY_NAMES.has(title) && CONTRIBUTION_ONLY.test(summary);
+  return !isFactorOnly;
+}
+
+const SummaryPanel = ({
   scores = {},
   factorsByLayer = {},
   rawScanResult = null,
@@ -29,6 +42,9 @@ const SummaryPanel = ({
   onViewRiskyPermissions = null,
   onViewNetworkDomains = null
 }) => {
+  // Show TOP 3 FINDINGS only when we have at least one actionable finding (not just factor labels)
+  const actionableTopFindings = (topFindings || []).filter(isActionableFinding).slice(0, 3);
+
   // Priority 1: New unified_summary format (simpler, LLM-powered)
   const unifiedSummary = rawScanResult?.report_view_model?.unified_summary;
   
@@ -185,13 +201,13 @@ const SummaryPanel = ({
               )}
             </div>
           )}
-          {topFindings.length > 0 && (
+          {actionableTopFindings.length > 0 && (
             <div className="summary-top-findings">
               <h4 className="top-findings-title">TOP 3 FINDINGS</h4>
               <ul className="top-findings-list">
-                {topFindings.slice(0, 3).map((f, idx) => (
+                {actionableTopFindings.map((f, idx) => (
                   <li key={idx} className="top-finding-item">
-                    {f.title || f.summary || String(f)}
+                    {f.summary || f.title || String(f)}
                   </li>
                 ))}
               </ul>
@@ -282,13 +298,13 @@ const SummaryPanel = ({
               )}
             </div>
           )}
-          {topFindings.length > 0 && (
+          {actionableTopFindings.length > 0 && (
             <div className="summary-top-findings">
               <h4 className="top-findings-title">TOP 3 FINDINGS</h4>
               <ul className="top-findings-list">
-                {topFindings.slice(0, 3).map((f, idx) => (
+                {actionableTopFindings.map((f, idx) => (
                   <li key={idx} className="top-finding-item">
-                    {f.title || f.summary || String(f)}
+                    {f.summary || f.title || String(f)}
                   </li>
                 ))}
               </ul>
@@ -352,13 +368,13 @@ const SummaryPanel = ({
             )}
           </div>
         )}
-        {topFindings.length > 0 && (
+        {actionableTopFindings.length > 0 && (
           <div className="summary-top-findings">
             <h4 className="top-findings-title">TOP 3 FINDINGS</h4>
             <ul className="top-findings-list">
-              {topFindings.slice(0, 3).map((f, idx) => (
+              {actionableTopFindings.map((f, idx) => (
                 <li key={idx} className="top-finding-item">
-                  {f.title || f.summary || String(f)}
+                  {f.summary || f.title || String(f)}
                 </li>
               ))}
             </ul>

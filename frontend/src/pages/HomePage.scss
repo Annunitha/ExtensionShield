@@ -43,6 +43,7 @@
   align-items: center;
   justify-content: flex-start;
   padding: calc(var(--atlas-header-height) + 2rem) 2rem 2rem;
+  padding-top: 5rem;
   overflow: hidden;
   gap: 0;
 }
@@ -126,7 +127,7 @@
   align-items: center;
   width: 100%;
   max-width: 1200px;
-  padding: 0 2rem 5rem;
+  padding: 10rem 0;
   margin: 0 auto;
   flex: 1;
 }
@@ -533,7 +534,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1.5rem;
+  gap: 1rem;
   padding: 1rem 1.5rem;
   margin-top: auto;
   flex-shrink: 0;
@@ -586,6 +587,11 @@
   }
 }
 
+.stat-value-number {
+  font-variant-numeric: tabular-nums;
+  min-width: 1.5em;
+}
+
 .live-dot,
 .beta-dot {
   width: 8px;
@@ -604,9 +610,11 @@
 }
 
 .stat-divider {
+  flex-shrink: 0;
   width: 1px;
-  height: 32px;
+  height: 28px;
   background: var(--atlas-border);
+  margin: 0;
 }
 
 /* ============================================================================
@@ -616,7 +624,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  width: 100%;
   margin-top: 0.75rem;
   padding: 0.75rem 1.5rem;
   background: transparent;
@@ -630,6 +640,7 @@
   order: 5;
   opacity: 0;
   transform: translateY(20px);
+  text-align: center;
   
   &.visible {
     opacity: 1;
@@ -704,35 +715,43 @@
 
 .bridge-container {
   position: relative;
+  width: 100%;
   max-width: 900px;
   margin: 0 auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
 }
 
 .bridge-title {
   font-size: clamp(1.5rem, 4vw, 2rem);
   font-weight: 600;
   color: var(--atlas-text-primary);
-  margin-bottom: 3rem;
+  margin: 0 auto 3rem;
+  max-width: 20ch;
+  line-height: 1.25;
 }
 
 .bridge-steps {
   display: flex;
-  align-items: flex-start;
+  flex-wrap: wrap;
+  align-items: stretch;
   justify-content: center;
-  gap: 1rem;
+  gap: 1.25rem;
   margin-bottom: 2.5rem;
 }
 
 .bridge-step {
-  flex: 1;
-  max-width: 220px;
+  flex: 1 1 200px;
+  min-width: 0;
+  max-width: 260px;
   padding: 1.5rem 1.25rem;
   background: rgba(13, 20, 36, 0.6);
   border: 1px solid var(--atlas-border);
   border-radius: 16px;
   position: relative;
   transition: all 0.3s ease;
-  
+  text-align: center;
+
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
@@ -821,8 +840,10 @@
   font-size: 1rem;
   color: var(--atlas-text-secondary);
   font-style: italic;
-  max-width: 600px;
+  max-width: 560px;
   margin: 0 auto;
+  text-align: center;
+  line-height: 1.5;
   padding-top: 1rem;
   border-top: 1px solid var(--atlas-border);
 }
@@ -1077,17 +1098,6 @@
   background: var(--atlas-danger);
   border-radius: 50%;
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
-}
-
-@keyframes threatPulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.3);
-    opacity: 0.7;
-  }
 }
 
 .threat-label {
@@ -1954,6 +1964,82 @@
 /* ============================================================================
    RESPONSIVE
    ============================================================================ */
+
+/* Chrome extensions supported only on desktop. On mobile/tablet show message + carousel visual. */
+.hero-mobile-message {
+  display: none;
+}
+
+.hero-desktop-content {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 1023px) {
+  .hero-desktop-content {
+    display: flex !important;
+    padding: 0 1rem 2rem;
+  }
+
+  .hero-desktop-content .hero-left {
+    display: none !important;
+  }
+
+  .hero-desktop-content .stats-bar,
+  .hero-desktop-content .scroll-cue {
+    display: none !important;
+  }
+
+  .hero-desktop-content .hero-grid {
+    width: 100%;
+    max-width: 100%;
+    padding: 2rem 1rem;
+  }
+
+  .hero-desktop-content .hero-right {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  .hero-mobile-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: calc(var(--atlas-header-height) + 1.5rem) 1.5rem 1rem;
+    gap: 0.5rem;
+    min-height: 0;
+  }
+
+  .hero-mobile-message .hero-tagline {
+    font-size: clamp(0.6875rem, 1.5vw, 0.75rem);
+    font-weight: 600;
+    color: var(--atlas-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin: 0 0 0.25rem;
+  }
+
+  .hero-mobile-message .hero-title {
+    font-size: clamp(1.35rem, 4.5vw, 1.6rem);
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0 0 0.25rem;
+    max-width: 20ch;
+  }
+
+  .hero-mobile-message .hero-mobile-cta {
+    font-size: 0.9375rem;
+    color: var(--atlas-text-secondary);
+    margin: 0;
+  }
+}
+
 @media (max-width: 1024px) {
   .hero-grid {
     grid-template-columns: 1fr;
@@ -1999,6 +2085,7 @@
 @media (max-width: 768px) {
   .hero-section {
     padding: calc(var(--atlas-header-height) + 1rem) 1rem 2rem;
+    padding-top: 5rem;
     min-height: auto;
     min-height: 100dvh;
     gap: 1.25rem;
@@ -2008,7 +2095,7 @@
   .hero-grid {
     grid-template-columns: 1fr;
     gap: 2rem;
-    padding: 0 1rem 5rem;
+    padding: 4rem 1rem 5rem;
     order: 1;
   }
 
@@ -2067,6 +2154,10 @@
   .bridge-section {
     padding: 3rem 1rem 4rem;
   }
+
+  .bridge-container {
+    padding: 0 0.75rem;
+  }
   
   .bridge-title {
     font-size: 1.25rem;
@@ -2075,11 +2166,15 @@
   
   .bridge-steps {
     flex-direction: column;
-    gap: 1rem;
+    align-items: center;
+    gap: 1.25rem;
   }
   
   .bridge-step {
-    max-width: 100%;
+    width: 100%;
+    max-width: 280px;
+    margin-left: auto;
+    margin-right: auto;
   }
   
   .bridge-connector {
@@ -2251,10 +2346,11 @@
 @media (max-width: 480px) {
   .hero-section {
     padding: calc(var(--atlas-header-height) + 0.75rem) 0.75rem 1.5rem;
+    padding-top: 5rem;
   }
 
   .hero-grid {
-    padding: 0 0.75rem 3rem;
+    padding: 3rem 0.75rem 3rem;
     gap: 1.5rem;
   }
 
@@ -2288,10 +2384,11 @@
 @media (max-width: 360px) {
   .hero-section {
     padding: calc(var(--atlas-header-height) + 0.5rem) 0.5rem 1rem;
+    padding-top: 5rem;
   }
 
   .hero-grid {
-    padding: 0 0.5rem 2rem;
+    padding: 2rem 0.5rem 2rem;
   }
 
   .hero-left .hero-title {

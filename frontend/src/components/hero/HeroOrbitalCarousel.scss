@@ -606,6 +606,15 @@
   }
 }
 
+.hero-orbital-focus-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 100%;
+}
+
 .hero-orbital-focus-label {
   font-size: 0.8125rem;
   font-weight: 600;
@@ -615,6 +624,39 @@
   text-align: center;
   max-width: 100%;
   word-break: break-word;
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-orbital-focus-details-link {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: rgba(20, 184, 166, 0.15);
+  border: 1px solid rgba(20, 184, 166, 0.35);
+  border-radius: 5px;
+  color: var(--atlas-accent);
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+
+  svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  &:hover {
+    background: rgba(20, 184, 166, 0.28);
+    color: rgba(20, 184, 166, 1);
+    border-color: var(--atlas-accent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--atlas-accent);
+    outline-offset: 2px;
+  }
 }
 
 .hero-orbital-focus-rows {

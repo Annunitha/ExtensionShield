@@ -126,8 +126,8 @@ describe('validateReturnTo', () => {
   });
 
   describe('preserves valid paths', () => {
-    it('preserves complex paths', () => {
-      expect(validateReturnTo("/extension/abc123/version/xyz789")).toBe("/extension/abc123/version/xyz789");
+    it('preserves scan results path', () => {
+      expect(validateReturnTo("/scan/results/abc123")).toBe("/scan/results/abc123");
     });
 
     it('preserves paths with special characters in query', () => {

@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 
 // Lazy load pages for better code splitting
 const HomePage = React.lazy(() => import("../pages/HomePage"));
@@ -30,9 +30,11 @@ const OpenSourcePage = React.lazy(() => import("../pages/open-source/OpenSourceP
 const CommunityLandingPage = React.lazy(() => import("../pages/community/CommunityLandingPage"));
 const AboutUsPage = React.lazy(() => import("../pages/AboutUsPage"));
 
-// Extension Pages
-const ExtensionPage = React.lazy(() => import("../pages/extension/ExtensionPage"));
-const ExtensionVersionPage = React.lazy(() => import("../pages/extension/ExtensionVersionPage"));
+// Redirect /extension/:id to /scan/results/:id (extension route removed)
+const RedirectExtensionToScanResults = () => {
+  const { extensionId } = useParams();
+  return <Navigate to={`/scan/results/${encodeURIComponent(extensionId || "")}`} replace />;
+};
 
 // Reports (Enterprise)
 const ReportsPage = React.lazy(() => import("../pages/reports/ReportsPage"));
@@ -98,24 +100,14 @@ export const routes = [
     element: <ScanResultsDashboardPage />
   },
 
-  // ============ EXTENSION ROUTES (CANONICAL) ============
+  // ============ LEGACY: /extension/:id redirects to scan results ============
   {
     path: "/extension/:extensionId",
-    element: <ExtensionPage />,
-    seo: {
-      title: "Extension Security Report | ExtensionShield",
-      description: "Security analysis and risk assessment for Chrome extension.",
-      canonical: "/extension/:extensionId"
-    }
+    element: <RedirectExtensionToScanResults />
   },
   {
     path: "/extension/:extensionId/version/:buildHash",
-    element: <ExtensionVersionPage />,
-    seo: {
-      title: "Extension Version Report | ExtensionShield",
-      description: "Detailed security report for specific extension build.",
-      canonical: "/extension/:extensionId/version/:buildHash"
-    }
+    element: <RedirectExtensionToScanResults />
   },
 
   // ============ RESEARCH ROUTES ============

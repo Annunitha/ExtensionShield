@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useScan } from "../context/ScanContext";
 import { useAuth } from "../context/AuthContext";
 import databaseService from "../services/databaseService";
 import SEOHead from "../components/SEOHead";
+import { HeroOrbitalCarousel } from "../components/hero";
 import "./HomePage.scss";
 
 // Real extension listings (Chrome Web Store style)
@@ -27,19 +28,70 @@ const HomePage = () => {
   const [scanInput, setScanInput] = useState("");
   const [revealedSections, setRevealedSections] = useState({});
   const [extensionSlideIndex, setExtensionSlideIndex] = useState(0);
-  const [extensionsScannedCount, setExtensionsScannedCount] = useState(null);
+  const [extensionsScannedCount, setExtensionsScannedCount] = useState(0);
+  const [displayCount, setDisplayCount] = useState(0);
+  const displayCountRef = useRef(0);
+  const rafRef = useRef(null);
 
-  // Fetch live extension scan count from database
+  // Animate display count from current to target (incremental counter effect)
+  useEffect(() => {
+    const target = Math.max(0, extensionsScannedCount);
+    const start = displayCountRef.current;
+    const diff = target - start;
+    if (diff === 0) return;
+
+    const durationMs = 1400;
+    const easeOutQuart = (t) => 1 - (1 - t) ** 4;
+    const startTime = performance.now();
+
+    const tick = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / durationMs, 1);
+      const eased = easeOutQuart(progress);
+      const current = Math.round(start + diff * eased);
+      displayCountRef.current = current;
+      setDisplayCount(current);
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        displayCountRef.current = target;
+        setDisplayCount(target);
+      }
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [extensionsScannedCount]);
+
+  // Fetch total scanned extensions count from database (stats.total_scans); fallback to recent list length when stats return 0
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const stats = await databaseService.getStatistics();
-        if (!cancelled && typeof stats?.total_scans === "number") {
-          setExtensionsScannedCount(stats.total_scans);
+        const count = Math.max(0, Number(stats?.total_scans) || 0);
+        if (!cancelled) setExtensionsScannedCount(count);
+        if (count === 0) {
+          const recent = await databaseService.getRecentScans(100);
+          if (!cancelled && Array.isArray(recent) && recent.length > 0) {
+            setExtensionsScannedCount(recent.length);
+          }
         }
       } catch {
-        if (!cancelled) setExtensionsScannedCount(0);
+        if (!cancelled) {
+          try {
+            const recent = await databaseService.getRecentScans(100);
+            if (Array.isArray(recent) && recent.length > 0) {
+              setExtensionsScannedCount(recent.length);
+            } else {
+              setExtensionsScannedCount(0);
+            }
+          } catch {
+            setExtensionsScannedCount(0);
+          }
+        }
       }
     })();
     return () => { cancelled = true; };
@@ -197,6 +249,14 @@ const HomePage = () => {
             <div className="bg-glow glow-2" />
           </div>
 
+          {/* Mobile/tablet: scanner not supported — show idea + "Check on desktop" */}
+          <div className="hero-mobile-message">
+            <p className="hero-tagline">Chrome Extension Scanner</p>
+            <h1 className="hero-title">Know what your Chrome extensions can access.</h1>
+            <p className="hero-mobile-cta">Check on desktop.</p>
+          </div>
+
+          <div className="hero-desktop-content">
           <div className="hero-grid">
             {/* Left Panel - Headline, Input, CTA */}
             <motion.div
@@ -280,103 +340,14 @@ const HomePage = () => {
               </a>
             </motion.div>
 
-            {/* Right Panel - Frosted glass scan preview card */}
+            {/* Right Panel - 3D orbital carousel with focus report card */}
             <motion.div
               className="hero-right"
               initial={{ opacity: 0, x: 24 }}
               animate={isVisible ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
             >
-              <motion.div
-                className="hero-glass-card"
-                initial={{ opacity: 0, y: 20 }}
-                animate={isVisible ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.5, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                whileHover={{ boxShadow: "0 24px 48px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.06)" }}
-                role="complementary"
-                aria-label="Sample scan results preview"
-              >
-                <div className="glass-icon-wrapper">
-                  <div className="glass-card-icon" aria-hidden="true">
-                    {/* Chrome extension puzzle-piece icon (authentic style) */}
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="extension-icon-svg">
-                      <path
-                        fill="#5F6368"
-                        d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-2 .9-2 2v3.8h1.5c1.5 0 2.7 1.2 2.7 2.7s-1.2 2.7-2.7 2.7H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.5 1.2-2.7 2.7-2.7s2.7 1.2 2.7 2.7V22H13v-1.5c0-1.5 1.2-2.7 2.7-2.7 1.5 0 2.7 1.2 2.7 2.7V22H19c1.1 0 2-.9 2-2v-4h1.5c1.5 0 2.7-1.2 2.7-2.7s-1.2-2.7-2.7-2.7z"
-                      />
-                      <circle cx="12" cy="12" r="2.5" fill="#8AB4F8" />
-                    </svg>
-                  </div>
-                  <p className="glass-extension-label">Extension</p>
-                </div>
-
-                <div className="glass-card-rows">
-                  <motion.div
-                    className="glass-row security"
-                    initial={{ opacity: 0 }}
-                    animate={isVisible ? { opacity: 1 } : {}}
-                    transition={{ delay: 0.5, duration: 0.4 }}
-                  >
-                    <div className="glass-row-header">
-                      <svg className="glass-row-icon safe" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
-                      <div>
-                        <strong>Security</strong>
-                        <span>No critical issues</span>
-                      </div>
-                    </div>
-                    <div className="glass-progress-bar">
-                      <motion.div className="glass-progress-fill safe" initial={{ width: 0 }} animate={isVisible ? { width: "100%" } : {}} transition={{ delay: 0.7, duration: 0.8, ease: "easeOut" }} />
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    className="glass-row privacy"
-                    initial={{ opacity: 0 }}
-                    animate={isVisible ? { opacity: 1 } : {}}
-                    transition={{ delay: 0.6, duration: 0.4 }}
-                  >
-                    <div className="glass-row-header">
-                      <svg className="glass-row-icon warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                        <line x1="12" y1="9" x2="12" y2="13" />
-                        <line x1="12" y1="17" x2="12.01" y2="17" />
-                      </svg>
-                      <div>
-                        <strong>Privacy</strong>
-                        <span>Trackers detected</span>
-                      </div>
-                    </div>
-                    <div className="glass-progress-bar">
-                      <motion.div className="glass-progress-fill warning" initial={{ width: 0 }} animate={isVisible ? { width: "65%" } : {}} transition={{ delay: 0.8, duration: 0.8, ease: "easeOut" }} />
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    className="glass-row governance"
-                    initial={{ opacity: 0 }}
-                    animate={isVisible ? { opacity: 1 } : {}}
-                    transition={{ delay: 0.7, duration: 0.4 }}
-                  >
-                    <div className="glass-row-header">
-                      <svg className="glass-row-icon safe" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
-                      <div>
-                        <strong>Governance</strong>
-                        <span>Standard permissions</span>
-                      </div>
-                    </div>
-                    <div className="glass-progress-bar">
-                      <motion.div className="glass-progress-fill safe" initial={{ width: 0 }} animate={isVisible ? { width: "100%" } : {}} transition={{ delay: 0.9, duration: 0.8, ease: "easeOut" }} />
-                    </div>
-                  </motion.div>
-                </div>
-                <p className="glass-card-meta">
-                  Last analyzed 1min ago.
-                </p>
-              </motion.div>
+              <HeroOrbitalCarousel />
             </motion.div>
           </div>
 
@@ -406,15 +377,9 @@ const HomePage = () => {
             </div>
             <div className="stat-divider" />
             <div className="stat-item">
-              <span className="stat-value live">
-                {extensionsScannedCount !== null ? (
-                  <>
-                    <span className="live-dot" aria-hidden="true" />
-                    {extensionsScannedCount.toLocaleString()}+
-                  </>
-                ) : (
-                  <span className="stat-value-placeholder">—</span>
-                )}
+              <span className="stat-value live" data-stat="extensions-scanned">
+                <span className="live-dot" aria-hidden="true" />
+                <span className="stat-value-number">{displayCount.toLocaleString()}+</span>
               </span>
               <span className="stat-label">Extensions scanned</span>
             </div>
@@ -435,6 +400,7 @@ const HomePage = () => {
               <path d="M12 5v14M5 12l7 7 7-7" />
             </svg>
           </motion.button>
+          </div>
         </section>
 
       {/* Bridge Section - How trusted extensions turn risky */}

@@ -397,16 +397,9 @@ const ScanProgressPage = () => {
   const handleViewResults = () => {
     setUserExited(true);
     setShowCompletionModal(false);
-    if (scanResults) {
-      // If we have both extensionId and buildHash, use canonical URL
-      if (scanResults.extension_id && scanResults.build_hash) {
-        navigate(`/extension/${scanResults.extension_id}/version/${scanResults.build_hash}`, { replace: true });
-      } else {
-        // Fallback to scan results URL
-        navigate(`/scan/results/${scanId}`, { replace: true });
-      }
+    if (scanResults?.extension_id) {
+      navigate(`/scan/results/${scanResults.extension_id}`, { replace: true });
     } else {
-      // Fallback if no results yet
       navigate(`/scan/results/${scanId}`, { replace: true });
     }
   };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import databaseService from "../../services/databaseService";
 import extensionCacheService from "../../services/extensionCacheService";
@@ -72,6 +73,7 @@ function getOverallStatus(scan) {
 
 function FocusCard({ scan, isVisible }) {
   const iconUrl = scan?.extensionId ? extensionCacheService.getIconUrl(scan.extensionId) : EXTENSION_ICON_PLACEHOLDER;
+  const detailsHref = scan?.extensionId ? `/scan/results/${encodeURIComponent(scan.extensionId)}` : null;
 
   return (
     <motion.div
@@ -87,7 +89,18 @@ function FocusCard({ scan, isVisible }) {
         <div className="hero-orbital-focus-icon">
           <img src={iconUrl} alt="" onError={(e) => { e.target.onerror = null; e.target.src = EXTENSION_ICON_PLACEHOLDER; }} />
         </div>
-        <p className="hero-orbital-focus-label">{scan?.name || "Extension"}</p>
+        <div className="hero-orbital-focus-title-row">
+          <p className="hero-orbital-focus-label">{scan?.name || "Extension"}</p>
+          {detailsHref && (
+            <Link to={detailsHref} className="hero-orbital-focus-details-link" aria-label={`View details: ${scan?.name || "Extension"}`} title="View details">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                <path d="M15 3h6v6" />
+                <path d="M10 14L21 3" />
+              </svg>
+            </Link>
+          )}
+        </div>
       </div>
       <div className="hero-orbital-focus-rows">
         <div className="hero-orbital-focus-row security">
@@ -159,8 +172,8 @@ function computeDepth(ringAngleDeg, index, cardCount, tiltDeg, maxOpacity = 1) {
 }
 
 function OrbitIcon({ scan, depth, isSelected, isHovered, interactive = true, compact = false, onClick, onHoverStart, onHoverEnd }) {
-  // Use cache service for faster icon loading (preloaded icons)
-  const iconUrl = scan?.extensionId ? extensionCacheService.getIconUrl(scan.extensionId) : EXTENSION_ICON_PLACEHOLDER;
+  const extensionId = scan?.extensionId || scan?.extension_id;
+  const iconUrl = extensionId ? extensionCacheService.getIconUrl(extensionId) : EXTENSION_ICON_PLACEHOLDER;
   const scale = depth?.scale ?? 1;
   const opacity = depth?.opacity ?? 1;
   const zIndex = depth?.zIndex ?? 1;

@@ -92,14 +92,10 @@ class DatabaseService {
       }
       
       const data = await response.json();
-      // console.log(`[databaseService] Received ${data.recent?.length || 0} recent scans`); // prod: no console
-      
-      if (!data.recent) {
-        // console.warn("[databaseService] Response missing 'recent' field:", data); // prod: no console
-        return [];
-      }
-      
-      return data.recent || [];
+      // Support both { recent: [...] } and direct array (e.g. some proxies)
+      if (Array.isArray(data)) return data;
+      if (data?.recent && Array.isArray(data.recent)) return data.recent;
+      return [];
     } catch (error) {
       // console.error("[databaseService] Error fetching recent scans:", error); // prod: no console
       // console.error("[databaseService] Error details:", { message: error.message, stack: error.stack, name: error.name }); // prod: no console
