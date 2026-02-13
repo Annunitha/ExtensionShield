@@ -41,6 +41,7 @@ from extension_shield.api.database import db, SupabaseDatabase
 from extension_shield.api.supabase_auth import get_current_user_id as _get_current_user_id
 from extension_shield.core.config import get_settings
 from extension_shield.api.csp_middleware import CSPMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from extension_shield.core.report_view_model import build_report_view_model, build_consumer_insights
 from extension_shield.governance.tool_adapters import SignalPackBuilder
 from extension_shield.scoring.engine import ScoringEngine
@@ -379,6 +380,52 @@ class PageViewEvent(BaseModel):
 
     path: str
 
+
+# Sentry: enable only in prod when SENTRY_DSN is set; never capture request bodies or auth headers
+def _init_sentry() -> None:
+    if not get_settings().is_prod():
+        return
+    dsn = os.getenv("SENTRY_DSN", "").strip()
+    if not dsn:
+        return
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.fastapi import FastApiIntegration
+        from sentry_sdk.integrations.starlette import StarletteIntegration
+
+        def _before_send(event: dict, hint: dict) -> dict | None:
+            # Ensure request bodies and Authorization headers are never sent
+            request = event.get("request") or {}
+            if isinstance(request, dict):
+                request = dict(request)
+                request.pop("data", None)
+                request.pop("cookies", None)
+                headers = request.get("headers")
+                if isinstance(headers, dict):
+                    headers = {k: v for k, v in headers.items() if k.lower() not in ("authorization", "cookie")}
+                    request["headers"] = headers
+                elif isinstance(headers, (list, tuple)):
+                    request["headers"] = [(k, v) for k, v in headers if k.lower() not in ("authorization", "cookie")]
+                event["request"] = request
+            return event
+
+        sentry_sdk.init(
+            dsn=dsn,
+            environment="production",
+            send_default_pii=False,
+            before_send=_before_send,
+            integrations=[
+                StarletteIntegration(),
+                FastApiIntegration(),
+            ],
+        )
+        logger.info("Sentry initialized (prod, SENTRY_DSN set)")
+    except Exception as exc:
+        logger.warning("Sentry init skipped or failed: %s", exc)
+
+
+_init_sentry()
+
 # Initialize FastAPI app
 app = FastAPI(
     title="Project Atlas API",
@@ -461,26 +508,38 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
-    # HSTS only for HTTPS (check if request is secure)
-    if request.url.scheme == "https":
+    # HSTS: always in production; in dev only when request is effectively HTTPS (scheme or X-Forwarded-Proto)
+    is_https = request.url.scheme == "https"
+    if not is_https and request.headers.get("X-Forwarded-Proto", "").strip().lower() == "https":
+        is_https = True
+    if get_settings().is_prod() or is_https:
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     # Note: CSP is now handled by CSPMiddleware (added below)
     return response
 
-# Configure CORS
+# Configure CORS: prod requires explicit allowlist (no "*"); dev defaults to localhost
 _cors_env = os.getenv("CORS_ORIGINS", "").strip()
-if _cors_env:
+if get_settings().is_prod():
+    if not _cors_env:
+        raise ValueError(
+            "CORS_ORIGINS must be set in production. Set to a comma-separated list of allowed origins "
+            "(e.g. https://extensionshield.com). Wildcard '*' is not allowed in prod."
+        )
     allowed_origins = [o.strip() for o in _cors_env.split(",") if o.strip()]
+    if "*" in allowed_origins or not allowed_origins:
+        raise ValueError(
+            "CORS_ORIGINS in production must be a non-empty allowlist; '*' is not allowed. "
+            f"Got: {_cors_env!r}"
+        )
 else:
-    allowed_origins = [
-        "http://localhost:5173",  # Vite dev server (default)
-        "http://localhost:5174",  # Vite fallback port
-        "http://localhost:5175",  # Vite fallback port
-        "http://localhost:5176",  # Vite fallback port
-        "http://localhost:5177",  # Vite fallback port
-        "http://localhost:3000",  # Alternative dev port
-        "http://localhost:8007",  # Same-origin in container
-    ]
+    if _cors_env:
+        allowed_origins = [o.strip() for o in _cors_env.split(",") if o.strip()]
+    else:
+        allowed_origins = [
+            "http://localhost:5173",  # Vite dev server (default)
+            "http://localhost:5174",  "http://localhost:5175",  "http://localhost:5176",
+            "http://localhost:5177",  "http://localhost:3000",  "http://localhost:8007",
+        ]
 print(f"CORS allowed origins: {allowed_origins}")
 app.add_middleware(
     CORSMiddleware,
@@ -505,11 +564,17 @@ else:
     print(f"✅ CSP: Production mode detected (STATIC_DIR={STATIC_DIR}, index.html exists)")
 app.add_middleware(CSPMiddleware, is_dev=_is_dev)
 
+# Trust X-Forwarded-Proto / X-Forwarded-For from Railway/Cloudflare so request.url.scheme is correct
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+
 # Storage for scan results (in-memory cache + database persistence)
 scan_results: Dict[str, Dict[str, Any]] = {}
 scan_status: Dict[str, str] = {}
 # extension_id -> authenticated user_id (Supabase `sub`) at scan trigger time
 scan_user_ids: Dict[str, Optional[str]] = {}
+
+# For /health uptime (no filesystem or internal config in response)
+_health_start_time = datetime.now(timezone.utc)
 
 # -----------------------------------------------------------------------------
 # Daily deep-scan limit (placeholder, in-memory)
@@ -828,11 +893,12 @@ def _storage_relative_extracted_path(extension_dir: Optional[str]) -> Optional[s
 
 
 def extract_extension_id(url: str) -> Optional[str]:
-    """Extract extension ID from Chrome Web Store URL."""
+    """Extract extension ID from Chrome Web Store URL. Returns only if it matches ^[a-z]{32}$."""
     import re
-
+    from extension_shield.utils.extension import is_chrome_extension_id
     match = re.search(r"/detail/(?:[^/]+/)?([a-z]{32})", url)
-    return match.group(1) if match else None
+    candidate = match.group(1) if match else None
+    return candidate if candidate and is_chrome_extension_id(candidate) else None
 
 
 def extract_icon_path(manifest: Dict[str, Any], extracted_path: Optional[str]) -> Optional[str]:
@@ -2980,12 +3046,13 @@ async def get_recent_scans(limit: int = 10, search: str = None):
 
 
 @app.get("/api/diagnostic/scans")
-async def diagnostic_scans():
+async def diagnostic_scans(request: Request):
     """
     Diagnostic endpoint to check scan data flow.
     Returns information about scans in memory, database, and their status.
     Useful for debugging why scans aren't appearing in the UI.
     """
+    _require_admin_key(request)
     try:
         diagnostic_info = {
             "memory_scans": {
@@ -3081,7 +3148,7 @@ async def diagnostic_scans():
 
 
 @app.delete("/api/scan/{extension_id}")
-async def delete_scan(extension_id: str):
+async def delete_scan(extension_id: str, request: Request):
     """
     Delete a scan result.
 
@@ -3091,6 +3158,7 @@ async def delete_scan(extension_id: str):
     Returns:
         Deletion confirmation
     """
+    _require_admin_key(request)
     success = db.delete_scan_result(extension_id)
 
     if success:
@@ -3104,13 +3172,14 @@ async def delete_scan(extension_id: str):
 
 
 @app.post("/api/clear")
-async def clear_all_scans():
+async def clear_all_scans(request: Request):
     """
     Clear all scan results.
 
     Returns:
         Confirmation message
     """
+    _require_admin_key(request)
     success = db.clear_all_results()
 
     if success:
@@ -3123,14 +3192,23 @@ async def clear_all_scans():
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint for container orchestration."""
+    """Health check endpoint for container orchestration. Minimal payload: no paths or internal config."""
+    uptime_seconds = int((datetime.now(timezone.utc) - _health_start_time).total_seconds())
     return {
-        "status": "healthy", 
-        "service": "project-atlas", 
+        "status": "healthy",
         "version": "1.0.0",
-        "storage_path": str(RESULTS_DIR),
-        "storage_exists": RESULTS_DIR.exists()
+        "uptime_seconds": uptime_seconds,
     }
+
+
+@app.get("/api/health/sentry-test")
+async def sentry_test_endpoint(request: Request):
+    """
+    Raise an exception to verify Sentry capture. Only enabled in prod (Sentry init is prod-only).
+    Requires X-Admin-Key so it is not triggered by accident.
+    """
+    _require_admin_key(request)
+    raise RuntimeError("Sentry test: intentional exception for verification (ignore in prod Sentry)")
 
 
 @app.get("/api/health/db")
