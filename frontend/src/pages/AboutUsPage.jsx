@@ -44,18 +44,21 @@ const AboutUsPage = () => {
 
           <div className="about-story">
             <div className="story-section">
-              <h2>Why I Built This</h2>
+              <h2>Why I built this</h2>
               <p>
-                I learned the fun way that "harmless" browser extensions sometimes mean: "I would like access to your browsing history, clipboard, and first-born child."
+                I learned the fun way that "harmless" browser extensions sometimes translates to:
               </p>
               <p>
-                One day I installed an extension that looked totally normal… until I noticed the permissions didn't match what it claimed to do. So I went looking for a simple answer to a simple question:
+                "Hi, can I have your browsing history, clipboard, and maybe custody of your first-born child?"
+              </p>
+              <p>
+                One day I installed an extension that looked totally normal… until I noticed the permissions didn't match what it claimed to do. So I went looking for a simple answer:
               </p>
               <p>
                 <strong>Is this extension actually safe?</strong>
               </p>
               <p>
-                What I found instead were tools that were either too technical, too vague, or confidently wrong in a way only the internet can be. I couldn't find something that combined security analysis + privacy risk + compliance into a clear verdict you can act on.
+                What I found were tools that were either too technical, too vague, or confidently wrong (the internet special). I couldn't find something that combined security analysis + privacy risk + compliance into a clear verdict you can actually act on.
               </p>
               <p>
                 So I built ExtensionShield.
@@ -65,16 +68,13 @@ const AboutUsPage = () => {
             <div className="story-section">
               <h2>Background</h2>
               <p>
-                I got my start through the <strong>Google Open Source program</strong> and found my passion for software development. I joined Drupal (<a href="https://www.drupal.org/u/stanzin" target="_blank" rel="noopener noreferrer">drupal.org/u/stanzin</a>), where I learned the value of transparency, community review, "show your work," and the occasional spicy-but-correct code review.
+                I got my start in open source through Google Summer of Code, then joined the Drupal (<a href="https://www.drupal.org/u/stanzin" target="_blank" rel="noopener noreferrer">drupal.org/u/stanzin</a>) community. That's where I learned transparency, community review, and "show your work"—plus the occasional spicy-but-correct code review that makes you better.
               </p>
               <p>
-                Drupal's community is also genuinely fun—smart engineers, real collaboration, and a culture that makes you level up fast.
+                Later, I worked on enterprise systems at Hanover Insurance, where security, privacy, and compliance aren't optional—they're the job. That experience helped me turn ExtensionShield into something practical: less vibes, more evidence.
               </p>
               <p>
-                Later, I joined Hanover Insurance, which is basically the opposite vibe: regulated environments where security, privacy, and compliance aren't optional—they're the job. That experience shaped ExtensionShield into what I wanted in the first place.
-              </p>
-              <p>
-                ExtensionShield is partially open source, and you can see how we calculate everything to be transparent.
+                Today I'm continuously expanding an extensive ruleset to catch real-world risks—and sharing the methodology (and parts of the engine) so you can see how the verdict is made.
               </p>
             </div>
 
