@@ -28,9 +28,9 @@ const FactorBars = ({
   });
 
   const getBarColor = (severity) => {
-    if (severity >= 0.7) return '#EF4444';
-    if (severity >= 0.4) return '#F59E0B';
-    return '#10B981';
+    if (severity >= 0.7) return 'var(--risk-bad)';
+    if (severity >= 0.4) return 'var(--risk-warn)';
+    return 'var(--risk-good)';
   };
 
   const getBarWidth = (factor) => {

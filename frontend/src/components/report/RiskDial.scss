@@ -96,19 +96,19 @@
   
   &.decision-allow {
     background: rgba(16, 185, 129, 0.15);
-    color: #10B981;
+    color: var(--risk-good);
     border: 1px solid rgba(16, 185, 129, 0.3);
   }
   
   &.decision-warn {
     background: rgba(245, 158, 11, 0.15);
-    color: #F59E0B;
+    color: var(--risk-warn);
     border: 1px solid rgba(245, 158, 11, 0.3);
   }
   
   &.decision-block {
     background: rgba(239, 68, 68, 0.15);
-    color: #EF4444;
+    color: var(--risk-bad);
     border: 1px solid rgba(239, 68, 68, 0.3);
   }
 }

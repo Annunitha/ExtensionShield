@@ -67,7 +67,7 @@ const PrivacyPolicyPage = () => {
 
         <div className="privacy-content">
           {/* Introduction */}
-          <div className="glass-card accordion-item" data-accordion-id={SECTION_IDS.intro}>
+          <div className="glass-card surface-card accordion-item" data-accordion-id={SECTION_IDS.intro}>
             <button
               type="button"
               className="accordion-header"
@@ -100,7 +100,7 @@ const PrivacyPolicyPage = () => {
           </div>
 
           {/* Information We Collect */}
-          <div className="glass-card accordion-item">
+          <div className="glass-card surface-card accordion-item">
             <button
               type="button"
               className="accordion-header"
@@ -170,7 +170,7 @@ const PrivacyPolicyPage = () => {
           </div>
 
           {/* How We Use Your Information */}
-          <div className="glass-card accordion-item">
+          <div className="glass-card surface-card accordion-item">
             <button
               type="button"
               className="accordion-header"
@@ -210,7 +210,7 @@ const PrivacyPolicyPage = () => {
           </div>
 
           {/* Data Sharing and Disclosure */}
-          <div className="glass-card accordion-item">
+          <div className="glass-card surface-card accordion-item">
             <button
               type="button"
               className="accordion-header"
@@ -254,7 +254,7 @@ const PrivacyPolicyPage = () => {
           </div>
 
           {/* Data Retention */}
-          <div className="glass-card accordion-item">
+          <div className="glass-card surface-card accordion-item">
             <button
               type="button"
               className="accordion-header"
@@ -294,7 +294,7 @@ const PrivacyPolicyPage = () => {
           </div>
 
           {/* Data Security */}
-          <div className="glass-card accordion-item">
+          <div className="glass-card surface-card accordion-item">
             <button
               type="button"
               className="accordion-header"
@@ -327,7 +327,7 @@ const PrivacyPolicyPage = () => {
           </div>
 
           {/* Your Rights and Choices */}
-          <div className="glass-card accordion-item">
+          <div className="glass-card surface-card accordion-item">
             <button
               type="button"
               className="accordion-header"
@@ -372,7 +372,7 @@ const PrivacyPolicyPage = () => {
           </div>
 
           {/* Cookies and Similar Technologies */}
-          <div className="glass-card accordion-item">
+          <div className="glass-card surface-card accordion-item">
             <button
               type="button"
               className="accordion-header"
@@ -405,7 +405,7 @@ const PrivacyPolicyPage = () => {
           </div>
 
           {/* Children's Privacy */}
-          <div className="glass-card accordion-item">
+          <div className="glass-card surface-card accordion-item">
             <button
               type="button"
               className="accordion-header"
@@ -438,7 +438,7 @@ const PrivacyPolicyPage = () => {
           </div>
 
           {/* Changes to This Privacy Policy */}
-          <div className="glass-card accordion-item">
+          <div className="glass-card surface-card accordion-item">
             <button
               type="button"
               className="accordion-header"
@@ -471,7 +471,7 @@ const PrivacyPolicyPage = () => {
           </div>
 
           {/* Contact Us */}
-          <div className="glass-card accordion-item contact-card">
+          <div className="glass-card surface-card accordion-item contact-card">
             <button
               type="button"
               className="accordion-header"

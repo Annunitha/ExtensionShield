@@ -189,7 +189,7 @@ const ScanResultsPageV2 = () => {
           <h2>No Results Found</h2>
           <p>This extension hasn't been scanned yet or the scan is still in progress.</p>
           {error && (
-            <div className="empty-error" style={{ marginTop: '1rem', color: '#ef4444' }}>
+            <div className="empty-error" style={{ marginTop: '1rem', color: 'var(--risk-bad)' }}>
               {error}
             </div>
           )}

@@ -731,10 +731,10 @@
       color: #22c55e;
     }
     &.warning {
-      color: #f59e0b;
+      color: var(--risk-warn);
     }
     &.danger {
-      color: #ef4444;
+      color: var(--risk-bad);
     }
   }
 
@@ -770,10 +770,10 @@
     background: linear-gradient(90deg, #22c55e, #4ade80);
   }
   &.warning {
-    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    background: linear-gradient(90deg, var(--risk-warn), #fbbf24);
   }
   &.danger {
-    background: linear-gradient(90deg, #ef4444, #f87171);
+    background: linear-gradient(90deg, var(--risk-bad), #f87171);
   }
 }
 

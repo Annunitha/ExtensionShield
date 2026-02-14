@@ -58,7 +58,7 @@ const InputModal = ({
         title: 'Extension ID',
         icon: '🆔',
         description: 'Direct extension ID input and lookup information.',
-        color: '#10B981',
+        color: 'var(--risk-good)',
       },
     };
     return types[inputType] || types.url;
@@ -68,10 +68,10 @@ const InputModal = ({
 
   const getValidationStatusColor = () => {
     switch (validationStatus) {
-      case 'valid': return '#10B981';
-      case 'invalid': return '#EF4444';
-      case 'pending': return '#F59E0B';
-      default: return '#6B7280';
+      case 'valid': return 'var(--risk-good)';
+      case 'invalid': return 'var(--risk-bad)';
+      case 'pending': return 'var(--risk-warn)';
+      default: return 'var(--risk-neutral)';
     }
   };
 

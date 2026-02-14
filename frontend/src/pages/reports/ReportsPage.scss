@@ -208,23 +208,23 @@
     background: rgba(34, 197, 94, 0.15);
     color: #22c55e;
   }
-  .stat-value { color: #22c55e; }
+  .stat-value { color: var(--risk-good); }
 }
 
 .stat-card.stat-review {
   .stat-icon {
     background: rgba(245, 158, 11, 0.15);
-    color: #f59e0b;
+    color: var(--risk-warn);
   }
-  .stat-value { color: #f59e0b; }
+  .stat-value { color: var(--risk-warn); }
 }
 
 .stat-card.stat-block {
   .stat-icon {
     background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
+    color: var(--risk-bad);
   }
-  .stat-value { color: #ef4444; }
+  .stat-value { color: var(--risk-bad); }
 }
 
 /* ============================================================================
@@ -333,12 +333,12 @@
 
   &.verdict-review {
     background: rgba(245, 158, 11, 0.15);
-    color: #f59e0b;
+    color: var(--risk-warn);
   }
 
   &.verdict-block {
     background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
+    color: var(--risk-bad);
   }
 
   &.verdict-unknown {
@@ -394,13 +394,13 @@
 
   &.verdict-review {
     background: rgba(245, 158, 11, 0.15);
-    color: #f59e0b;
+    color: var(--risk-warn);
     border: 1px solid rgba(245, 158, 11, 0.3);
   }
 
   &.verdict-block {
     background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
+    color: var(--risk-bad);
     border: 1px solid rgba(239, 68, 68, 0.3);
   }
 }

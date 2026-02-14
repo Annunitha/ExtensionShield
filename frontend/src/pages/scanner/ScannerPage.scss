@@ -126,13 +126,13 @@
   span {
     flex: 1;
     font-size: 0.875rem;
-    color: #ef4444;
+    color: var(--risk-bad);
   }
 
   button {
     background: transparent;
     border: none;
-    color: #ef4444;
+    color: var(--risk-bad);
     cursor: pointer;
     padding: 0.25rem;
     font-size: 1rem;
@@ -177,13 +177,10 @@
 }
 
 .table-wrapper {
-  background: rgba(17, 24, 39, 0.4);
-  border: 1px solid rgba(148, 163, 184, 0.1);
-  border-radius: 16px;
+  /* Surface from .surface-panel (index.css) */
   overflow: hidden;
-  backdrop-filter: blur(10px);
   position: relative;
-  
+
   // Horizontal scroll shadow indicators
   &::before,
   &::after {
@@ -384,26 +381,26 @@
   // Default colors (will be overridden by inline styles for score-based coloring)
   &.risk-low {
     background: rgba(16, 185, 129, 0.08);
-    border-color: #10B981;
-    color: #10B981;
+    border-color: var(--risk-good-border);
+    color: var(--risk-good);
   }
 
   &.risk-medium, &.risk-moderate {
     background: rgba(245, 158, 11, 0.08);
-    border-color: #F59E0B;
-    color: #F59E0B;
+    border-color: var(--risk-warn-border);
+    color: var(--risk-warn);
   }
 
   &.risk-high {
     background: rgba(239, 68, 68, 0.08);
-    border-color: #EF4444;
-    color: #EF4444;
+    border-color: var(--risk-bad-border);
+    color: var(--risk-bad);
   }
 
   &.risk-unknown {
     background: rgba(107, 114, 128, 0.08);
     border-color: rgba(107, 114, 128, 0.3);
-    color: #6B7280;
+    color: var(--risk-neutral);
   }
 }
 
@@ -480,7 +477,7 @@
   &.signal-warn {
     background: rgba(245, 158, 11, 0.08);
     border-color: rgba(245, 158, 11, 0.2);
-    color: #f59e0b;
+    color: var(--risk-warn);
 
     .signal-value {
       border-color: rgba(245, 158, 11, 0.3);
@@ -490,7 +487,7 @@
   &.signal-high {
     background: rgba(239, 68, 68, 0.1);
     border-color: rgba(239, 68, 68, 0.25);
-    color: #ef4444;
+    color: var(--risk-bad);
 
     .signal-value {
       border-color: rgba(239, 68, 68, 0.3);
@@ -631,7 +628,7 @@
     .pro-badge {
       font-size: 0.5rem;
       padding: 0.1rem 0.25rem;
-      background: linear-gradient(135deg, #f59e0b, #d97706);
+      background: linear-gradient(135deg, var(--risk-warn), #d97706);
       border-radius: 3px;
       color: #000;
       font-weight: 700;

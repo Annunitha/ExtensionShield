@@ -431,7 +431,7 @@ const ScanHistoryPage = () => {
           <p>Browse and search all scanned extensions</p>
           {!isAuthenticated && (
             <p className="auth-hint" style={{ marginTop: '0.5rem', fontSize: '0.875rem', opacity: 0.8 }}>
-              Showing 10 most recent scans. <button onClick={openSignInModal} style={{ background: 'none', border: 'none', color: 'var(--accent-color, #3b82f6)', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontSize: 'inherit' }}>Sign in</button> to scan new extensions (limit: 2 scans/day).
+              Showing 10 most recent scans. <button onClick={openSignInModal} style={{ background: 'none', border: 'none', color: 'hsl(var(--color-info))', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontSize: 'inherit' }}>Sign in</button> to scan new extensions (limit: 2 scans/day).
             </p>
           )}
         </div>
@@ -484,7 +484,7 @@ const ScanHistoryPage = () => {
         {/* Extensions Table */}
         {!loading && filteredScans.length > 0 && (
           <div className={`extensions-table-container ${showBlur ? 'blurred-content' : ''}`}>
-            <div className="table-wrapper" ref={tableWrapperRef}>
+            <div className="table-wrapper surface-panel" ref={tableWrapperRef}>
               <table className="extensions-table">
                 <thead>
                   <tr>

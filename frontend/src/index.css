@@ -11,11 +11,15 @@
   --color-surface: 222 47% 10%;
   --color-surface-elevated: 222 47% 12%;
   --color-surface-hover: 222 47% 15%;
+  --color-card: 222 47% 10%;
+  --color-card-foreground: 210 40% 98%;
+  --color-popover: 222 47% 12%;
+  --color-popover-foreground: 210 40% 98%;
 
   /* Foreground Colors */
   --color-foreground: 210 40% 98%;
   --color-foreground-muted: 215 20% 65%;
-  --color-foreground-subtle: 215 16% 47%;
+  --color-foreground-subtle: 215 16% 52%;
 
   /* Primary Brand - Emerald */
   --color-primary: 142 71% 45%;
@@ -48,6 +52,12 @@
   --color-warning-hover: 38 92% 45%;
   --color-warning-foreground: 222 47% 5%;
 
+  --color-info: 217 91% 60%;
+  --color-info-hover: 217 91% 50%;
+  --color-info-foreground: 0 0% 100%;
+  --color-info-bg: rgba(59, 130, 246, 0.12);
+  --color-info-border: rgba(59, 130, 246, 0.4);
+
   /* Borders & Inputs */
   --color-border: 215 20% 15%;
   --color-border-subtle: 215 20% 12%;
@@ -56,6 +66,20 @@
   --color-input: 222 47% 8%;
   --color-input-focus: 142 71% 45%;
   --color-ring: 142 71% 45%;
+
+  /* Risk palette - shared by report/chart components (shadcn-style) */
+  --risk-good: #10B981;
+  --risk-warn: #F59E0B;
+  --risk-bad: #EF4444;
+  --risk-neutral: #6B7280;
+  --risk-good-bg: rgba(16, 185, 129, 0.12);
+  --risk-good-border: rgba(16, 185, 129, 0.4);
+  --risk-warn-bg: rgba(245, 158, 11, 0.12);
+  --risk-warn-border: rgba(245, 158, 11, 0.4);
+  --risk-bad-bg: rgba(239, 68, 68, 0.12);
+  --risk-bad-border: rgba(239, 68, 68, 0.4);
+  --risk-neutral-bg: rgba(107, 114, 128, 0.12);
+  --risk-neutral-border: rgba(107, 114, 128, 0.4);
 
   /* Radii */
   --radius-sm: 0.5rem;
@@ -109,11 +133,11 @@
   --atlas-purple-glow: rgba(139, 92, 246, 0.4);
   --atlas-orange: #f97316;
   --atlas-orange-glow: rgba(249, 115, 22, 0.4);
-  --atlas-danger: #ef4444;
+  --atlas-danger: var(--risk-bad);
   --atlas-text-primary: #f8fafc;
   --atlas-text-secondary: #94a3b8;
   --atlas-text-muted: #94a3b8; /* Slightly brighter for WCAG AA on lighter bg (was #64748b) */
-  --atlas-border: rgba(148, 163, 184, 0.12);
+  --atlas-border: rgba(148, 163, 184, 0.18);
 }
 
 /* ============================================================================
@@ -125,6 +149,10 @@
   --color-surface: 0 0% 98%;
   --color-surface-elevated: 0 0% 96%;
   --color-surface-hover: 0 0% 94%;
+  --color-card: 0 0% 98%;
+  --color-card-foreground: 222 47% 11%;
+  --color-popover: 0 0% 96%;
+  --color-popover-foreground: 222 47% 11%;
 
   /* Foreground Colors */
   --color-foreground: 222 47% 11%;
@@ -134,7 +162,7 @@
   /* Primary Brand - Emerald (darker for light mode) */
   --color-primary: 142 71% 40%;
   --color-primary-hover: 142 71% 35%;
-  --color-primary-foreground: 0 0% 100%;
+  --color-primary-foreground: 222 47% 5%;
 
   /* Secondary - Purple */
   --color-secondary: 256 65% 60%;
@@ -162,6 +190,12 @@
   --color-warning-hover: 38 92% 45%;
   --color-warning-foreground: 0 0% 100%;
 
+  --color-info: 217 91% 60%;
+  --color-info-hover: 217 91% 50%;
+  --color-info-foreground: 0 0% 100%;
+  --color-info-bg: rgba(59, 130, 246, 0.12);
+  --color-info-border: rgba(59, 130, 246, 0.4);
+
   /* Borders & Inputs */
   --color-border: 215 20% 85%;
   --color-border-subtle: 215 20% 90%;
@@ -169,7 +203,21 @@
 
   --color-input: 0 0% 98%;
   --color-input-focus: 142 71% 40%;
-  --color-ring: 142 71% 40%;
+  --color-ring: 142 71% 28%;
+
+  /* Risk palette (same as dark for consistency) */
+  --risk-good: #10B981;
+  --risk-warn: #F59E0B;
+  --risk-bad: #EF4444;
+  --risk-neutral: #6B7280;
+  --risk-good-bg: rgba(16, 185, 129, 0.12);
+  --risk-good-border: rgba(16, 185, 129, 0.4);
+  --risk-warn-bg: rgba(245, 158, 11, 0.12);
+  --risk-warn-border: rgba(245, 158, 11, 0.4);
+  --risk-bad-bg: rgba(239, 68, 68, 0.12);
+  --risk-bad-border: rgba(239, 68, 68, 0.4);
+  --risk-neutral-bg: rgba(107, 114, 128, 0.12);
+  --risk-neutral-border: rgba(107, 114, 128, 0.4);
 
   /* Legacy Atlas tokens for light mode */
   --atlas-bg-primary: #ffffff;
@@ -177,7 +225,7 @@
   --atlas-text-primary: #0f172a;
   --atlas-text-secondary: #475569;
   --atlas-text-muted: #64748b;
-  --atlas-border: rgba(17, 24, 39, 0.1);
+  --atlas-border: rgba(17, 24, 39, 0.14);
 }
 
 .light html {
@@ -208,12 +256,35 @@
 
 .light .glass {
   background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(17, 24, 39, 0.1);
+  border: 1px solid rgba(17, 24, 39, 0.14);
 }
 
 .light .glass-strong {
   background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(17, 24, 39, 0.15);
+  border: 1px solid rgba(17, 24, 39, 0.2);
+}
+
+.light .surface-card {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.light .surface-card:hover {
+  border-color: rgba(17, 24, 39, 0.18);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.light .surface-panel {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(17, 24, 39, 0.1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.light .surface-panel:hover {
+  border-color: rgba(17, 24, 39, 0.14);
 }
 
 @theme {
@@ -222,6 +293,10 @@
   --color-surface: hsl(var(--color-surface));
   --color-surface-elevated: hsl(var(--color-surface-elevated));
   --color-surface-hover: hsl(var(--color-surface-hover));
+  --color-card: hsl(var(--color-card));
+  --color-card-foreground: hsl(var(--color-card-foreground));
+  --color-popover: hsl(var(--color-popover));
+  --color-popover-foreground: hsl(var(--color-popover-foreground));
 
   --color-foreground: hsl(var(--color-foreground));
   --color-foreground-muted: hsl(var(--color-foreground-muted));
@@ -248,6 +323,12 @@
 
   --color-warning: hsl(var(--color-warning));
   --color-warning-hover: hsl(var(--color-warning-hover));
+
+  --color-info: hsl(var(--color-info));
+  --color-info-hover: hsl(var(--color-info-hover));
+  --color-info-foreground: hsl(var(--color-info-foreground));
+  --color-info-bg: var(--color-info-bg);
+  --color-info-border: var(--color-info-border);
 
   --color-border: hsl(var(--color-border));
   --color-input: hsl(var(--color-input));
@@ -324,14 +405,44 @@ body {
   background: rgba(17, 24, 39, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.18);
 }
 
 .glass-strong {
   background: rgba(17, 24, 39, 0.8);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
-  border: 1px solid rgba(148, 163, 184, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+/* ============================================================================
+   SURFACE UTILITIES - Standardized card/panel surfaces (background, border, shadow, blur, hover)
+   ============================================================================ */
+.surface-card {
+  background: rgba(17, 24, 39, 0.6);
+  border: 1px solid var(--atlas-border);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+.surface-card:hover {
+  border-color: rgba(148, 163, 184, 0.22);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.28);
+}
+
+.surface-panel {
+  background: rgba(17, 24, 39, 0.4);
+  border: 1px solid var(--atlas-border);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.surface-panel:hover {
+  border-color: rgba(148, 163, 184, 0.18);
 }
 
 /* ============================================================================

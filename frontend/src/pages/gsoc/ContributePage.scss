@@ -141,7 +141,7 @@
   &.report {
     background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
     border: 1px solid rgba(239, 68, 68, 0.3);
-    color: #ef4444;
+    color: var(--risk-bad);
   }
   
   &.community {
@@ -151,9 +151,9 @@
   }
   
   &.share {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    color: #3b82f6;
+    background: linear-gradient(135deg, var(--color-info-bg), transparent);
+    border: 1px solid var(--color-info-border);
+    color: hsl(var(--color-info));
   }
 }
 
@@ -177,7 +177,7 @@
   &.critical {
     background: rgba(239, 68, 68, 0.1);
     border-color: rgba(239, 68, 68, 0.3);
-    color: #ef4444;
+    color: var(--risk-bad);
   }
 }
 

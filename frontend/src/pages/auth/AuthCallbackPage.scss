@@ -60,11 +60,11 @@
 }
 
 .auth-callback-success {
-  color: #10b981;
+  color: var(--risk-good);
 }
 
 .auth-callback-error {
-  color: #ef4444;
+  color: var(--risk-bad);
 }
 
 .auth-callback-success svg,
@@ -81,7 +81,7 @@
 }
 
 .auth-callback-message.error {
-  color: #ef4444;
+  color: var(--risk-bad);
 }
 
 .auth-callback-submessage {

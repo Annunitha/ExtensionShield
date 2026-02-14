@@ -22,10 +22,10 @@ const ReportScoreCard = ({
 }) => {
   const getBandColor = () => {
     switch (band) {
-      case 'GOOD': return '#10B981';
-      case 'WARN': return '#F59E0B';
-      case 'BAD': return '#EF4444';
-      default: return '#6B7280';
+      case 'GOOD': return 'var(--risk-good)';
+      case 'WARN': return 'var(--risk-warn)';
+      case 'BAD': return 'var(--risk-bad)';
+      default: return 'var(--risk-neutral)';
     }
   };
 

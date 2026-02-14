@@ -438,7 +438,7 @@
   
   &.verdict-yellow {
     background: rgba(245, 158, 11, 0.1);
-    color: #f59e0b;
+    color: var(--risk-warn);
   }
   
   &.verdict-orange {
@@ -448,7 +448,7 @@
   
   &.verdict-red {
     background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
+    color: var(--risk-bad);
   }
 }
 
@@ -509,13 +509,13 @@
   &.warning {
     background: rgba(245, 158, 11, 0.1);
     border: 1px solid rgba(245, 158, 11, 0.2);
-    color: #f59e0b;
+    color: var(--risk-warn);
   }
 
   &.danger {
     background: rgba(239, 68, 68, 0.1);
     border: 1px solid rgba(239, 68, 68, 0.2);
-    color: #ef4444;
+    color: var(--risk-bad);
   }
 }
 
@@ -566,7 +566,7 @@
   }
 
   &.trust-yellow {
-    border-color: #f59e0b;
+    border-color: var(--risk-warn);
     background: rgba(245, 158, 11, 0.1);
     box-shadow: 0 0 40px rgba(245, 158, 11, 0.2);
   }
@@ -578,7 +578,7 @@
   }
 
   &.trust-red {
-    border-color: #ef4444;
+    border-color: var(--risk-bad);
     background: rgba(239, 68, 68, 0.1);
     box-shadow: 0 0 40px rgba(239, 68, 68, 0.2);
   }
@@ -614,7 +614,7 @@
 
   &.trust-yellow {
     background: rgba(245, 158, 11, 0.15);
-    color: #f59e0b;
+    color: var(--risk-warn);
   }
 
   &.trust-orange {
@@ -624,7 +624,7 @@
 
   &.trust-red {
     background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
+    color: var(--risk-bad);
   }
 }
 
@@ -812,11 +812,11 @@
   }
 
   &.risk-high {
-    border-left: 3px solid #ef4444;
+    border-left: 3px solid var(--risk-bad);
   }
 
   &.risk-medium {
-    border-left: 3px solid #f59e0b;
+    border-left: 3px solid var(--risk-warn);
   }
 
   &.risk-low {
@@ -1142,8 +1142,8 @@
   border-radius: 4px;
   transition: width 0.5s ease;
 
-  &.high { background: #ef4444; }
-  &.medium { background: #f59e0b; }
+  &.high { background: var(--risk-bad); }
+  &.medium { background: var(--risk-warn); }
   &.low { background: #22c55e; }
 }
 
@@ -1245,8 +1245,8 @@
   font-weight: 700;
   line-height: 1;
 
-  &.high { color: #ef4444; }
-  &.medium { color: #f59e0b; }
+  &.high { color: var(--risk-bad); }
+  &.medium { color: var(--risk-warn); }
   &.low { color: #22c55e; }
 }
 
@@ -1902,7 +1902,7 @@
     }
     
     &.delta-down {
-      color: #ef4444;
+      color: var(--risk-bad);
     }
     
     &.delta-same {
@@ -1921,13 +1921,13 @@
   &.risk-moderate {
     background: rgba(245, 158, 11, 0.1);
     border-color: rgba(245, 158, 11, 0.25);
-    color: #f59e0b;
+    color: var(--risk-warn);
   }
   
   &.risk-high {
     background: rgba(239, 68, 68, 0.1);
     border-color: rgba(239, 68, 68, 0.25);
-    color: #ef4444;
+    color: var(--risk-bad);
   }
 }
 
@@ -1944,11 +1944,11 @@
   &.risk-med,
   &.risk-medium,
   &.risk-moderate {
-    color: #f59e0b;
+    color: var(--risk-warn);
   }
   
   &.risk-high {
-    color: #ef4444;
+    color: var(--risk-bad);
   }
 }
 
@@ -1986,7 +1986,7 @@
     }
     
     &.change-negative {
-      color: #ef4444;
+      color: var(--risk-bad);
       
       &::before {
         content: '↓ ';

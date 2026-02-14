@@ -40,6 +40,9 @@ const RedirectExtensionToScanResults = () => {
 const ReportsPage = React.lazy(() => import("../pages/reports/ReportsPage"));
 const ReportDetailPage = React.lazy(() => import("../pages/reports/ReportDetailPage"));
 
+// Dev / Debug (not in nav)
+const ThemeDebugPage = React.lazy(() => import("../pages/debug/ThemeDebugPage"));
+
 /**
  * Route Configuration
  * 
@@ -343,6 +346,12 @@ export const routes = [
   {
     path: "/analysis",
     element: <Navigate to="/scan" replace />
+  },
+
+  // ============ DEBUG (dev only) ============
+  {
+    path: "/debug/theme",
+    element: <ThemeDebugPage />
   },
 
   // ============ CATCH-ALL ============

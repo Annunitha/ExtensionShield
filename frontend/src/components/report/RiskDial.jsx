@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { getRiskColorVar } from '../../constants/riskBands';
+import { getRiskHex } from '../../utils/riskColorUtils';
 import './RiskDial.scss';
 
 /**
@@ -98,39 +100,41 @@ const RiskDial = ({
   // We invert because higher score = safer = less risk
   const riskLevel = 100 - animatedScore; // 0 = safe, 100 = dangerous
   
-  // Generate tick marks - 24 ticks around the top arc (from -120° to +120°)
-  const ticks = useMemo(() => {
+  // Tick geometry (angles) - stable
+  const tickGeometry = useMemo(() => {
     const tickCount = 24;
-    const startAngle = -120; // degrees from top (left side)
-    const endAngle = 120; // degrees from top (right side)
+    const startAngle = -120;
+    const endAngle = 120;
     const angleSpan = endAngle - startAngle;
-    
     return Array.from({ length: tickCount }, (_, i) => {
-      const progress = i / (tickCount - 1); // 0 to 1
+      const progress = i / (tickCount - 1);
       const angle = startAngle + progress * angleSpan;
-      
-      // Color zones aligned with score-band thresholds:
-      // Green: 85-100 (0-15% of risk dial)
-      // Yellow: 60-84 (15-40% of risk dial)
-      // Red: 0-59 (40-100% of risk dial)
-      let color;
-      if (progress < 0.15) {
-        // Pure green zone (85-100 score)
-        const t = progress / 0.15;
-        color = interpolateColor('#22C55E', '#84CC16', t);
-      } else if (progress < 0.40) {
-        // Yellow zone (60-84 score)
-        const t = (progress - 0.15) / 0.25;
-        color = interpolateColor('#84CC16', '#EAB308', t);
-      } else {
-        // Red zone (0-59 score)
-        const t = (progress - 0.40) / 0.60;
-        color = interpolateColor('#F97316', '#EF4444', t);
-      }
-      
-      return { angle, color, index: i };
+      return { angle, progress, index: i };
     });
   }, []);
+
+  // Tick colors from shared risk palette (need hex for interpolation)
+  const [tickColors, setTickColors] = useState([]);
+  useEffect(() => {
+    const good = getRiskHex('GOOD');
+    const warn = getRiskHex('WARN');
+    const bad = getRiskHex('BAD');
+    const colors = tickGeometry.map(({ progress }) => {
+      if (progress < 0.15) {
+        return interpolateColor(good, good, progress / 0.15);
+      }
+      if (progress < 0.40) {
+        return interpolateColor(warn, bad, (progress - 0.15) / 0.25);
+      }
+      return interpolateColor(warn, bad, (progress - 0.40) / 0.60);
+    });
+    setTickColors(colors);
+  }, [tickGeometry]);
+
+  const ticks = useMemo(() => {
+    if (tickColors.length !== tickGeometry.length) return tickGeometry.map((t) => ({ ...t, color: undefined }));
+    return tickGeometry.map((t, i) => ({ ...t, color: tickColors[i] }));
+  }, [tickGeometry, tickColors]);
 
   // Calculate needle angle based on risk level (inverted score)
   const needleAngle = useMemo(() => {
@@ -166,15 +170,8 @@ const RiskDial = ({
     }
   };
 
-  // Band-driven color: use effectiveBand as source of truth for marker/needle
-  const getBandColor = () => {
-    switch (effectiveBand) {
-      case 'GOOD': return '#22C55E'; // green
-      case 'WARN': return '#EAB308'; // yellow/amber
-      case 'BAD':  return '#EF4444'; // red
-      default:     return '#6B7280'; // neutral for NA
-    }
-  };
+  // Band-driven color: use shared risk palette (CSS variables)
+  const getBandColor = () => getRiskColorVar(effectiveBand);
 
   const center = size / 2;
   const outerRadius = size * 0.42;
@@ -229,7 +226,7 @@ const RiskDial = ({
               y1={y1}
               x2={x2}
               y2={y2}
-              stroke={color}
+              stroke={color ?? 'var(--risk-neutral)'}
               strokeWidth={size * 0.025}
               strokeLinecap="round"
               opacity={isActive ? 1 : 0.25}

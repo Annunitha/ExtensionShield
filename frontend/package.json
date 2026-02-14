@@ -14,13 +14,16 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "generate:sitemap": "node scripts/generate-sitemap.js",
+    "contrast:audit": "node scripts/contrast-audit.js",
     "seo:test": "node scripts/seo_smoke_test.mjs --prod",
     "seo:test:local": "node scripts/seo_smoke_test.mjs --local",
     "seo:prod:reality": "node scripts/seo_prod_reality_check.mjs",
     "seo:prod:reality:scanner": "REDIRECT_DOMAINS=extensionscanner.com node scripts/seo_prod_reality_check.mjs",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "test:visual": "playwright test --config=playwright.config.cjs",
+    "test:visual:update": "playwright test --config=playwright.config.cjs --update-snapshots"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
@@ -54,6 +57,7 @@
     "globals": "^16.4.0",
     "jsdom": "^23.0.1",
     "lucide-react": "^0.562.0",
+    "@playwright/test": "^1.49.0",
     "playwright": "^1.49.0",
     "postcss": "^8.5.6",
     "prettier": "^3.4.2",

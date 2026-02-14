@@ -145,7 +145,7 @@
   }
   
   &.danger .stat-value {
-    color: #ef4444;
+    color: var(--risk-bad);
   }
 }
 

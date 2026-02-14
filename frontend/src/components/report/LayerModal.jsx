@@ -66,10 +66,10 @@ function humanizeFactor(factor) {
   };
   const severity = factor.severity ?? 0;
   let level, levelColor;
-  if (severity >= 0.7)      { level = 'High risk';   levelColor = '#EF4444'; }
-  else if (severity >= 0.4) { level = 'Medium risk';  levelColor = '#F59E0B'; }
-  else if (severity >= 0.05){ level = 'Low risk';     levelColor = '#10B981'; }
-  else                      { level = 'Clear';        levelColor = '#10B981'; }
+  if (severity >= 0.7)      { level = 'High risk';   levelColor = 'var(--risk-bad)'; }
+  else if (severity >= 0.4) { level = 'Medium risk';  levelColor = 'var(--risk-warn)'; }
+  else if (severity >= 0.05){ level = 'Low risk';     levelColor = 'var(--risk-good)'; }
+  else                      { level = 'Clear';        levelColor = 'var(--risk-good)'; }
   return { ...info, level, levelColor, severity, raw: factor };
 }
 
@@ -94,10 +94,10 @@ function getSeverityClass(severity) {
 
 function bandColor(band) {
   switch (band) {
-    case 'GOOD': return '#10B981';
-    case 'WARN': return '#F59E0B';
-    case 'BAD':  return '#EF4444';
-    default:     return '#6B7280';
+    case 'GOOD': return 'var(--risk-good)';
+    case 'WARN': return 'var(--risk-warn)';
+    case 'BAD':  return 'var(--risk-bad)';
+    default:     return 'var(--risk-neutral)';
   }
 }
 

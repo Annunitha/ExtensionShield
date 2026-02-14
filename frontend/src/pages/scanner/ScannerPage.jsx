@@ -105,19 +105,19 @@ const SignalChip = ({ type, signal }) => {
 const RiskBadge = ({ level, score }) => {
   const colorClass = getRiskColorClass(level);
   
-  // Get border color based on score (using new thresholds)
+  // Get border color based on score (using shared risk palette)
   const getBorderColor = () => {
-    if (score === null || score === undefined) return 'rgba(107, 114, 128, 0.3)';
-    if (score >= 85) return '#10B981'; // Green
-    if (score >= 60) return '#F59E0B'; // Yellow
-    return '#EF4444'; // Red
+    if (score === null || score === undefined) return 'var(--risk-neutral-border)';
+    if (score >= 85) return 'var(--risk-good-border)';
+    if (score >= 60) return 'var(--risk-warn-border)';
+    return 'var(--risk-bad-border)';
   };
 
   const getTextColor = () => {
-    if (score === null || score === undefined) return '#6B7280';
-    if (score >= 85) return '#10B981'; // Green
-    if (score >= 60) return '#F59E0B'; // Yellow
-    return '#EF4444'; // Red
+    if (score === null || score === undefined) return 'var(--risk-neutral)';
+    if (score >= 85) return 'var(--risk-good)';
+    if (score >= 60) return 'var(--risk-warn)';
+    return 'var(--risk-bad)';
   };
 
   return (
@@ -610,7 +610,7 @@ const ScannerPage = () => {
 
           {!loading && allScans.length > 0 && (
             <>
-              <div className="table-wrapper" ref={tableWrapperRef}>
+              <div className="table-wrapper surface-panel" ref={tableWrapperRef}>
                 <table className="extensions-table">
                   <thead>
                     <tr>

@@ -51,7 +51,7 @@
 .alert-icon {
   width: 20px;
   height: 20px;
-  color: #ef4444;
+  color: var(--risk-bad);
 }
 
 .alert-text {
@@ -178,9 +178,9 @@
 }
 
 .comparison-badge {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.3);
-  color: #60a5fa;
+  background: var(--color-info-bg);
+  border-color: var(--color-info-border);
+  color: hsl(var(--color-info));
   font-size: 0.75rem;
 
   &.signal-badge {

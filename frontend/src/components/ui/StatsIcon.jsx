@@ -32,7 +32,7 @@ const StatsIcon = ({ size = 24, className = "" }) => {
         width="4"
         height="10"
         rx="2"
-        fill="#ef4444"
+        fill="var(--risk-bad)"
       />
       {/* Blue bar (tallest) */}
       <rect
@@ -41,7 +41,7 @@ const StatsIcon = ({ size = 24, className = "" }) => {
         width="4"
         height="14"
         rx="2"
-        fill="#3b82f6"
+        className="fill-info"
       />
     </svg>
   );

@@ -32,7 +32,7 @@
     border-color: rgba(239, 68, 68, 0.2);
     
     .risk-indicator {
-      background: #EF4444;
+      background: var(--risk-bad);
     }
   }
 
@@ -40,7 +40,7 @@
     border-color: rgba(245, 158, 11, 0.2);
     
     .risk-indicator {
-      background: #F59E0B;
+      background: var(--risk-warn);
     }
   }
 }

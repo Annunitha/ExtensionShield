@@ -23,33 +23,33 @@ const KeyFindings = ({
         return { 
           icon: '🚨', 
           label: 'Critical', 
-          color: '#EF4444',
-          bgColor: 'rgba(239, 68, 68, 0.1)',
-          borderColor: 'rgba(239, 68, 68, 0.3)'
+          color: 'var(--risk-bad)',
+          bgColor: 'var(--risk-bad-bg)',
+          borderColor: 'var(--risk-bad-border)'
         };
       case 'medium': 
         return { 
           icon: '⚠️', 
           label: 'Warning', 
-          color: '#F59E0B',
-          bgColor: 'rgba(245, 158, 11, 0.1)',
-          borderColor: 'rgba(245, 158, 11, 0.3)'
+          color: 'var(--risk-warn)',
+          bgColor: 'var(--risk-warn-bg)',
+          borderColor: 'var(--risk-warn-border)'
         };
       case 'low': 
         return { 
           icon: '💡', 
           label: 'Info', 
-          color: '#10B981',
-          bgColor: 'rgba(16, 185, 129, 0.1)',
-          borderColor: 'rgba(16, 185, 129, 0.3)'
+          color: 'var(--risk-good)',
+          bgColor: 'var(--risk-good-bg)',
+          borderColor: 'var(--risk-good-border)'
         };
       default: 
         return { 
           icon: '📌', 
           label: 'Note', 
-          color: '#6B7280',
-          bgColor: 'rgba(107, 114, 128, 0.1)',
-          borderColor: 'rgba(107, 114, 128, 0.3)'
+          color: 'var(--risk-neutral)',
+          bgColor: 'var(--risk-neutral-bg)',
+          borderColor: 'var(--risk-neutral-border)'
         };
     }
   };
@@ -59,7 +59,7 @@ const KeyFindings = ({
       case 'security': return { icon: '🛡️', label: 'Security', color: '#3B82F6' };
       case 'privacy': return { icon: '🔒', label: 'Privacy', color: '#8B5CF6' };
       case 'governance': return { icon: '📋', label: 'Governance', color: '#EC4899' };
-      default: return { icon: '📊', label: 'General', color: '#6B7280' };
+      default: return { icon: '📊', label: 'General', color: 'var(--risk-neutral)' };
     }
   };
 

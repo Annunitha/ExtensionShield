@@ -70,9 +70,9 @@ const SummaryPanel = ({
     const decision = scores?.decision;
     if (!decision) return null;
     const badges = {
-      'ALLOW': { label: 'SAFE', color: '#10B981', icon: '✓' },
-      'WARN': { label: 'REVIEW', color: '#F59E0B', icon: '⚡' },
-      'BLOCK': { label: 'BLOCKED', color: '#EF4444', icon: '✕' },
+      'ALLOW': { label: 'SAFE', color: 'var(--risk-good)', icon: '✓' },
+      'WARN': { label: 'REVIEW', color: 'var(--risk-warn)', icon: '⚡' },
+      'BLOCK': { label: 'BLOCKED', color: 'var(--risk-bad)', icon: '✕' },
     };
     const badge = badges[decision] || badges['WARN'];
     return (

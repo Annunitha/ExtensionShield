@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { getRiskHex, getInfoHex } from "../utils/riskColorUtils";
 import "./RocketGame.scss";
 
 // Hoisted constants to avoid per-frame allocation
@@ -16,6 +17,7 @@ const RocketGame = ({
   const keysRef = useRef(new Set());
   // Cache gradient so we don't re-create it every frame
   const bgCacheRef = useRef({ gradient: null, height: 0 });
+  const infoHexRef = useRef(null);
   
   const [ui, setUi] = useState({ 
     score: 0, 
@@ -388,17 +390,16 @@ const RocketGame = ({
         ctx.shadowBlur = 0;
       });
 
-      // Bullets - make them more visible
+      // Bullets - make them more visible (use theme info color)
+      if (!infoHexRef.current) infoHexRef.current = getInfoHex();
+      const infoHex = infoHexRef.current;
       g.bullets.forEach(bullet => {
-        // Bullet glow effect
         ctx.shadowBlur = 8;
-        ctx.shadowColor = "#60a5fa";
-        ctx.fillStyle = "#60a5fa";
+        ctx.shadowColor = infoHex;
+        ctx.fillStyle = infoHex;
         ctx.fillRect(bullet.x, bullet.y, bullet.w, bullet.h);
-        
-        // Bullet core (brighter center)
         ctx.shadowBlur = 0;
-        ctx.fillStyle = "#93c5fd";
+        ctx.fillStyle = infoHex;
         ctx.fillRect(bullet.x + 2, bullet.y + 1, bullet.w - 4, bullet.h - 2);
       });
 
@@ -452,8 +453,8 @@ const RocketGame = ({
       ctx.closePath();
       ctx.fill();
 
-      // Blue triangular body pointing right
-      ctx.fillStyle = "#3b82f6";
+      // Blue triangular body pointing right (theme info color)
+      ctx.fillStyle = infoHex;
       ctx.beginPath();
       ctx.moveTo(rx + rw, ry); // Tip pointing right
       ctx.lineTo(rx, ry - rh / 2); // Top left
@@ -462,7 +463,7 @@ const RocketGame = ({
       ctx.fill();
 
       // Blue accent/cockpit window
-      ctx.fillStyle = "#60a5fa";
+      ctx.fillStyle = infoHex;
       ctx.beginPath();
       ctx.arc(rx + rw * 0.3, ry, 5, 0, Math.PI * 2);
       ctx.fill();
@@ -482,12 +483,12 @@ const RocketGame = ({
       
       // Debug info (bottom)
       const isFocused = document.activeElement === canvas;
-      ctx.fillStyle = isFocused ? "#22c55e" : "#ef4444";
+      ctx.fillStyle = isFocused ? getRiskHex("GOOD") : getRiskHex("BAD");
       ctx.font = "14px monospace";
       ctx.fillText(`Focus: ${isFocused ? 'YES' : 'CLICK!'}`, 20, h - 60);
       
       if (keys.size > 0) {
-        ctx.fillStyle = "#22c55e";
+        ctx.fillStyle = getRiskHex("GOOD");
         ctx.fillText(`Keys: ${Array.from(keys).join(', ')}`, 20, h - 40);
       }
       
@@ -503,7 +504,7 @@ const RocketGame = ({
         ctx.textAlign = "center";
 
         // "GAME OVER" title
-        ctx.fillStyle = "#ef4444";
+        ctx.fillStyle = getRiskHex("BAD");
         ctx.font = "bold 48px monospace";
         ctx.fillText("GAME OVER", w / 2, h / 2 - 30);
 

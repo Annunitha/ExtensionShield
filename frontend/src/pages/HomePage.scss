@@ -13,7 +13,7 @@
   --atlas-purple-glow: rgba(139, 92, 246, 0.4);
   --atlas-orange: #f97316;
   --atlas-orange-glow: rgba(249, 115, 22, 0.4);
-  --atlas-danger: #ef4444;
+  --atlas-danger: var(--risk-bad);
   --atlas-text-primary: #f8fafc;
   --atlas-text-secondary: #94a3b8;
   --atlas-text-muted: #64748b;
@@ -172,26 +172,18 @@
   align-items: center;
 }
 
-/* Frosted Glass Card - Scan results preview
-   Background aligned with hero (atlas palette) for brand consistency.
-   Contrast: --atlas-text-primary / --atlas-text-muted on dark base (WCAG AA).
-   Alternatives: (1) Softer blend: background: rgba(17, 24, 39, 0.85); border with rgba(34,197,94,0.12);
-   (2) Deeper match: background: var(--atlas-bg-primary); border: 1px solid rgba(148,163,184,0.15); */
+/* Frosted glass card - uses .surface-card token set (layout/sizing only here) */
 .hero-glass-card {
   width: 100%;
   max-width: 360px;
   padding: 2rem;
-  background: var(--atlas-bg-secondary);
-  background: color-mix(in srgb, var(--atlas-bg-secondary) 96%, var(--atlas-bg-primary) 4%);
+  border-radius: 20px;
+  /* Surface: same as .surface-card (background, border, shadow, blur from index.css) */
+  background: rgba(17, 24, 39, 0.6);
+  border: 1px solid var(--atlas-border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--atlas-border);
-  border-radius: 20px;
-  box-shadow: 
-    0 16px 40px rgba(0, 0, 0, 0.35),
-    0 0 0 1px rgba(255, 255, 255, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 1px 0 rgba(34, 197, 94, 0.06);
 }
 
 /* Glass card icon - extension icon (no radiating circles), compact */
@@ -253,7 +245,7 @@
         color: #22c55e;
       }
       &.warning {
-        color: #f59e0b;
+        color: var(--risk-warn);
       }
     }
 
@@ -290,7 +282,7 @@
     background: linear-gradient(90deg, #22c55e, #4ade80);
   }
   &.warning {
-    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    background: linear-gradient(90deg, var(--risk-warn), #fbbf24);
   }
 }
 
@@ -952,12 +944,11 @@
 }
 
 .deception-card {
-  background: rgba(13, 20, 36, 0.8);
-  border: 1px solid var(--atlas-border);
+  /* Surface from .surface-card (index.css) */
   border-radius: 16px;
   overflow: hidden;
   transition: all 0.3s ease;
-  
+
   &:hover {
     transform: translateY(-4px);
     border-color: rgba(239, 68, 68, 0.4);
@@ -1008,11 +999,11 @@
   /* Fallback gradient when logo fails */
   &.tabs, &.zoom { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
   &.stylus { background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); }
-  &.shield { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+  &.shield { background: linear-gradient(135deg, hsl(var(--color-info)) 0%, hsl(var(--color-info-hover)) 100%); }
   &.honey { background: linear-gradient(135deg, #FF9500 0%, #E85D04 100%); }
-  &.grammarly { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+  &.grammarly { background: linear-gradient(135deg, var(--risk-good) 0%, #059669 100%); }
   &.vpn { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
-  &.download { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+  &.download { background: linear-gradient(135deg, var(--risk-warn) 0%, #d97706 100%); }
   
   .ext-logo-fallback.show svg { stroke: white; }
 }
@@ -1552,19 +1543,17 @@
 }
 
 .pricing-card {
+  /* Surface from .surface-card (index.css) */
   position: relative;
   padding: 2rem;
-  background: rgba(13, 20, 36, 0.6);
-  border: 1px solid var(--atlas-border);
   border-radius: 16px;
   transition: all 0.3s ease;
-  
+
   &:hover {
-    border-color: rgba(148, 163, 184, 0.2);
     transform: translateY(-4px);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
   }
-  
+
   &.popular {
     border-color: var(--atlas-accent);
     background: linear-gradient(180deg, rgba(34, 197, 94, 0.08) 0%, rgba(13, 20, 36, 0.6) 100%);

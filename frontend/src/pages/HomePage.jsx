@@ -486,7 +486,7 @@ const HomePage = () => {
             </button>
             <div className={`deception-cards-grid ${EXTENSION_CARDS.slice(extensionSlideIndex * 3, extensionSlideIndex * 3 + 3).length === 2 ? 'two-cards' : ''}`}>
               {EXTENSION_CARDS.slice(extensionSlideIndex * 3, extensionSlideIndex * 3 + 3).map((ext) => (
-                <div key={ext.id} className="deception-card">
+                <div key={ext.id} className="deception-card surface-card">
                   <div className="card-trust-layer">
                     <div className={`ext-icon ${ext.iconClass}`}>
                       {ext.logoUrl ? (
@@ -708,7 +708,7 @@ const HomePage = () => {
 
         <div className="pricing-grid">
           {/* Community Plan */}
-          <div className="pricing-card popular">
+          <div className="pricing-card surface-card popular">
             <div className="popular-badge">BETA</div>
             <div className="pricing-card-header">
               <h3>Community</h3>
@@ -751,7 +751,7 @@ const HomePage = () => {
           </div>
 
           {/* Enterprise Plan */}
-          <div className="pricing-card enterprise">
+          <div className="pricing-card surface-card enterprise">
             <div className="pricing-card-header">
               <h3>Enterprise</h3>
               <p>Teams & governance</p>

@@ -395,11 +395,11 @@
 
   &.lm-perm-high {
     border-color: rgba(239, 68, 68, 0.15);
-    .lm-perm-dot { background: #EF4444; }
+    .lm-perm-dot { background: var(--risk-bad); }
   }
   &.lm-perm-medium {
     border-color: rgba(245, 158, 11, 0.12);
-    .lm-perm-dot { background: #F59E0B; }
+    .lm-perm-dot { background: var(--risk-warn); }
   }
   &.lm-perm-low {
     .lm-perm-dot { background: rgba(248, 250, 252, 0.25); }

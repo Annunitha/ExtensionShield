@@ -38,20 +38,14 @@ export const ThemeProvider = ({ children }) => {
   }, [theme, location.pathname]);
 
   useEffect(() => {
-    // Apply effective theme to document
-    document.documentElement.classList.remove("light", "dark");
-    document.documentElement.classList.add(effectiveTheme);
-    
-    // Update CSS variables based on effective theme
+    // Apply theme via html class only; CSS (.light in index.css) handles backgrounds
     if (effectiveTheme === "light") {
-      document.documentElement.style.backgroundColor = "#ffffff";
-      document.body.style.backgroundColor = "#ffffff";
+      document.documentElement.classList.add("light");
     } else {
-      document.documentElement.style.backgroundColor = "#0d1424";
-      document.body.style.backgroundColor = "#0d1424";
+      document.documentElement.classList.remove("light");
     }
-    
-    // Save actual theme (not effective theme) to localStorage
+
+    // Persist user choice (not effective theme) to localStorage
     if (effectiveTheme === theme) {
       localStorage.setItem("theme", theme);
     }

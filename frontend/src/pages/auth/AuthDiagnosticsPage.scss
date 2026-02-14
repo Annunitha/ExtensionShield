@@ -29,7 +29,7 @@
   }
   
   .debug-warning {
-    color: #f59e0b;
+    color: var(--risk-warn);
     font-weight: 600;
     margin-top: 0.5rem;
   }
@@ -125,16 +125,16 @@
   }
   
   &.refresh {
-    background: #3b82f6;
+    background: hsl(var(--color-info));
     color: white;
     
     &:hover:not(:disabled) {
-      background: #2563eb;
+      background: hsl(var(--color-info-hover));
     }
   }
   
   &.signout {
-    background: #ef4444;
+    background: var(--risk-bad);
     color: white;
     
     &:hover {

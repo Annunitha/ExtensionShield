@@ -127,7 +127,7 @@ const BenchmarksPage = () => {
                   data={trendsData.maliciousExtensions}
                   dataKey="Malicious Extensions"
                   title="Reported extension enforcement & security advisories (selected sources)"
-                  color="#ef4444"
+                  color="var(--risk-bad)"
                 />
               </div>
 
@@ -136,7 +136,7 @@ const BenchmarksPage = () => {
                   data={trendsData.dataTheftIncidents}
                   dataKey="Data Theft Incidents"
                   title="Reported extension-related data exposure incidents (public reports)"
-                  color="#f59e0b"
+                  color="var(--risk-warn)"
                 />
               </div>
             </div>
