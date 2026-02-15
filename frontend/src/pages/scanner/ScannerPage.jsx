@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import EnhancedUrlInput from "../../components/EnhancedUrlInput";
 import { useScan } from "../../context/ScanContext";
 import databaseService from "../../services/databaseService";
 import realScanService from "../../services/realScanService";
@@ -13,6 +12,7 @@ import { enrichScans } from "../../utils/scanEnrichment";
 import { EXTENSION_ICON_PLACEHOLDER, getExtensionIconUrl } from "../../utils/constants";
 import { getScanResultsRoute } from "../../utils/slug";
 import SEOHead from "../../components/SEOHead";
+import DemoModal from "../../components/DemoModal";
 import "./ScannerPage.scss";
 
 // Tooltip component for signal chips
@@ -105,19 +105,19 @@ const SignalChip = ({ type, signal }) => {
 const RiskBadge = ({ level, score }) => {
   const colorClass = getRiskColorClass(level);
   
-  // Get border color based on score (using shared risk palette)
+  // Get border color based on score (using new thresholds)
   const getBorderColor = () => {
-    if (score === null || score === undefined) return 'var(--risk-neutral-border)';
-    if (score >= 85) return 'var(--risk-good-border)';
-    if (score >= 60) return 'var(--risk-warn-border)';
-    return 'var(--risk-bad-border)';
+    if (score === null || score === undefined) return 'rgba(107, 114, 128, 0.3)';
+    if (score >= 85) return '#10B981'; // Green
+    if (score >= 60) return '#F59E0B'; // Yellow
+    return '#EF4444'; // Red
   };
 
   const getTextColor = () => {
-    if (score === null || score === undefined) return 'var(--risk-neutral)';
-    if (score >= 85) return 'var(--risk-good)';
-    if (score >= 60) return 'var(--risk-warn)';
-    return 'var(--risk-bad)';
+    if (score === null || score === undefined) return '#6B7280';
+    if (score >= 85) return '#10B981'; // Green
+    if (score >= 60) return '#F59E0B'; // Yellow
+    return '#EF4444'; // Red
   };
 
   return (
@@ -176,7 +176,6 @@ const ScannerPage = () => {
     error,
     setError,
     startScan,
-    handleFileUpload,
   } = useScan();
 
   const [allScans, setAllScans] = useState([]);
@@ -184,7 +183,9 @@ const ScannerPage = () => {
   const [sortConfig, setSortConfig] = useState({ key: "timestamp", direction: "desc" });
   const [hoveredRow, setHoveredRow] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
+  const [demoModalOpen, setDemoModalOpen] = useState(false);
   const tableWrapperRef = useRef(null);
+  const demoTriggerRef = useRef(null);
 
   // Daily deep-scan limit UI state (cached lookups remain available)
   const [deepScanLimit, setDeepScanLimit] = useState(null);
@@ -375,11 +376,6 @@ const ScannerPage = () => {
   const deepScanLimitReached = deepScanLimit && deepScanLimit.remaining <= 0;
   const scanDisabledDueToLimit = Boolean(deepScanLimitReached && !cachedAvailable);
   const scanDisabledTooltip = "Daily deep-scan limit reached. Cached lookups are still unlimited.";
-  const scanButtonLabel = scanDisabledDueToLimit
-    ? "Daily Limit Reached"
-    : deepScanLimitReached && cachedAvailable
-      ? "Lookup Report"
-      : "Scan Extension";
 
   // Format user count
   const formatUserCount = (count) => {
@@ -559,26 +555,72 @@ const ScannerPage = () => {
       />
       <div className="scanner-page">
         <section className="scanner-hero">
-        {/* Main Content */}
+        {/* Main Content - Similar to hero layout (tagline, headline, sub, input, features) */}
         <div className="scanner-content">
-          {/* Header */}
           <div className="scanner-header">
-            <h1>Extension Scanner</h1>
-            <p>Analyze any Chrome extension for security threats and compliance issues</p>
+            <p className="scanner-tagline">Chrome Extension Scanner</p>
+            <h1 className="scanner-headline">Know what your Chrome extensions can access.</h1>
           </div>
 
-          {/* Scan Input Box */}
-          <div className="scan-input-wrapper">
-            <EnhancedUrlInput
-              value={url}
-              onChange={setUrl}
-              onScan={handleScanClick}
-              onFileUpload={handleFileUpload}
-              isScanning={isScanning}
-              scanDisabled={scanDisabledDueToLimit}
-              scanDisabledTooltip={scanDisabledTooltip}
-              scanButtonLabel={scanButtonLabel}
-            />
+          <div className="scanner-search">
+            <div className="scanner-search-container">
+              <span className="scanner-search-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="chrome-logo">
+                  <path d="M12 12L22 12A10 10 0 0 1 7 3.34L12 12Z" fill="#4285F4" />
+                  <path d="M12 12L7 3.34A10 10 0 0 1 7 20.66L12 12Z" fill="#EA4335" />
+                  <path d="M12 12L7 20.66A10 10 0 0 1 22 12L12 12Z" fill="#FBBC05" />
+                  <circle cx="12" cy="12" r="4" fill="#34A853" />
+                  <circle cx="12" cy="12" r="2.5" fill="white" />
+                </svg>
+              </span>
+              <input
+                type="text"
+                id="scanner-url-input"
+                placeholder="Paste Chrome Web Store URL or Extension ID"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleScanClick()}
+                aria-label="Chrome Web Store URL or Extension ID"
+                autoComplete="url"
+                disabled={isScanning}
+              />
+              <button
+                type="button"
+                className="scanner-scan-icon"
+                onClick={handleScanClick}
+                disabled={isScanning || !url.trim() || scanDisabledDueToLimit}
+                title={scanDisabledDueToLimit ? scanDisabledTooltip : "Scan extension"}
+                aria-label="Scan extension"
+              >
+                {isScanning ? <span className="scanner-spinner" aria-hidden /> : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="M21 21l-4.35-4.35" />
+                  </svg>
+                )}
+              </button>
+            </div>
+            <p className="scanner-scan-info">
+              <svg className="scanner-scan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+              Checks permissions, network access, version history, and known threats.
+            </p>
+            <button
+              type="button"
+              ref={demoTriggerRef}
+              className="scanner-demo-link"
+              title="See how to scan an extension step-by-step"
+              onClick={() => setDemoModalOpen(true)}
+            >
+              <span className="scanner-demo-icon" aria-hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none" />
+                </svg>
+              </span>
+              <span>Watch demo</span>
+            </button>
           </div>
 
           {scanDisabledDueToLimit && (
@@ -600,11 +642,17 @@ const ScannerPage = () => {
         <div className="extensions-table-container">
           <div className="table-header-section">
             {loading && <div className="loading-indicator">Loading...</div>}
+            {!loading && allScans.length > 0 && (
+              <div className="table-section-heading">
+                <h2 className="table-section-title">Recent scans</h2>
+                <p className="table-section-subtitle">Click View to open the evidence report.</p>
+              </div>
+            )}
           </div>
 
           {!loading && allScans.length > 0 && (
             <>
-              <div className="table-wrapper surface-panel" ref={tableWrapperRef}>
+              <div className="table-wrapper" ref={tableWrapperRef}>
                 <table className="extensions-table">
                   <thead>
                     <tr>
@@ -798,6 +846,12 @@ const ScannerPage = () => {
           )}
         </div>
       </section>
+
+      <DemoModal
+        isOpen={demoModalOpen}
+        onClose={() => setDemoModalOpen(false)}
+        triggerRef={demoTriggerRef}
+      />
       </div>
     </>
   );

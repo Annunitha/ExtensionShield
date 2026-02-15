@@ -1,7 +1,7 @@
 import React from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
-const TrendChart = ({ data, dataKey, title, color = "#22c55e" }) => {
+const TrendChart = ({ data, dataKey, title, color = "#22c55e", height = 350 }) => {
   // Format data for Recharts
   const formattedData = data.map(item => ({
     date: new Date(item.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' }),
@@ -35,7 +35,7 @@ const TrendChart = ({ data, dataKey, title, color = "#22c55e" }) => {
   };
 
   return (
-    <div style={{ width: '100%', height: 350 }}>
+    <div style={{ width: '100%', height }}>
       <h4 style={{ 
         fontSize: '0.9375rem', 
         fontWeight: 600, 
@@ -64,6 +64,9 @@ const TrendChart = ({ data, dataKey, title, color = "#22c55e" }) => {
             strokeWidth={2}
             dot={{ fill: color, r: 4 }}
             activeDot={{ r: 6 }}
+            isAnimationActive={true}
+            animationDuration={1200}
+            animationEasing="ease-out"
           />
         </LineChart>
       </ResponsiveContainer>

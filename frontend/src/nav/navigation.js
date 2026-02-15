@@ -47,6 +47,12 @@ export const topNavItems = [
         label: "How We Score",
         description: "How we score risk",
         path: "/research/methodology"
+      },
+      {
+        icon: "benchmarks",
+        label: "Benchmarks",
+        description: "Industry trends & scoring",
+        path: "/research/benchmarks"
       }
     ]
   },

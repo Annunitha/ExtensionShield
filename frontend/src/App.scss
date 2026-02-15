@@ -71,8 +71,8 @@ body {
 }
 .atlas-app[data-route="scan"] {
   --accentHue: 270;
-  --overlayOpacity: 0.12;
-  --starsOpacity: 0.7;
+  --overlayOpacity: 0.15;
+  --starsOpacity: 0.8;
 }
 .atlas-app[data-route="research"] {
   --accentHue: 270;
@@ -244,23 +244,24 @@ body {
   }
 }
 
+/* Megamenu & nav dropdown - solid panel for clear contrast (accessible, no fade-in) */
 .megamenu-dropdown {
   position: absolute;
   top: calc(100% + 0.25rem);
   left: 0;
   width: 320px;
-  background: rgba(17, 24, 39, 0.98);
+  background: rgba(15, 23, 42, 0.97);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(148, 163, 184, 0.15);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(148, 163, 184, 0.12);
   border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(148, 163, 184, 0.06);
   padding: 0.75rem;
-  z-index: 1000;
+  z-index: 1300;
   animation: megamenuEnter 0.2s ease;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  /* Add padding-top to create a bridge for mouse movement */
   margin-top: 0.25rem;
 }
 
@@ -273,6 +274,30 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Light mode - match header glass (same as header scrolled state) */
+.light .megamenu-dropdown,
+.light .nav-dropdown-menu {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1), 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.light .megamenu-item:hover,
+.light .nav-dropdown-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.light .megamenu-label,
+.light .nav-dropdown-label {
+  color: hsl(var(--color-foreground));
+}
+
+.light .megamenu-desc,
+.light .nav-dropdown-desc {
+  color: rgba(0, 0, 0, 0.6);
 }
 
 .megamenu-item {
@@ -422,18 +447,18 @@ body {
   top: calc(100% + 0.25rem);
   left: 0;
   min-width: 280px;
-  background: rgba(17, 24, 39, 0.98);
+  background: rgba(15, 23, 42, 0.97);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(148, 163, 184, 0.15);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(148, 163, 184, 0.12);
   border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(148, 163, 184, 0.06);
   padding: 0.75rem;
-  z-index: 1000;
+  z-index: 1300;
   animation: megamenuEnter 0.2s ease;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  /* Add padding-top to create a bridge for mouse movement */
   margin-top: 0.25rem;
 }
 
@@ -463,12 +488,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(148, 163, 184, 0.1);
-  border-radius: 8px;
   
   svg {
-    width: 16px;
-    height: 16px;
+    width: 32px;
+    height: 32px;
   }
 }
 

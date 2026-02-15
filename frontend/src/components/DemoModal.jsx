@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { ExternalLink } from "lucide-react";
 import "./DemoModal.scss";
+
+const CHROME_WEB_STORE_URL = "https://chromewebstore.google.com/";
 
 const DEMO_STEPS = [
   {
@@ -160,9 +163,22 @@ function DemoModal({ isOpen, onClose, triggerRef }) {
         className="demo-modal-content"
         onClick={(e) => e.stopPropagation()}
       >
-        <p id="demo-modal-description" className="demo-modal-caption">
-          Step {stepIndex + 1}: {step.caption}
-        </p>
+        <div className="demo-modal-caption-row">
+          <p id="demo-modal-description" className="demo-modal-caption">
+            Step {stepIndex + 1}: {step.caption}
+          </p>
+          {stepIndex === 0 && (
+            <a
+              href={CHROME_WEB_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="demo-modal-store-link"
+              aria-label="Open Chrome Web Store"
+            >
+              <ExternalLink size={18} strokeWidth={2} />
+            </a>
+          )}
+        </div>
 
         <div className="demo-modal-main">
           {/* Left arrow */}

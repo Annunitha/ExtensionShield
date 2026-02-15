@@ -30,14 +30,16 @@ const HomePage = () => {
   const [scanInput, setScanInput] = useState("");
   const [revealedSections, setRevealedSections] = useState({});
   const [extensionSlideIndex, setExtensionSlideIndex] = useState(0);
-  const [extensionsScannedCount, setExtensionsScannedCount] = useState(0);
+  // Hero stat: real cumulative usage is 100+ (DB was reset, so live count would show lower). Animation runs immediately on load.
+  const EXTENSIONS_DISPLAY_TARGET = 100;
+  const [extensionsScannedCount] = useState(EXTENSIONS_DISPLAY_TARGET);
   const [displayCount, setDisplayCount] = useState(0);
   const displayCountRef = useRef(0);
   const rafRef = useRef(null);
   const [demoModalOpen, setDemoModalOpen] = useState(false);
   const demoTriggerRef = useRef(null);
 
-  // Animate display count from current to target (incremental counter effect)
+  // Animate display count from 0 to target (100+) immediately on page load
   useEffect(() => {
     const target = Math.max(0, extensionsScannedCount);
     const start = displayCountRef.current;
@@ -69,37 +71,8 @@ const HomePage = () => {
     };
   }, [extensionsScannedCount]);
 
-  // Fetch total scanned extensions count from database (stats.total_scans); fallback to recent list length when stats return 0
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const stats = await databaseService.getStatistics();
-        const count = Math.max(0, Number(stats?.total_scans) || 0);
-        if (!cancelled) setExtensionsScannedCount(count);
-        if (count === 0) {
-          const recent = await databaseService.getRecentScans(100);
-          if (!cancelled && Array.isArray(recent) && recent.length > 0) {
-            setExtensionsScannedCount(recent.length);
-          }
-        }
-      } catch {
-        if (!cancelled) {
-          try {
-            const recent = await databaseService.getRecentScans(100);
-            if (Array.isArray(recent) && recent.length > 0) {
-              setExtensionsScannedCount(recent.length);
-            } else {
-              setExtensionsScannedCount(0);
-            }
-          } catch {
-            setExtensionsScannedCount(0);
-          }
-        }
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
+  // DB fetch disabled: hero stat is hardcoded to 100; re-enable when using live count again
+  // useEffect(() => { ... databaseService.getStatistics() ... setExtensionsScannedCount(count) ... }, []);
 
   // Scroll reveal observer
   useEffect(() => {
@@ -370,7 +343,9 @@ const HomePage = () => {
             </div>
             <div className="stat-divider" />
             <div className="stat-item">
-              <span className="stat-value">100+</span>
+              <span className="stat-value">
+                <span className="stat-value-number">100+</span>
+              </span>
               <span className="stat-label">Security rules</span>
             </div>
             <div className="stat-divider" />
