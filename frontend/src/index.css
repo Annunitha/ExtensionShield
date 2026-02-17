@@ -462,7 +462,8 @@ html.light {
 .light .recommendation-card,
 .light .capability-card,
 .light .report-card,
-.light .glass-card {
+.light .glass-card,
+.light .karma-panel {
   background: var(--atlas-bg-card);
   border: 1px solid var(--color__clay);
   box-shadow: var(--atlas-card-shadow);
@@ -541,6 +542,30 @@ html.light {
   color: var(--color__white);
 }
 
+/* Light mode: all accent (green) filled buttons – white text for consistency */
+.light .cta-button,
+.light .action-signin,
+.light .search-btn,
+.light .submit-btn,
+.light .login-overlay-btn,
+.light .empty-action-btn,
+.light .pricing-btn.popular-btn,
+.light .pricing-btn.enterprise-btn,
+.light .dev-cta-button.primary {
+  color: #fff !important;
+}
+.light .cta-button:hover,
+.light .action-signin:hover,
+.light .search-btn:hover,
+.light .submit-btn:hover,
+.light .login-overlay-btn:hover,
+.light .empty-action-btn:hover,
+.light .pricing-btn.popular-btn:hover,
+.light .pricing-btn.enterprise-btn:hover,
+.light .dev-cta-button.primary:hover {
+  color: #fff !important;
+}
+
 /* Day mode: improved contrast (WCAG) – body and secondary text at least medium weight */
 .light p,
 .light .section-content,
@@ -589,7 +614,8 @@ html.light {
 .light .research-card:hover,
 .light .enterprise-card:hover,
 .light .highlight-tile:hover,
-.light .glossary-term:hover {
+.light .glossary-term:hover,
+.light .karma-panel:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 40px rgba(38, 35, 31, 0.12);
 }
@@ -602,7 +628,8 @@ html.light {
 .light .finding-card:hover,
 .light .case-study-card:hover,
 .light .research-card:hover,
-.light .enterprise-card:hover {
+.light .enterprise-card:hover,
+.light .karma-panel:hover {
   border-color: rgba(22, 163, 74, 0.25);
 }
 

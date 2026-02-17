@@ -3,7 +3,6 @@
  * All components are designed to work with ReportViewModel
  */
 
-export { default as RiskDial } from './RiskDial';
 export { default as DonutScore } from './DonutScore';
 export { default as ResultsSidebarTile } from './ResultsSidebarTile';
 export { default as ReportScoreCard } from './ReportScoreCard';

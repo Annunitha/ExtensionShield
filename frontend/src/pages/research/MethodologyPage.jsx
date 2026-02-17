@@ -1,7 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import SEOHead from "../../components/SEOHead";
-import RiskDial from "../../components/report/RiskDial";
+import DonutScore from "../../components/report/DonutScore";
+import { getBandFromScore } from "../../constants/riskBands";
 import "./MethodologyPage.scss";
 
 const MethodologyPage = () => {
@@ -35,8 +36,13 @@ const MethodologyPage = () => {
               <h2>Aggregate Risk Score</h2>
               <p>All three dimensions combined into one actionable metric</p>
             </div>
-            <div className="aggregate-dial">
-              <RiskDial score={83} label="OVERALL" size={280} />
+            <div className="aggregate-risk-display">
+              <DonutScore
+                score={83}
+                band={getBandFromScore(83)}
+                size={280}
+                label="OVERALL"
+              />
             </div>
             <div className="aggregate-formula">
               <div className="formula-item">
@@ -64,9 +70,8 @@ const MethodologyPage = () => {
 
           {/* Three Pipeline Flow */}
           <div className="pipeline-flow">
-            
             {/* Pipeline 1: ThreatXtension (Open Source) */}
-            <div className="pipeline-card pipeline-1">
+            <div className="pipeline-card">
               <div className="pipeline-number">01</div>
               <div className="pipeline-content">
                 <div className="pipeline-left">
@@ -98,8 +103,8 @@ const MethodologyPage = () => {
                   </div>
                 </div>
                 <div className="pipeline-right">
-                  <div className="score-dial-wrapper">
-                    <RiskDial score={85} label="SECURITY" size={200} />
+                  <div className="pipeline-dial-wrapper">
+                    <DonutScore score={88} band={getBandFromScore(88)} size={240} label="SECURITY" />
                   </div>
                 </div>
               </div>
@@ -113,7 +118,7 @@ const MethodologyPage = () => {
             </div>
 
             {/* Pipeline 2: Privacy Analysis */}
-            <div className="pipeline-card pipeline-2">
+            <div className="pipeline-card">
               <div className="pipeline-number">02</div>
               <div className="pipeline-content">
                 <div className="pipeline-left">
@@ -137,8 +142,8 @@ const MethodologyPage = () => {
                   </div>
                 </div>
                 <div className="pipeline-right">
-                  <div className="score-dial-wrapper">
-                    <RiskDial score={72} label="PRIVACY" size={200} />
+                  <div className="pipeline-dial-wrapper">
+                    <DonutScore score={72} band={getBandFromScore(72)} size={240} label="PRIVACY" />
                   </div>
                 </div>
               </div>
@@ -152,7 +157,7 @@ const MethodologyPage = () => {
             </div>
 
             {/* Pipeline 3: Compliance */}
-            <div className="pipeline-card pipeline-3">
+            <div className="pipeline-card">
               <div className="pipeline-number">03</div>
               <div className="pipeline-content">
                 <div className="pipeline-left">
@@ -182,8 +187,8 @@ const MethodologyPage = () => {
                   </div>
                 </div>
                 <div className="pipeline-right">
-                  <div className="score-dial-wrapper">
-                    <RiskDial score={91} label="COMPLIANCE" size={200} />
+                  <div className="pipeline-dial-wrapper">
+                    <DonutScore score={52} band={getBandFromScore(52)} size={240} label="COMPLIANCE" />
                   </div>
                 </div>
               </div>

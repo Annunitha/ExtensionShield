@@ -10,28 +10,6 @@
   overflow: hidden;
 }
 
-.methodology-bg {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  
-  .bg-gradient {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(34, 197, 94, 0.08) 0%, transparent 50%);
-  }
-  
-  .bg-grid {
-    position: absolute;
-    inset: 0;
-    background-image: 
-      linear-gradient(rgba(148, 163, 184, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
-    background-size: 50px 50px;
-    mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
-  }
-}
-
 .methodology-content {
   position: relative;
   max-width: 1100px;
@@ -281,8 +259,11 @@
   }
 }
 
-.score-dial-wrapper {
-  position: relative;
+.pipeline-dial-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
 }
 
 /* Flow Arrows */
@@ -295,12 +276,6 @@
   svg {
     width: 24px;
     height: 48px;
-  }
-  
-  &.final {
-    svg path {
-      stroke: rgba(34, 197, 94, 0.5);
-    }
   }
 }
 
@@ -333,10 +308,12 @@
   }
 }
 
-.aggregate-dial {
+.aggregate-risk-display {
   display: flex;
   justify-content: center;
+  align-items: center;
   margin-bottom: 2rem;
+  min-height: 300px;
 }
 
 .aggregate-formula {
@@ -496,7 +473,7 @@
   gap: 0.5rem;
   padding: 0.875rem 1.5rem;
   background: var(--atlas-accent, #22c55e);
-  color: #0d1424;
+  color: #fff;
   border: none;
   border-radius: 8px;
   font-size: 0.9375rem;
@@ -558,11 +535,7 @@
   }
 }
 
-/* Light mode - gradient adjustment only (other styles use theme vars) */
-.light .methodology-bg .bg-gradient {
-  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(22, 163, 74, 0.05) 0%, transparent 50%);
-}
-
+/* Light mode - header gradient (other styles use theme vars) */
 .light .methodology-header h1 {
   background: linear-gradient(135deg, var(--theme-text-primary) 0%, var(--theme-text-muted) 100%);
   -webkit-background-clip: text;

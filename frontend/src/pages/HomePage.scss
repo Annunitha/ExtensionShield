@@ -397,7 +397,7 @@
   padding: 0.75rem 1.5rem;
   min-width: 100px;
   background: linear-gradient(135deg, var(--atlas-accent) 0%, #16a34a 100%);
-  color: #0d1424;
+  color: #fff;
   font-size: clamp(0.875rem, 1.6vw, 0.9375rem);
   font-weight: 600;
   border: none;
@@ -1682,7 +1682,7 @@
   
   &.popular-btn {
     background: var(--atlas-accent);
-    color: #0d1424;
+    color: #fff;
     border: none;
     
     &:hover {
@@ -1693,7 +1693,7 @@
 
   &.enterprise-btn {
     background: rgba(139, 92, 246, 0.95);
-    color: #070813;
+    color: #fff;
     border: none;
 
     &:hover {
@@ -2660,14 +2660,15 @@
     color: var(--risk-good);
   }
 
-  /* Karma / community feedback panel – ash-style card, sage buttons, rust icon */
+  /* Karma / community feedback panel – match site card (chalk + clay) */
   .karma-panel {
-    background: rgba(73, 70, 63, 0.12);
-    border: 1px solid var(--atlas-border);
+    background: var(--atlas-bg-card);
+    border: 1px solid var(--color__clay);
+    box-shadow: var(--atlas-card-shadow);
 
     &:hover {
       border-color: var(--atlas-border-accent);
-      box-shadow: 0 8px 32px rgba(36, 34, 30, 0.08);
+      box-shadow: 0 12px 40px rgba(36, 34, 30, 0.1), 0 0 0 1px rgba(22, 163, 74, 0.12);
     }
   }
 

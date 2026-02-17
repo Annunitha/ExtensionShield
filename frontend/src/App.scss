@@ -1146,7 +1146,21 @@ body {
   }
 }
 
+/* Tablet: keep full nav but tighter layout; megamenu dropdown full width when open */
 @media (max-width: 768px) {
+  .header-container {
+    padding: 0 1rem;
+  }
+
+  .megamenu-dropdown {
+    width: calc(100vw - 2rem);
+    left: 0;
+    right: auto;
+  }
+}
+
+/* Below 900px: all menu items (incl. megamenu) move into hamburger; theme toggler stays next to hamburger for one-tap access */
+@media (max-width: 900px) {
   :root {
     --atlas-header-height: 64px;
   }

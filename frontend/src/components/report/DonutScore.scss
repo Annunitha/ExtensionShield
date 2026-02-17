@@ -15,14 +15,23 @@
 
 .donut-center {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  gap: 0.25rem;
   pointer-events: none;
+  box-sizing: border-box;
+  padding: 2.75rem;
+}
+
+.donut-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .donut-value {
@@ -32,6 +41,14 @@
   line-height: 1;
   letter-spacing: -0.02em;
   font-family: var(--report-font, inherit);
+  margin: 0;
+}
+
+.donut-status-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  margin-right: 0.375rem;
 }
 
 .donut-status-pill {
@@ -69,11 +86,28 @@
   font-size: 4.25rem;
 }
 
+.donut-score--gauge.donut-score--compact .donut-value {
+  font-size: 3.25rem;
+}
+
+.donut-score--gauge.donut-score--compact .donut-label {
+  font-size: 0.6875rem;
+}
+
 .donut-score--gauge .donut-status-pill {
   font-size: 0.8125rem;
 }
 
+.donut-score--gauge.donut-score--compact .donut-status-pill {
+  font-size: 0.75rem;
+  padding: 5px 12px;
+}
+
 /* Light theme – score value and pill visible */
+.light .donut-label {
+  color: var(--atlas-text-muted);
+}
+
 .light .donut-value {
   color: var(--atlas-text-primary);
 }

@@ -13,8 +13,9 @@ import './DonutScore.scss';
  * - score: number (0-100)
  * - band: "GOOD" | "WARN" | "BAD" | "NA"
  * - size?: number (default: 300)
+ * - label?: string (e.g. "OVERALL") – shown above value when provided
  */
-const DonutScore = ({ score = 0, band = 'NA', size = 300 }) => {
+const DonutScore = ({ score = 0, band = 'NA', size = 300, label }) => {
   const clampedScore = Math.max(0, Math.min(100, score ?? 0));
   const [animatedScore, setAnimatedScore] = useState(0);
 
@@ -45,8 +46,8 @@ const DonutScore = ({ score = 0, band = 'NA', size = 300 }) => {
   }, [clampedScore, prefersReducedMotion]);
 
   const center = size / 2;
-  const radius = size * 0.36;
-  const strokeW = size * 0.06;
+  const radius = size * 0.38;
+  const strokeW = size * 0.055;
   const displayScore = Math.round(animatedScore);
   const circumference = 2 * Math.PI * radius;
 
@@ -92,7 +93,7 @@ const DonutScore = ({ score = 0, band = 'NA', size = 300 }) => {
 
   return (
     <motion.div
-      className="donut-score donut-score--gauge"
+      className={`donut-score donut-score--gauge${size <= 260 ? ' donut-score--compact' : ''}`}
       style={{ width: size, height: size }}
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -180,10 +181,15 @@ const DonutScore = ({ score = 0, band = 'NA', size = 300 }) => {
           style={{ transition: prefersReducedMotion ? 'none' : 'stroke-dasharray 1.1s cubic-bezier(0, 0, 0.2, 1)' }}
         />
       </svg>
-
       <div className="donut-center">
+        {label && <div className="donut-label">{label}</div>}
         <div className="donut-value">{displayScore}</div>
         <span className={`donut-status-pill ${getStatusClass()}`}>
+          {band === 'GOOD' && (
+            <svg className="donut-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          )}
           {getStatusLabel()}
         </span>
       </div>

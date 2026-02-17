@@ -530,6 +530,7 @@ function AppHeader() {
           )}
         </div>
 
+        {/* Theme toggler next to hamburger (not inside): one-tap access without opening menu */}
         <div className="header-actions header-actions-mobile">
           <ThemeToggle />
         </div>
