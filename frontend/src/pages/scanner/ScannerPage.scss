@@ -1555,6 +1555,31 @@
     color: var(--atlas-text-primary);
   }
 
+  /* Scroll shadows: use subtle gradient in light mode (avoid black line) */
+  .table-wrapper::before {
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.06), transparent);
+  }
+
+  .table-wrapper::after {
+    background: linear-gradient(to left, rgba(0, 0, 0, 0.06), transparent);
+  }
+
+  /* Sticky extension-cell separator: subtle in light mode */
+  .extensions-table tbody td.extension-cell::after {
+    background: rgba(0, 0, 0, 0.06);
+    box-shadow: 1px 0 4px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Sticky extension-cell: light bg in light mode so text matches other fields */
+  .extensions-table tbody td.extension-cell {
+    background: var(--atlas-bg-card);
+
+    tr:hover &,
+    tr.row-hovered & {
+      background: var(--atlas-accent-subtle);
+    }
+  }
+
   .extensions-table .extension-name {
     color: var(--atlas-text-primary);
     font-weight: 600;

@@ -422,3 +422,26 @@ $success-green: #22c55e;
     right: 0.125rem;
   }
 }
+
+/* Light mode: steps in white for visibility against dark caption bar */
+.light .demo-modal-caption-row {
+  background: rgba(13, 20, 36, 0.9);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+}
+
+.light .demo-modal-caption {
+  color: #fff;
+}
+
+.light .demo-modal-store-link {
+  color: #fff;
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  svg {
+    color: inherit;
+  }
+}
