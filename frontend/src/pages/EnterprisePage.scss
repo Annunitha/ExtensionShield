@@ -1,7 +1,7 @@
 .enterprise-page {
   min-height: 100vh;
   background: transparent;
-  color: var(--atlas-text-primary);
+  color: var(--theme-text-primary);
   position: relative;
   overflow: hidden;
   font-family: var(--font-sans);
@@ -74,8 +74,8 @@
   align-items: center;
   gap: 0.5rem;
   background: transparent;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  color: var(--atlas-text-secondary);
+  border: 1px solid var(--theme-border);
+  color: var(--theme-text-secondary);
   padding: 0.5rem 0.875rem;
   border-radius: 999px;
   cursor: pointer;

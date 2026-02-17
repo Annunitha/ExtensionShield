@@ -1,11 +1,11 @@
 /* ============================================================================
-   About Us Page - Minimalistic Design
+   About Us Page - Theme-aware Minimalistic Design
    ============================================================================ */
 
 .about-us-page {
   min-height: 100vh;
-  background: var(--atlas-bg-primary, #0d1424);
-  color: var(--atlas-text-primary, #f8fafc);
+  background: transparent;
+  color: var(--theme-text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -17,7 +17,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse 80% 50% at 50% 50%, rgba(34, 197, 94, 0.05) 0%, transparent 70%);
+    background: radial-gradient(ellipse 80% 50% at 50% 50%, var(--theme-accent-subtle) 0%, transparent 70%);
     pointer-events: none;
   }
 }

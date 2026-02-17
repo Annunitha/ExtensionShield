@@ -1,24 +1,24 @@
 // ===========================================================================
-// SummaryPanel - Consumer-friendly quick summary
+// SummaryPanel - Consumer-friendly quick summary (Theme-aware)
 // Format: Verdict → Reasons → Access → Action
 // ===========================================================================
 
 .summary-panel {
   font-family: var(--report-font, inherit);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--theme-bg-card);
+  border: 1px solid var(--theme-border);
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 0;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--theme-shadow-card);
   backdrop-filter: blur(8px);
   font-size: var(--report-text-base, 1rem);
   line-height: var(--report-line-normal, 1.6);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 
   &:hover {
-    border-color: rgba(148, 163, 184, 0.22);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    border-color: var(--theme-border-hover);
+    box-shadow: var(--theme-shadow-card-hover);
   }
 
   // --- Header ---
@@ -28,7 +28,7 @@
     justify-content: space-between;
     margin-bottom: 20px;
     padding-bottom: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid var(--theme-border);
 
     .summary-title {
       display: flex;
@@ -36,7 +36,7 @@
       gap: 10px;
       font-size: var(--report-text-base, 1rem);
       font-weight: 700;
-      color: #f8fafc;
+      color: var(--theme-text-primary);
       margin: 0;
 
       .title-icon {

@@ -11,6 +11,7 @@ const AppBackground = () => (
     <div className="app-bg-base" />
     <div className="app-bg-gradient" />
     <div className="app-bg-grid" />
+    <div className="app-bg-dots" />
     <div className="app-bg-stars" />
   </div>
 );

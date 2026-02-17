@@ -2464,52 +2464,26 @@
    Day mode – Homepage (chalk/limestone/pitch/rust, enterprise-grade)
    ============================================================================ */
 .light {
-  .hero-glass-card {
-    background: rgba(247, 243, 235, 0.92);
-    border: 1px solid var(--atlas-border);
-    box-shadow: 0 4px 20px rgba(36, 34, 30, 0.06);
-  }
-
-  .glass-card-icon {
-    background: rgba(36, 34, 30, 0.06);
-    border: 1px solid rgba(36, 34, 30, 0.08);
-    box-shadow: 0 2px 8px rgba(36, 34, 30, 0.06);
-  }
-
+  /* Hero glass card, search, stats use reference palette (outline/background from index.css .light) */
   .glass-progress-bar {
     background: rgba(36, 34, 30, 0.1);
   }
 
-  .glass-card-meta {
-    border-top-color: rgba(36, 34, 30, 0.1);
+  .search-container .search-icon svg {
+    stroke: var(--atlas-text-muted);
   }
 
-  /* Hero search input – soft surface, rust focus */
-  .search-container {
-    background: rgba(247, 243, 235, 0.98);
-    border: 1px solid var(--atlas-border);
+  .search-container input::placeholder {
+    color: var(--atlas-text-muted);
+  }
 
-    &:focus-within {
-      border-color: var(--atlas-accent);
-      box-shadow: 0 0 0 4px var(--atlas-accent-subtle);
-    }
-
-    .search-icon svg {
-      stroke: var(--atlas-text-muted);
-    }
-
-    input::placeholder {
-      color: var(--atlas-text-muted);
-    }
-
-    input:-webkit-autofill,
-    input:-webkit-autofill:hover,
-    input:-webkit-autofill:focus,
-    input:-webkit-autofill:active {
-      -webkit-box-shadow: 0 0 0 9999px rgb(246 242 234) inset;
-      box-shadow: 0 0 0 9999px rgb(246 242 234) inset;
-      -webkit-text-fill-color: var(--atlas-text-primary);
-    }
+  .search-container input:-webkit-autofill,
+  .search-container input:-webkit-autofill:hover,
+  .search-container input:-webkit-autofill:focus,
+  .search-container input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 9999px var(--color__limestone) inset;
+    box-shadow: 0 0 0 9999px var(--color__limestone) inset;
+    -webkit-text-fill-color: var(--atlas-text-primary);
   }
 
   .search-btn {
@@ -2524,13 +2498,6 @@
   .search-btn.search-btn-icon:hover {
     background: var(--atlas-accent-subtle);
     color: var(--atlas-accent);
-  }
-
-  /* Stats bar */
-  .stats-bar {
-    background: rgba(247, 243, 235, 0.95);
-    border: 1px solid var(--atlas-border);
-    box-shadow: 0 4px 16px rgba(36, 34, 30, 0.06);
   }
 
   /* Bridge section – step cards */

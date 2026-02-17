@@ -2,18 +2,19 @@
 
 :root {
   /* ============================================================================
-     EXTENSIONSHIELD - Dark theme (Cloudflare-inspired palette, unique, WCAG AA)
-     Deep backgrounds, brand accent, blue for info/focus. All tokens stay in-project.
+     EXTENSIONSHIELD - Dark Theme (Default)
+     Original dark theme preserved from before light mode was added.
+     Navy-blue backgrounds with emerald accents - WCAG AA compliant.
      ============================================================================ */
 
-  /* Background - Cloudflare-style deep (≈ #080808–#141418) WCAG AA */
-  --color-background: 224 35% 4%;
-  --color-surface: 224 32% 6%;
-  --color-surface-elevated: 224 30% 8%;
-  --color-surface-hover: 224 28% 11%;
-  --color-card: 224 32% 6%;
+  /* Background Colors - Softer Navy Dark Theme */
+  --color-background: 222 47% 8%;
+  --color-surface: 222 47% 10%;
+  --color-surface-elevated: 222 47% 12%;
+  --color-surface-hover: 222 47% 15%;
+  --color-card: 222 47% 10%;
   --color-card-foreground: 210 40% 98%;
-  --color-popover: 224 30% 8%;
+  --color-popover: 222 47% 12%;
   --color-popover-foreground: 210 40% 98%;
 
   /* Foreground */
@@ -24,49 +25,49 @@
   /* Primary / Accent - ExtensionShield brand (emerald) */
   --color-primary: 142 71% 45%;
   --color-primary-hover: 142 71% 40%;
-  --color-primary-foreground: 0 0% 100%;
+  --color-primary-foreground: 222 47% 5%;
 
-  /* Secondary */
+  /* Secondary - Purple */
   --color-secondary: 256 65% 65%;
   --color-secondary-hover: 256 65% 58%;
   --color-secondary-foreground: 210 40% 98%;
 
-  /* Accent */
+  /* Accent - Emerald */
   --color-accent: 142 71% 45%;
   --color-accent-hover: 142 71% 40%;
-  --color-accent-foreground: 0 0% 100%;
+  --color-accent-foreground: 222 47% 5%;
 
   /* Status */
   --color-muted: 215 16% 47%;
   --color-muted-foreground: 215 20% 65%;
 
-  --color-destructive: 0 84% 55%;
-  --color-destructive-hover: 0 84% 50%;
-  --color-destructive-foreground: 0 0% 100%;
+  --color-destructive: 0 84% 60%;
+  --color-destructive-hover: 0 84% 55%;
+  --color-destructive-foreground: 210 40% 98%;
 
-  --color-success: 131 52% 45%;
-  --color-success-hover: 131 52% 40%;
-  --color-success-foreground: 0 0% 100%;
+  --color-success: 142 71% 45%;
+  --color-success-hover: 142 71% 40%;
+  --color-success-foreground: 210 40% 98%;
 
-  --color-warning: 45 100% 51%;
-  --color-warning-hover: 45 100% 46%;
-  --color-warning-foreground: 224 35% 8%;
+  --color-warning: 38 92% 50%;
+  --color-warning-hover: 38 92% 45%;
+  --color-warning-foreground: 222 47% 5%;
 
-  /* Info / focus - Cloudflare-style blue (#2160FD) WCAG AA */
-  --color-info: 225 98% 56%;
-  --color-info-hover: 225 98% 50%;
+  /* Info / focus - Blue for info states */
+  --color-info: 217 91% 60%;
+  --color-info-hover: 217 91% 50%;
   --color-info-foreground: 0 0% 100%;
-  --color-info-bg: rgba(33, 96, 253, 0.12);
-  --color-info-border: rgba(33, 96, 253, 0.4);
+  --color-info-bg: rgba(59, 130, 246, 0.12);
+  --color-info-border: rgba(59, 130, 246, 0.4);
 
   /* Borders & Inputs */
-  --color-border: 215 20% 14%;
-  --color-border-subtle: 215 20% 10%;
-  --color-border-strong: 215 20% 22%;
+  --color-border: 215 20% 15%;
+  --color-border-subtle: 215 20% 12%;
+  --color-border-strong: 215 20% 20%;
 
-  --color-input: 224 35% 6%;
+  --color-input: 222 47% 8%;
   --color-input-focus: 142 71% 45%;
-  --color-ring: 225 98% 56%;
+  --color-ring: 142 71% 45%;
 
   /* Risk palette - shared by report/chart components (shadcn-style) */
   --risk-good: #10B981;
@@ -81,6 +82,55 @@
   --risk-bad-border: rgba(239, 68, 68, 0.4);
   --risk-neutral-bg: rgba(107, 114, 128, 0.12);
   --risk-neutral-border: rgba(107, 114, 128, 0.4);
+
+  /* ============================================================================
+     THEME SYSTEM VARIABLES (used by SCSS mixins)
+     These provide a unified API for theme-aware components
+     ============================================================================ */
+  --theme-bg-primary: #0d1424;
+  --theme-bg-secondary: #111827;
+  --theme-bg-tertiary: #1f2937;
+  --theme-bg-card: rgba(17, 24, 39, 0.8);
+  --theme-bg-surface: rgba(17, 24, 39, 0.6);
+  --theme-bg-surface-hover: rgba(17, 24, 39, 0.8);
+  --theme-bg-glass: rgba(17, 24, 39, 0.6);
+  --theme-bg-glass-strong: rgba(17, 24, 39, 0.8);
+  --theme-bg-overlay: rgba(13, 20, 36, 0.95);
+  
+  --theme-text-primary: #f8fafc;
+  --theme-text-secondary: #94a3b8;
+  --theme-text-muted: #94a3b8;
+  --theme-text-subtle: #64748b;
+  
+  --theme-accent: #22c55e;
+  --theme-accent-hover: #16a34a;
+  --theme-accent-subtle: rgba(34, 197, 94, 0.15);
+  --theme-accent-glow: rgba(34, 197, 94, 0.4);
+  
+  --theme-border: rgba(148, 163, 184, 0.18);
+  --theme-border-subtle: rgba(148, 163, 184, 0.12);
+  --theme-border-strong: rgba(148, 163, 184, 0.25);
+  --theme-border-accent: rgba(34, 197, 94, 0.3);
+  --theme-border-hover: rgba(148, 163, 184, 0.22);
+  
+  --theme-shadow-card: 0 4px 20px rgba(0, 0, 0, 0.2);
+  --theme-shadow-card-hover: 0 8px 30px rgba(0, 0, 0, 0.28);
+  --theme-shadow-dropdown: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --theme-shadow-glow: 0 0 20px rgba(34, 197, 94, 0.2);
+  
+  --theme-hover-bg: rgba(255, 255, 255, 0.05);
+  --theme-hover-border: rgba(148, 163, 184, 0.22);
+  --theme-active-bg: rgba(34, 197, 94, 0.1);
+  
+  --theme-input-bg: rgba(17, 24, 39, 0.4);
+  --theme-input-border: rgba(148, 163, 184, 0.15);
+  --theme-input-focus-border: rgba(34, 197, 94, 0.5);
+  
+  --theme-scrollbar-track: #111827;
+  --theme-scrollbar-thumb: rgba(148, 163, 184, 0.22);
+  --theme-scrollbar-thumb-hover: rgba(148, 163, 184, 0.3);
+  
+  --theme-code-bg: rgba(0, 0, 0, 0.3);
 
   /* Radii */
   --radius-sm: 0.5rem;
@@ -122,14 +172,15 @@
 
   /* ============================================================================
      Legacy Atlas tokens (used by HomePage/marketing surfaces)
-     Softer dark theme: lighter backgrounds for reduced eye strain while meeting
-     WCAG AA (4.5:1 normal text, 3:1 large text). Primary/secondary/muted text
-     pass on these backgrounds.
+     Original dark theme values - WCAG AA compliant.
      ============================================================================ */
-  --atlas-bg-primary: #0a0a0f;
-  --atlas-bg-secondary: #0f1014;
-  --atlas-bg-tertiary: #14151a;
-  --atlas-bg-card: rgba(15, 16, 20, 0.88);
+  --atlas-bg-primary: #0d1424;
+  --atlas-bg-secondary: #111827;
+  --atlas-bg-tertiary: #1f2937;
+  --atlas-bg-card: rgba(17, 24, 39, 0.8);
+  --atlas-surface-card: rgba(17, 24, 39, 0.8);
+  --atlas-surface-hover: rgba(17, 24, 39, 0.95);
+  --atlas-card-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   --atlas-accent: #22c55e;
   --atlas-accent-hover: #16a34a;
   --atlas-accent-glow: rgba(34, 197, 94, 0.4);
@@ -162,64 +213,63 @@
 }
 
 /* ============================================================================
-   LIGHT MODE THEME (default) - Cloudflare-inspired, unique, WCAG AA
-   Cool light grays, dark text, blue for info/focus. Project variables only.
-   To update light theme site-wide: edit this .light block (Atlas vars + --atlas-card-shadow).
+   LIGHT MODE THEME
+   Warm cream/ivory tones - WCAG AA compliant.
    Toggle UI: components/ThemeToggle.jsx | Class applied by: context/ThemeContext.jsx
    ============================================================================ */
 .light {
-  /* Background - Cloudflare-style light (cool neutrals) */
-  --color-background: 220 14% 98%;
-  --color-surface: 220 12% 96%;
-  --color-surface-elevated: 220 10% 94%;
-  --color-surface-hover: 220 10% 91%;
-  --color-card: 220 12% 96%;
-  --color-card-foreground: 224 35% 8%;
-  --color-popover: 220 12% 96%;
-  --color-popover-foreground: 224 35% 8%;
+  /* Background - Warm light tones */
+  --color-background: 0 0% 100%;
+  --color-surface: 0 0% 98%;
+  --color-surface-elevated: 0 0% 96%;
+  --color-surface-hover: 0 0% 94%;
+  --color-card: 0 0% 98%;
+  --color-card-foreground: 222 47% 11%;
+  --color-popover: 0 0% 96%;
+  --color-popover-foreground: 222 47% 11%;
 
   /* Foreground - WCAG AA on light */
-  --color-foreground: 224 35% 8%;
-  --color-foreground-muted: 220 10% 38%;
-  --color-foreground-subtle: 220 8% 28%;
+  --color-foreground: 222 47% 11%;
+  --color-foreground-muted: 215 16% 47%;
+  --color-foreground-subtle: 215 12% 35%;
 
-  /* Primary / Accent - ExtensionShield green */
-  --color-primary: 142 71% 42%;
-  --color-primary-hover: 142 71% 36%;
-  --color-primary-foreground: 0 0% 100%;
+  /* Primary Brand - Emerald (darker for light mode) */
+  --color-primary: 142 71% 40%;
+  --color-primary-hover: 142 71% 35%;
+  --color-primary-foreground: 222 47% 5%;
 
-  /* Secondary */
-  --color-secondary: 256 65% 55%;
-  --color-secondary-hover: 256 65% 50%;
+  /* Secondary - Purple */
+  --color-secondary: 256 65% 60%;
+  --color-secondary-hover: 256 65% 55%;
   --color-secondary-foreground: 0 0% 100%;
 
-  /* Accent */
-  --color-accent: 142 71% 42%;
-  --color-accent-hover: 142 71% 36%;
+  /* Accent - Emerald */
+  --color-accent: 142 71% 40%;
+  --color-accent-hover: 142 71% 35%;
   --color-accent-foreground: 0 0% 100%;
 
   /* Status */
-  --color-muted: 220 10% 42%;
-  --color-muted-foreground: 220 8% 32%;
+  --color-muted: 215 16% 47%;
+  --color-muted-foreground: 215 20% 35%;
 
-  --color-destructive: 0 84% 55%;
-  --color-destructive-hover: 0 84% 50%;
+  --color-destructive: 0 84% 60%;
+  --color-destructive-hover: 0 84% 55%;
   --color-destructive-foreground: 0 0% 100%;
 
-  --color-success: 131 52% 45%;
-  --color-success-hover: 131 52% 40%;
+  --color-success: 142 71% 40%;
+  --color-success-hover: 142 71% 35%;
   --color-success-foreground: 0 0% 100%;
 
-  --color-warning: 45 100% 51%;
-  --color-warning-hover: 45 100% 46%;
-  --color-warning-foreground: 224 35% 8%;
+  --color-warning: 38 92% 50%;
+  --color-warning-hover: 38 92% 45%;
+  --color-warning-foreground: 222 47% 5%;
 
-  /* Info / focus - Cloudflare blue (#2160FD) WCAG AA on white */
-  --color-info: 225 98% 56%;
-  --color-info-hover: 225 98% 50%;
+  /* Info / focus */
+  --color-info: 217 91% 60%;
+  --color-info-hover: 217 91% 50%;
   --color-info-foreground: 0 0% 100%;
-  --color-info-bg: rgba(33, 96, 253, 0.1);
-  --color-info-border: rgba(33, 96, 253, 0.35);
+  --color-info-bg: rgba(59, 130, 246, 0.1);
+  --color-info-border: rgba(59, 130, 246, 0.35);
 
   /* Borders & Inputs */
   --color-border: 220 12% 88%;
@@ -228,38 +278,112 @@
 
   --color-input: 220 14% 96%;
   --color-input-focus: 142 71% 42%;
-  --color-ring: 225 98% 56%;
+  --color-ring: 142 71% 45%;
 
-  /* Risk palette */
-  --risk-good: #10B981;
-  --risk-warn: #E6A800;
-  --risk-bad: #DC2626;
+  /* Risk palette - slightly adjusted for light backgrounds */
+  --risk-good: #059669;
+  --risk-warn: #d97706;
+  --risk-bad: #dc2626;
   --risk-neutral: #6B7280;
-  --risk-good-bg: rgba(16, 185, 129, 0.12);
-  --risk-good-border: rgba(16, 185, 129, 0.4);
-  --risk-warn-bg: rgba(230, 168, 0, 0.12);
-  --risk-warn-border: rgba(230, 168, 0, 0.4);
-  --risk-bad-bg: rgba(220, 38, 38, 0.12);
-  --risk-bad-border: rgba(220, 38, 38, 0.4);
-  --risk-neutral-bg: rgba(107, 114, 128, 0.12);
-  --risk-neutral-border: rgba(107, 114, 128, 0.4);
+  --risk-good-bg: rgba(5, 150, 105, 0.1);
+  --risk-good-border: rgba(5, 150, 105, 0.3);
+  --risk-warn-bg: rgba(217, 119, 6, 0.1);
+  --risk-warn-border: rgba(217, 119, 6, 0.3);
+  --risk-bad-bg: rgba(220, 38, 38, 0.1);
+  --risk-bad-border: rgba(220, 38, 38, 0.3);
+  --risk-neutral-bg: rgba(107, 114, 128, 0.1);
+  --risk-neutral-border: rgba(107, 114, 128, 0.3);
 
-  /* Atlas - light surfaces, WCAG AA text (single place to update light theme) */
-  --atlas-bg-primary: rgb(250 250 252);
-  --atlas-bg-secondary: rgb(244 244 247);
-  --atlas-bg-tertiary: rgb(228 228 231);
-  --atlas-bg-card: rgba(247, 243, 235, 0.95);
-  --atlas-card-shadow: 0 4px 16px rgba(36, 34, 30, 0.06);
-  --atlas-accent: #16a34a;
-  --atlas-accent-hover: #15803d;
-  --atlas-accent-subtle: rgba(22, 163, 74, 0.12);
-  --atlas-accent-glow: rgba(22, 163, 74, 0.25);
-  --atlas-text-primary: rgb(24 24 27);
-  --atlas-text-secondary: rgb(39 39 42);
-  --atlas-text-muted: rgb(63 63 70);
-  --atlas-border: rgba(39, 39, 42, 0.12);
-  --atlas-border-accent: rgba(22, 163, 74, 0.35);
-  --dimension-rounded-corner: 0.625rem;
+  /* ============================================================================
+     Reference site palette (chalk, pitch, ash, stone, clay, limestone, sage, rust)
+     Used for consistent card outline and background in light mode.
+     ============================================================================ */
+  --color__rust: rgb(183 80 12);
+  --color__ochre: rgb(214 126 67);
+  --color__sage: rgb(139 166 140);
+  --color__pine: rgb(61 90 63);
+  --color__slate: rgb(95 113 147);
+  --color__glacier: rgb(149 174 221);
+  --color__chalk: rgb(251 249 245);
+  --color__pitch: rgb(36 34 30);
+  --color__coal: rgb(47 44 37);
+  --color__ash: rgb(73 70 63);
+  --color__ash-stone: rgb(114 109 111);
+  --color__stone: rgb(180 172 157);
+  --color__clay: rgb(217 210 196);
+  --color__limestone: rgb(247 243 235);
+  --color__white: rgb(255 255 255);
+  --color__black: rgb(0 0 0);
+  --dimension__rounded-corner: 0.625rem;
+
+  /* Atlas - light surfaces (vibrant, high contrast, reference palette) */
+  --atlas-bg-primary: #ffffff;
+  --atlas-bg-secondary: var(--color__chalk);
+  --atlas-bg-tertiary: var(--color__limestone);
+  --atlas-bg-card: var(--color__chalk);
+  --atlas-card-shadow: 0 4px 20px rgba(36, 34, 30, 0.08), 0 0 0 1px rgba(73, 70, 63, 0.12);
+  --atlas-accent: #15803d;
+  --atlas-accent-hover: #166534;
+  --atlas-accent-subtle: rgba(21, 128, 61, 0.12);
+  --atlas-accent-glow: rgba(21, 128, 61, 0.25);
+  --atlas-cta-rust: var(--color__rust);
+  --atlas-cta-rust-hover: rgb(155 68 10);
+  --atlas-text-primary: var(--color__pitch);
+  --atlas-text-secondary: var(--color__coal);
+  --atlas-text-muted: var(--color__ash);
+  --atlas-border: rgba(73, 70, 63, 0.22);
+  --atlas-border-strong: var(--color__stone);
+  --atlas-border-accent: rgba(21, 128, 61, 0.45);
+  --atlas-surface-card: var(--color__chalk);
+  --atlas-surface-hover: var(--color__limestone);
+
+  /* ============================================================================
+     THEME SYSTEM VARIABLES (light mode – vibrant, WCAG AA)
+     ============================================================================ */
+  --theme-bg-primary: #ffffff;
+  --theme-bg-secondary: var(--color__chalk);
+  --theme-bg-tertiary: var(--color__limestone);
+  --theme-bg-card: var(--color__chalk);
+  --theme-bg-surface: var(--color__chalk);
+  --theme-bg-surface-hover: var(--color__limestone);
+  --theme-bg-glass: var(--color__chalk);
+  --theme-bg-glass-strong: #ffffff;
+  --theme-bg-overlay: #ffffff;
+  
+  --theme-text-primary: var(--color__pitch);
+  --theme-text-secondary: var(--color__coal);
+  --theme-text-muted: var(--color__ash);
+  --theme-text-subtle: var(--color__ash-stone);
+  
+  --theme-accent: #15803d;
+  --theme-accent-hover: #166534;
+  --theme-accent-subtle: rgba(21, 128, 61, 0.12);
+  --theme-accent-glow: rgba(21, 128, 61, 0.25);
+  
+  --theme-border: rgba(73, 70, 63, 0.28);
+  --theme-border-subtle: var(--color__clay);
+  --theme-border-strong: var(--color__stone);
+  --theme-border-accent: rgba(21, 128, 61, 0.5);
+  --theme-border-hover: rgba(21, 128, 61, 0.3);
+  
+  --theme-shadow-card: 0 4px 20px rgba(36, 34, 30, 0.08), 0 0 0 1px rgba(73, 70, 63, 0.12);
+  --theme-shadow-card-hover: 0 12px 40px rgba(36, 34, 30, 0.12), 0 0 0 1px rgba(21, 128, 61, 0.2);
+  --theme-shadow-dropdown: 0 8px 32px rgba(36, 34, 30, 0.12), 0 0 0 1px rgba(73, 70, 63, 0.14);
+  --theme-shadow-glow: 0 0 0 1px rgba(21, 128, 61, 0.15);
+  
+  --theme-hover-bg: rgba(36, 34, 30, 0.05);
+  --theme-hover-border: var(--color__stone);
+  --theme-active-bg: rgba(21, 128, 61, 0.1);
+  
+  --theme-input-bg: #ffffff;
+  --theme-input-border: var(--color__clay);
+  --theme-input-focus-border: var(--theme-accent);
+  
+  --theme-scrollbar-track: var(--color__limestone);
+  --theme-scrollbar-thumb: rgba(73, 70, 63, 0.3);
+  --theme-scrollbar-thumb-hover: rgba(73, 70, 63, 0.45);
+  
+  --theme-code-bg: rgba(36, 34, 30, 0.06);
 }
 
 /* Force day background so no other layer overrides it */
@@ -284,29 +408,32 @@ html.light {
 }
 
 .light ::-webkit-scrollbar-track {
-  background: rgb(246 242 234);
+  background: var(--color__limestone);
 }
 
 .light ::-webkit-scrollbar-thumb {
-  background: rgba(38, 35, 31, 0.18);
-  border: 2px solid rgb(246 242 234);
+  background: rgba(73, 70, 63, 0.25);
+  border: 2px solid var(--color__limestone);
 }
 
 .light ::-webkit-scrollbar-thumb:hover {
-  background: rgba(38, 35, 31, 0.28);
+  background: rgba(73, 70, 63, 0.35);
 }
 
+/* Light mode: glass surfaces – chalk/white with visible outline */
 .light .glass {
-  background: rgba(250, 248, 244, 0.85);
-  border: 1px solid rgba(38, 35, 31, 0.1);
+  background: var(--color__chalk);
+  border: 1px solid var(--color__clay);
+  box-shadow: 0 4px 12px rgba(36, 34, 30, 0.06);
 }
 
 .light .glass-strong {
-  background: rgba(250, 248, 244, 0.95);
-  border: 1px solid rgba(38, 35, 31, 0.12);
+  background: #ffffff;
+  border: 1px solid var(--color__stone);
+  box-shadow: 0 4px 16px rgba(36, 34, 30, 0.08);
 }
 
-/* Card style (light) – uses .light tokens above; add new card classes here to match site */
+/* Card style (light) – vibrant: chalk card bg + visible clay/stone outline */
 .light .surface-card,
 .light .bridge-step,
 .light .deception-card,
@@ -337,7 +464,7 @@ html.light {
 .light .report-card,
 .light .glass-card {
   background: var(--atlas-bg-card);
-  border: 1px solid var(--atlas-border);
+  border: 1px solid var(--color__clay);
   box-shadow: var(--atlas-card-shadow);
 }
 
@@ -348,19 +475,70 @@ html.light {
 }
 .light .surface-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(22, 163, 74, 0.2);
-  box-shadow: 0 12px 40px rgba(38, 35, 31, 0.1), 0 0 0 1px rgba(22, 163, 74, 0.08);
+  border-color: var(--atlas-border-accent);
+  box-shadow: 0 12px 40px rgba(36, 34, 30, 0.1), 0 0 0 1px rgba(22, 163, 74, 0.12);
 }
 
 .light .surface-panel {
-  background: rgba(246, 242, 234, 0.85);
-  border: 1px solid rgba(38, 35, 31, 0.08);
-  box-shadow: 0 2px 12px rgba(38, 35, 31, 0.05);
+  background: var(--color__chalk);
+  border: 1px solid var(--color__clay);
+  box-shadow: 0 4px 16px rgba(36, 34, 30, 0.06);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 .light .surface-panel:hover {
-  border-color: rgba(38, 35, 31, 0.12);
+  border-color: var(--color__stone);
+}
+
+/* Light mode: homepage hero & stats – bright card style */
+.light .hero-glass-card {
+  background: var(--color__chalk);
+  border: 1px solid var(--color__clay);
+  box-shadow: 0 4px 20px rgba(36, 34, 30, 0.08), 0 0 0 1px rgba(73, 70, 63, 0.12);
+}
+.light .hero-glass-card:hover {
+  border-color: var(--atlas-border-accent);
+  box-shadow: 0 12px 40px rgba(36, 34, 30, 0.1), 0 0 0 1px rgba(21, 128, 61, 0.2);
+}
+
+.light .glass-card-icon {
+  background: rgba(36, 34, 30, 0.06);
+  border: 1px solid var(--color__clay);
+  box-shadow: 0 2px 8px rgba(36, 34, 30, 0.06);
+}
+
+.light .glass-card-meta {
+  border-top: 1px solid var(--color__clay);
+}
+
+.light .stats-bar {
+  background: var(--color__chalk);
+  border: 1px solid var(--color__clay);
+  box-shadow: 0 4px 20px rgba(36, 34, 30, 0.08), 0 0 0 1px rgba(73, 70, 63, 0.12);
+}
+
+.light .search-container {
+  background: #ffffff;
+  border: 1px solid var(--color__clay);
+  box-shadow: 0 2px 10px rgba(36, 34, 30, 0.06);
+}
+.light .search-container:focus-within {
+  border-color: var(--atlas-accent);
+  box-shadow: 0 0 0 4px var(--atlas-accent-subtle), 0 0 0 1px var(--atlas-accent);
+}
+
+/* Optional rust CTA (reference-style warm accent) */
+.light .cta-rust,
+.light .btn-cta-rust {
+  background: var(--atlas-cta-rust);
+  color: var(--color__white);
+  border: 1px solid var(--atlas-cta-rust);
+}
+.light .cta-rust:hover,
+.light .btn-cta-rust:hover {
+  background: var(--atlas-cta-rust-hover);
+  border-color: var(--atlas-cta-rust-hover);
+  color: var(--color__white);
 }
 
 /* Day mode: improved contrast (WCAG) – body and secondary text at least medium weight */

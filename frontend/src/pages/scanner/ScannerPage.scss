@@ -1,13 +1,13 @@
 /* ============================================================================
-   Scanner Page - Matches Homepage theme (ExtensionShield Design System)
+   Scanner Page - Theme-aware styling using CSS variables
    ============================================================================ */
 
 .scanner-page {
   min-height: 100vh;
   min-width: 100%;
   width: 100%;
-  background: var(--atlas-bg-primary);
-  color: var(--atlas-text-primary, #f8fafc);
+  background: transparent;
+  color: var(--theme-text-primary);
   font-family: var(--font-sans);
   display: flex;
   flex-direction: column;
@@ -79,15 +79,15 @@
   align-items: center;
   width: 100%;
   gap: 0.5rem;
-  background: rgba(13, 20, 36, 0.95);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: var(--theme-bg-overlay);
+  border: 1px solid var(--theme-border);
   border-radius: 16px;
   padding: 0.5rem;
   transition: all 0.3s ease;
 
   &:focus-within {
-    border-color: var(--atlas-accent, #22c55e);
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+    border-color: var(--theme-accent);
+    box-shadow: 0 0 0 4px var(--theme-accent-subtle);
   }
 
   .scanner-search-icon {
@@ -111,12 +111,12 @@
     border: none;
     outline: none;
     font-size: clamp(0.875rem, 1.6vw, 0.9375rem);
-    color: var(--atlas-text-primary, #f8fafc);
+    color: var(--theme-text-primary);
     padding: 0.75rem 0.5rem;
     font-family: inherit;
 
     &::placeholder {
-      color: var(--atlas-text-muted, #64748b);
+      color: var(--theme-text-muted);
     }
   }
 }
@@ -356,14 +356,14 @@
   font-size: 0.875rem;
 
   thead {
-    background: var(--atlas-bg-secondary, #111827);
-    border-bottom: 1px solid var(--atlas-border, rgba(148, 163, 184, 0.18));
+    background: var(--theme-bg-secondary);
+    border-bottom: 1px solid var(--theme-border);
 
     th {
       padding: 0.875rem 1rem;
       text-align: left;
       font-weight: 600;
-      color: var(--atlas-text-primary, #f8fafc);
+      color: var(--theme-text-primary);
       font-size: 0.75rem;
       letter-spacing: 0.04em;
       text-transform: uppercase;
@@ -375,7 +375,7 @@
         transition: background-color 0.2s ease;
 
         &:hover {
-          background: rgba(148, 163, 184, 0.08);
+          background: var(--theme-hover-bg);
         }
       }
 
@@ -401,14 +401,14 @@
 
   tbody {
     tr {
-      border-bottom: 1px solid var(--atlas-border, rgba(148, 163, 184, 0.18));
+      border-bottom: 1px solid var(--theme-border);
       transition: background-color 0.15s ease;
       position: relative;
       cursor: pointer;
 
       &:hover,
       &.row-hovered {
-        background: rgba(34, 197, 94, 0.06);
+        background: var(--theme-active-bg);
       }
 
       &:last-child {
@@ -418,7 +418,7 @@
 
     td {
       padding: 1rem;
-      color: var(--atlas-text-primary, #f8fafc);
+      color: var(--theme-text-primary);
       vertical-align: middle;
 
       &.extension-cell {
@@ -426,7 +426,7 @@
       }
 
       .no-data {
-        color: var(--atlas-text-muted, #64748b);
+        color: var(--theme-text-muted);
         opacity: 0.5;
       }
     }

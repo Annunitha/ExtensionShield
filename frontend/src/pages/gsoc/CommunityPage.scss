@@ -1,11 +1,11 @@
 /* ============================================================================
-   Community Page – Theme tokens from index.css
+   Community Page – Theme-aware styling
    ============================================================================ */
 
 .community-page {
   min-height: 100vh;
   background: transparent;
-  color: var(--atlas-text-primary, #f8fafc);
+  color: var(--theme-text-primary);
   position: relative;
   font-family: var(--font-sans);
 }
@@ -64,17 +64,18 @@
 
 .community-card {
   padding: 2rem;
-  background: rgba(13, 20, 36, 0.6);
-  border: 1px solid rgba(148, 163, 184, 0.1);
+  background: var(--theme-bg-card);
+  border: 1px solid var(--theme-border);
   border-radius: var(--radius-lg);
   text-decoration: none;
   color: inherit;
+  box-shadow: var(--theme-shadow-card);
   transition: all 0.3s ease;
   
   &:hover:not(.coming-soon) {
-    border-color: rgba(34, 197, 94, 0.4);
+    border-color: var(--theme-border-accent);
     transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--theme-shadow-card-hover);
   }
   
   &.coming-soon {

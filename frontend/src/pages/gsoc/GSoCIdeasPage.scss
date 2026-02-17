@@ -1,11 +1,11 @@
 /* ============================================================================
-   GSoC Ideas Page – Theme tokens from index.css
+   GSoC Ideas Page – Theme-aware styling
    ============================================================================ */
 
 .gsoc-ideas-page {
   min-height: 100vh;
   background: transparent;
-  color: var(--atlas-text-primary, #f8fafc);
+  color: var(--theme-text-primary);
   position: relative;
   font-family: var(--font-sans);
 }
@@ -88,14 +88,16 @@
 
 .idea-card {
   padding: 2rem;
-  background: rgba(13, 20, 36, 0.6);
-  border: 1px solid rgba(148, 163, 184, 0.1);
+  background: var(--theme-bg-card);
+  border: 1px solid var(--theme-border);
   border-radius: 16px;
+  box-shadow: var(--theme-shadow-card);
   transition: all 0.3s ease;
   
   &:hover {
-    border-color: rgba(34, 197, 94, 0.3);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border-color: var(--theme-border-accent);
+    box-shadow: var(--theme-shadow-card-hover);
+    transform: translateY(-2px);
   }
 }
 

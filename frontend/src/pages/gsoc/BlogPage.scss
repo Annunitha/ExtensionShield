@@ -1,11 +1,11 @@
 /* ============================================================================
-   Blog Page – Theme tokens from index.css
+   Blog Page – Theme-aware styling using CSS variables
    ============================================================================ */
 
 .blog-page {
   min-height: 100vh;
   background: transparent;
-  color: var(--atlas-text-primary, #f8fafc);
+  color: var(--theme-text-primary);
   position: relative;
   font-family: var(--font-sans);
 }
@@ -18,7 +18,7 @@
   .bg-gradient {
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(34, 197, 94, 0.06) 0%, transparent 50%);
+    background: radial-gradient(ellipse 80% 50% at 50% 0%, var(--theme-accent-glow) 0%, transparent 50%);
   }
 }
 
@@ -37,7 +37,7 @@
     font-size: clamp(2rem, 5vw, 3rem);
     font-weight: var(--weight-strong, 700);
     margin-bottom: 1rem;
-    background: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);
+    background: linear-gradient(135deg, var(--theme-text-primary) 0%, var(--theme-text-secondary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -45,7 +45,7 @@
   
   p {
     font-size: 1.125rem;
-    color: var(--atlas-text-secondary, #94a3b8);
+    color: var(--theme-text-secondary);
     line-height: 1.7;
   }
 }
@@ -59,21 +59,28 @@
 
 .blog-card {
   padding: 2rem;
-  background: rgba(13, 20, 36, 0.6);
-  border: 1px solid rgba(148, 163, 184, 0.1);
+  background: var(--theme-bg-card);
+  border: 1px solid var(--theme-border);
   border-radius: var(--radius-lg);
-  transition: all 0.3s ease;
+  box-shadow: var(--theme-shadow-card);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: var(--theme-border-hover);
+    box-shadow: var(--theme-shadow-card-hover);
+  }
 
   h2 {
     font-size: var(--report-text-xl);
     font-weight: var(--weight-strong, 700);
     margin-bottom: 0.75rem;
-    color: var(--atlas-text-primary, #f8fafc);
+    color: var(--theme-text-primary);
   }
   
   p {
     font-size: 0.9375rem;
-    color: var(--atlas-text-secondary, #94a3b8);
+    color: var(--theme-text-secondary);
     line-height: 1.7;
     margin: 0;
   }
@@ -88,23 +95,23 @@
 
 .category-badge {
   padding: 0.25rem 0.625rem;
-  background: var(--atlas-accent-subtle);
-  border: 1px solid var(--atlas-border-accent);
+  background: var(--theme-accent-subtle);
+  border: 1px solid var(--theme-border-accent);
   border-radius: var(--radius-sm);
   font-size: 0.6875rem;
   font-weight: var(--weight-heading, 600);
-  color: #a78bfa;
+  color: var(--theme-accent);
 }
 
 .date {
   font-size: 0.8125rem;
-  color: var(--atlas-text-muted, #64748b);
+  color: var(--theme-text-muted);
 }
 
 .blog-empty-cta {
   padding: 2rem;
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(13, 20, 36, 0.6) 100%);
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  background: var(--theme-accent-subtle);
+  border: 1px solid var(--theme-border-accent);
   border-radius: var(--radius-lg);
   text-align: center;
   
@@ -112,12 +119,12 @@
     font-size: var(--report-text-xl);
     font-weight: var(--weight-strong, 700);
     margin-bottom: 0.5rem;
-    color: var(--atlas-text-primary, #f8fafc);
+    color: var(--theme-text-primary);
   }
   
   p {
     font-size: 0.9375rem;
-    color: var(--atlas-text-secondary, #94a3b8);
+    color: var(--theme-text-secondary);
     margin-bottom: 1.5rem;
   }
 }
@@ -127,8 +134,8 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.875rem 1.5rem;
-  background: var(--atlas-accent, #22c55e);
-  color: #0d1424;
+  background: var(--theme-accent);
+  color: #fff;
   border: none;
   border-radius: var(--radius);
   font-size: var(--report-text-sm);
@@ -137,71 +144,9 @@
   transition: all 0.3s ease;
   
   &:hover {
-    box-shadow: 0 8px 24px rgba(34, 197, 94, 0.4);
+    background: var(--theme-accent-hover);
+    box-shadow: 0 8px 24px var(--theme-accent-glow);
   }
 }
 
-/* ============================================================================
-   Light mode – match site design theme
-   ============================================================================ */
-.light .blog-page {
-  color: var(--atlas-text-primary);
-}
-
-.light .blog-bg .bg-gradient {
-  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(178, 82, 24, 0.05) 0%, transparent 50%);
-}
-
-.light .blog-header h1 {
-  background: linear-gradient(135deg, var(--atlas-text-primary) 0%, var(--atlas-text-secondary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.light .blog-header p {
-  color: var(--atlas-text-secondary);
-}
-
-.light .blog-card {
-  background: var(--atlas-bg-card);
-  border-color: var(--atlas-border);
-  box-shadow: var(--atlas-card-shadow);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-
-  &:hover {
-    transform: translateY(-4px);
-    border-color: var(--atlas-border-accent);
-    box-shadow: 0 12px 40px rgba(38, 35, 31, 0.12);
-  }
-
-  h2 { color: var(--atlas-text-primary); }
-  p { color: var(--atlas-text-secondary); }
-}
-
-.light .category-badge {
-  background: var(--atlas-accent-subtle);
-  border-color: var(--atlas-border-accent);
-  color: var(--atlas-accent);
-}
-
-.light .date {
-  color: var(--atlas-text-muted);
-}
-
-.light .blog-empty-cta {
-  background: var(--atlas-accent-subtle);
-  border-color: var(--atlas-border-accent);
-
-  h3 { color: var(--atlas-text-primary); }
-  p { color: var(--atlas-text-secondary); }
-}
-
-.light .cta-button {
-  background: linear-gradient(135deg, var(--atlas-accent) 0%, var(--atlas-accent-hover) 100%);
-  color: #fff;
-
-  &:hover {
-    box-shadow: 0 8px 24px var(--atlas-accent-glow);
-  }
-}
+/* Light mode handled automatically via --theme-* CSS variables */
