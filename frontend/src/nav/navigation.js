@@ -185,20 +185,6 @@ export const userMenuItems = [
 export const footerConfig = {
   disclaimer: "Comprehensive extension governance through security, privacy, and compliance analysis. We aggregate multiple dimensions into a single actionable score. So you can trust the results you find.",
   tagline: "Extension security you can trust.",
-  /** @deprecated use linkGroups for two-column footer */
-  links: [
-    { label: "Scan", path: "/scan" },
-    { label: "Is extension safe?", path: "/is-this-chrome-extension-safe" },
-    { label: "How We Score", path: "/research/methodology" },
-    { label: "Case Studies", path: "/research/case-studies" },
-    { label: "Compare Scanners", path: "/compare" },
-    { label: "Enterprise", path: "/enterprise" },
-    { label: "Blog", path: "/blog" },
-    { label: "Privacy Policy", path: "/privacy-policy" },
-    { label: "Contribute", path: "/contribute" },
-    { label: "GitHub", href: "https://github.com/Stanzin7/ExtensionScanner", external: true }
-  ],
-  /** Right column: grouped links for two-col footer */
   linkGroups: [
     {
       heading: "Product",

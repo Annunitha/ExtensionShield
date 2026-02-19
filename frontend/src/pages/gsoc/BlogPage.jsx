@@ -4,7 +4,6 @@ import SEOHead from "../../components/SEOHead";
 import "./BlogPage.scss";
 
 const BlogPage = () => {
-  // Placeholder blog posts - would come from CMS/API in production
   const posts = [
     {
       id: "welcome",

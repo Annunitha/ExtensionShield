@@ -206,13 +206,6 @@
   }
 }
 
-/* Fallback when no linkGroups (flat links) */
-.app-footer__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem 1.5rem;
-}
-
 /* ========== Bottom bar ========== */
 .app-footer__bottom {
   position: relative;

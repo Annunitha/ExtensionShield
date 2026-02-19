@@ -5,8 +5,7 @@ import ShieldLogo from "./ShieldLogo";
 import "./Footer.scss";
 
 const Footer = () => {
-  const groups = footerConfig.linkGroups || [];
-  const hasGroups = groups.length > 0;
+  const groups = footerConfig.linkGroups;
 
   return (
     <footer className="app-footer" role="contentinfo">
@@ -31,58 +30,33 @@ const Footer = () => {
 
           {/* Right column: link groups */}
           <div className="app-footer__links-col">
-            {hasGroups ? (
-              <div className="app-footer__groups">
-                {groups.map((group, idx) => (
-                  <div key={idx} className="app-footer__group">
-                    <span className="app-footer__group-heading">{group.heading}</span>
-                    <ul className="app-footer__list" aria-label={group.heading}>
-                      {group.links.map((link, i) => (
-                        <li key={i}>
-                          {link.external ? (
-                            <a
-                              href={link.href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="app-footer__link"
-                            >
-                              {link.label}
-                            </a>
-                          ) : (
-                            <Link to={link.path} className="app-footer__link">
-                              {link.label}
-                            </Link>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="app-footer__links">
-                {footerConfig.links.map((link, index) => {
-                  if (link.external) {
-                    return (
-                      <a
-                        key={index}
-                        href={link.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="app-footer__link"
-                      >
-                        {link.label}
-                      </a>
-                    );
-                  }
-                  return (
-                    <Link key={index} to={link.path} className="app-footer__link">
-                      {link.label}
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
+            <div className="app-footer__groups">
+              {groups.map((group, idx) => (
+                <div key={idx} className="app-footer__group">
+                  <span className="app-footer__group-heading">{group.heading}</span>
+                  <ul className="app-footer__list" aria-label={group.heading}>
+                    {group.links.map((link, i) => (
+                      <li key={i}>
+                        {link.external ? (
+                          <a
+                            href={link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="app-footer__link"
+                          >
+                            {link.label}
+                          </a>
+                        ) : (
+                          <Link to={link.path} className="app-footer__link">
+                            {link.label}
+                          </Link>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
