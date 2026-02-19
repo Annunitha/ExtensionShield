@@ -32,6 +32,24 @@
   color: var(--theme-text-primary);
 }
 
+/* Breadcrumb (used by hub and other landing pages that import this file) */
+.compare-container .breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--theme-text-secondary);
+  margin-bottom: 1rem;
+
+  a {
+    color: var(--theme-accent, #6366f1);
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+}
+
 .compare-header h1 {
   font-size: clamp(1.5rem, 4vw, 1.85rem);
   font-weight: 700;
@@ -125,4 +143,82 @@
 
 .compare-links a:hover {
   text-decoration: underline;
+}
+
+/* Hub page: Table of contents */
+.hub-toc {
+  margin: 1.5rem 0 2rem;
+  padding: 1rem 1.25rem;
+  background: var(--theme-bg-card, rgba(148, 163, 184, 0.06));
+  border: 1px solid var(--theme-border, rgba(148, 163, 184, 0.2));
+  border-radius: 10px;
+}
+
+.hub-toc-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  color: var(--theme-text-primary);
+}
+
+.hub-toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hub-toc li {
+  margin-bottom: 0.35rem;
+}
+
+.hub-toc a {
+  color: var(--theme-accent, #6366f1);
+  text-decoration: none;
+  font-size: 0.9375rem;
+}
+
+.hub-toc a:hover {
+  text-decoration: underline;
+}
+
+/* Hub page: Real examples grid */
+.hub-examples-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.hub-example-card {
+  display: block;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--theme-border, rgba(148, 163, 184, 0.2));
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.hub-example-card:hover {
+  border-color: var(--theme-accent, #6366f1);
+  background: var(--theme-bg-card, rgba(148, 163, 184, 0.04));
+}
+
+.hub-example-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+  color: var(--theme-text-primary);
+}
+
+.hub-example-card p {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--theme-text-secondary);
+  margin: 0 0 0.5rem;
+}
+
+.hub-example-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--theme-accent, #6366f1);
 }
