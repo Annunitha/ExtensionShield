@@ -93,6 +93,7 @@ def build_report_view_model_safe(
     metadata: Optional[Dict[str, Any]],
     extension_id: str,
     scan_id: str,
+    skip_llm: bool = False,
 ) -> Dict[str, Any]:
     """Safely build the report view model, returning an empty dict on failure."""
     try:
@@ -102,6 +103,7 @@ def build_report_view_model_safe(
             metadata=metadata,
             extension_id=extension_id,
             scan_id=scan_id,
+            skip_llm=skip_llm,
         )
     except Exception as exc:
         logger.warning("Failed to build report_view_model, using empty dict: %s", exc)
@@ -236,10 +238,11 @@ def upgrade_legacy_payload(payload: Dict[str, Any], extension_id: str) -> Dict[s
                 metadata=metadata,
                 extension_id=extension_id,
                 scan_id=extension_id,
+                skip_llm=True,
             )
             payload["report_view_model"] = report_view_model
             logger.info(
-                "[UPGRADE] Built report_view_model for extension_id=%s (force=%s)",
+                "[UPGRADE] Built report_view_model for extension_id=%s (force=%s, skip_llm=True)",
                 extension_id,
                 force_recompute,
             )

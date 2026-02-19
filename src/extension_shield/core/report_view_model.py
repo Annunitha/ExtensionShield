@@ -1379,6 +1379,7 @@ def build_report_view_model(
     metadata: Optional[Dict[str, Any]],
     extension_id: str,
     scan_id: str,
+    skip_llm: bool = False,
 ) -> Dict[str, Any]:
     """
     Build the production `report_view_model` dict for the frontend.
@@ -1389,6 +1390,8 @@ def build_report_view_model(
         metadata: webstore metadata dict (may be empty)
         extension_id: extension identifier
         scan_id: scan identifier
+        skip_llm: if True, skip LLM calls and use deterministic fallbacks only.
+                  Use this for retrieval paths to avoid slow LLM latency.
     """
     manifest = _coerce_dict(manifest)
     analysis_results = _coerce_dict(analysis_results)
@@ -1434,12 +1437,13 @@ def build_report_view_model(
     # LLM-backed outputs (with safe fallbacks)
     # -------------------------------------------------------------------------
     # Prefer already-computed pipeline outputs to avoid duplicate LLM calls.
+    # When skip_llm=True (retrieval path), never call LLM - use deterministic fallbacks.
     executive_summary_raw: Any = (
         analysis_results.get("executive_summary")
         or analysis_results.get("summary")
         or analysis_results.get("executiveSummary")
     )
-    if not (isinstance(executive_summary_raw, dict) and executive_summary_raw):
+    if not (isinstance(executive_summary_raw, dict) and executive_summary_raw) and not skip_llm:
         try:
             executive_summary_raw = SummaryGenerator().generate(
                 analysis_results=analysis_results,
@@ -1479,7 +1483,7 @@ def build_report_view_model(
             )
 
     impact_analysis_raw: Any = analysis_results.get("impact_analysis") or analysis_results.get("impactAnalysis")
-    if not (isinstance(impact_analysis_raw, dict) and impact_analysis_raw):
+    if not (isinstance(impact_analysis_raw, dict) and impact_analysis_raw) and not skip_llm:
         try:
             impact_analysis_raw = ImpactAnalyzer().generate(
                 analysis_results=analysis_results,
@@ -1501,7 +1505,7 @@ def build_report_view_model(
     )
 
     privacy_compliance_raw: Any = analysis_results.get("privacy_compliance") or analysis_results.get("privacyCompliance")
-    if not (isinstance(privacy_compliance_raw, dict) and privacy_compliance_raw):
+    if not (isinstance(privacy_compliance_raw, dict) and privacy_compliance_raw) and not skip_llm:
         try:
             privacy_compliance_raw = PrivacyComplianceAnalyzer().generate(
                 analysis_results=analysis_results,
