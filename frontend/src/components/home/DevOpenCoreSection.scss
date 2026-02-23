@@ -101,23 +101,24 @@
 
 .dev-open-core-cta-btn {
   display: inline-block;
+  font-family: var(--font-sans, system-ui, sans-serif);
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--atlas-bg-primary, #0f172a);
-  background: var(--atlas-accent);
+  color: #fff;
+  background: #22c55e;
   padding: 0.55rem 1.1rem;
   border-radius: 10px;
   text-decoration: none;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
 
   &:hover {
-    background: var(--atlas-accent-hover, #16a34a);
-    color: var(--atlas-bg-primary, #0f172a);
+    background: #16a34a;
+    color: #fff;
     transform: translateY(-1px);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--atlas-accent);
+    outline: 2px solid #22c55e;
     outline-offset: 2px;
   }
 }
@@ -152,25 +153,6 @@
   line-height: 1.45;
   margin: 0 0 1.25rem;
   opacity: 0.9;
-}
-
-.dev-open-core-enterprise-line {
-  font-size: 0.8125rem;
-  color: var(--atlas-text-muted);
-  line-height: 1.45;
-  margin: 0;
-  opacity: 0.9;
-}
-
-.dev-open-core-enterprise-link {
-  font-weight: 500;
-  color: var(--atlas-accent);
-  text-decoration: none;
-  transition: color 0.2s ease;
-
-  &:hover {
-    color: var(--atlas-accent-hover, #16a34a);
-  }
 }
 
 /* RIGHT: pipeline (enterprise-governance-visual) */
