@@ -35,7 +35,7 @@ def test_critical_high_sast_pattern_triggers_block():
     assert result.triggered is True
     assert result.decision == "BLOCK"
     assert any(
-        "Critical HIGH SAST pattern matched" in reason for reason in result.reasons
+        "Dangerous code pattern found" in reason for reason in result.reasons
     )
 
 
@@ -53,7 +53,7 @@ def test_sast_missing_coverage_caps_score_and_sets_review():
     assert result.overall_score <= 80
     assert result.decision.name == "NEEDS_REVIEW"
     assert any(
-        "Limited analysis coverage (SAST missing)" in reason
+        "SAST coverage missing; score capped at 80" in reason
         for reason in result.reasons
     )
 

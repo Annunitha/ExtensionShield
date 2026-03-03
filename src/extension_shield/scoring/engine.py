@@ -241,7 +241,7 @@ class ScoringEngine:
         # =====================================================================
         
         layer_weights = self.weights.layer_weights
-        base_overall = int(
+        base_overall = round(
             security_score * layer_weights.get("security", 0.5) +
             privacy_score * layer_weights.get("privacy", 0.3) +
             governance_score * layer_weights.get("governance", 0.2)
@@ -256,7 +256,7 @@ class ScoringEngine:
             security_score, privacy_score, governance_score, gate_results
         )
         
-        overall_after_gates = int(
+        overall_after_gates = round(
             security_score * layer_weights.get("security", 0.5) +
             privacy_score * layer_weights.get("privacy", 0.3) +
             governance_score * layer_weights.get("governance", 0.2)
@@ -303,7 +303,7 @@ class ScoringEngine:
         if sast_missing_coverage and overall_score > 80:
             overall_score = 80
             coverage_cap_applied = True
-            coverage_cap_reason = "Limited analysis coverage (SAST missing) — review recommended"
+            coverage_cap_reason = "SAST coverage missing; score capped at 80"
             coverage_reasons.append(coverage_cap_reason)
         
         logger.debug(
@@ -345,7 +345,9 @@ class ScoringEngine:
         # Apply coverage sanity: if coverage is limited and we didn't already
         # BLOCK, ensure at least NEEDS_REVIEW and surface a clear reason.
         if coverage_reasons:
-            reasons.extend(coverage_reasons)
+            for cr in coverage_reasons:
+                if cr not in reasons:
+                    reasons.append(cr)
             if decision != Decision.BLOCK:
                 decision = Decision.NEEDS_REVIEW
         

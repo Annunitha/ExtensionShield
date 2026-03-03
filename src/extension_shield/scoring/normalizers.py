@@ -277,16 +277,19 @@ def normalize_virustotal(vt_pack: VirusTotalSignalPack) -> FactorScore:
     Returns:
         FactorScore with normalized severity and confidence
     """
-    # Check if VT was enabled/available
+    # When VT is unavailable, exclude it from the weighted formula entirely
+    # by setting confidence=0.0. This prevents missing data from artificially
+    # inflating scores (severity=0 + confidence>0 adds to the denominator
+    # without adding risk, which makes the extension look safer than warranted).
     if not vt_pack.enabled:
         return FactorScore(
             name=SecurityFactors.VIRUSTOTAL,
             severity=0.0,
-            confidence=0.4,  # Low confidence when missing
+            confidence=0.0,
             weight=SECURITY_WEIGHTS_V1[SecurityFactors.VIRUSTOTAL],
             evidence_ids=[],
             details={"message": "VirusTotal not enabled or unavailable"},
-            flags=[],
+            flags=["signal_unavailable"],
         )
     
     # Map malicious count to severity
@@ -308,7 +311,7 @@ def normalize_virustotal(vt_pack: VirusTotalSignalPack) -> FactorScore:
     
     # Determine confidence
     if vt_pack.total_engines == 0:
-        confidence = 0.4  # No engine data (possibly rate-limited)
+        confidence = 0.0  # No engine data (rate-limited) — exclude from formula
     elif vt_pack.total_engines < 30:
         confidence = 0.7  # Partial scan (rate-limited or timeout)
     else:
@@ -493,11 +496,11 @@ def normalize_chromestats(chromestats: ChromeStatsSignalPack) -> FactorScore:
         return FactorScore(
             name=SecurityFactors.CHROMESTATS,
             severity=0.0,
-            confidence=0.4,  # Low confidence when not available
+            confidence=0.0,
             weight=SECURITY_WEIGHTS_V1[SecurityFactors.CHROMESTATS],
             evidence_ids=[],
             details={"message": "ChromeStats not enabled"},
-            flags=[],
+            flags=["signal_unavailable"],
         )
     
     # Normalize the risk score (original max was ~28)

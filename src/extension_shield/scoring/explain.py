@@ -388,17 +388,16 @@ class ExplanationBuilder:
         # Get risk level
         risk_level = RiskLevel.from_score(score).value
         
-        # Identify top contributors (already sorted)
+        # Identify top contributors (already sorted) with plain names
         top_contributors = [
-            f"{f.name} ({f.contribution:.1%})"
+            self.FACTOR_PLAIN_NAMES.get(f.name, f.name)
             for f in sorted_factors[:3]
             if f.contribution > 0.01
         ]
         
-        # Build summary
         summary = f"{layer_name.title()}: {score}/100 ({risk_level} risk)"
         if top_contributors:
-            summary += f" - Top: {', '.join([f.name for f in sorted_factors[:2]])}"
+            summary += f" — driven by {', '.join(top_contributors[:2])}"
         
         return LayerExplanation(
             layer_name=layer_name,
@@ -411,21 +410,35 @@ class ExplanationBuilder:
             summary=summary,
         )
     
+    FACTOR_PLAIN_NAMES = {
+        "SAST": "code security scan",
+        "VirusTotal": "antivirus scan",
+        "Entropy": "code obfuscation check",
+        "ManifestPosture": "extension configuration",
+        "ChromeStats": "Chrome Web Store reputation",
+        "WebStoreTrust": "developer trust signals",
+        "MaintenanceHealth": "update and maintenance status",
+        "PermissionsBaseline": "permission risk level",
+        "PermissionCombos": "risky permission combinations",
+        "NetworkExfil": "external data transfer check",
+        "CaptureSignals": "screen or input capture check",
+    }
+
     def _factor_to_explanation(self, factor: FactorScore) -> FactorExplanation:
         """Convert FactorScore to FactorExplanation."""
-        # Build summary string
         if factor.severity > 0.5:
-            severity_desc = "high"
+            severity_desc = "significant"
         elif factor.severity > 0.2:
             severity_desc = "moderate"
         elif factor.severity > 0:
-            severity_desc = "low"
+            severity_desc = "minor"
         else:
-            severity_desc = "none"
+            severity_desc = "no"
         
-        summary = f"{factor.name}: {severity_desc} severity ({factor.severity:.0%})"
+        plain_name = self.FACTOR_PLAIN_NAMES.get(factor.name, factor.name)
+        summary = f"{severity_desc.capitalize()} findings in {plain_name}"
         if factor.flags:
-            summary += f" - {factor.flags[0]}"
+            summary += f" — {factor.flags[0]}"
         
         return FactorExplanation(
             name=factor.name,
@@ -440,6 +453,16 @@ class ExplanationBuilder:
             summary=summary,
         )
     
+    GATE_PLAIN_NAMES = {
+        "CRITICAL_SAST": "dangerous code patterns",
+        "SENSITIVE_EXFIL": "data being sent to external servers",
+        "PURPOSE_MISMATCH": "behavior not matching its stated purpose",
+        "VT_MALWARE": "antivirus flags",
+        "TOS_VIOLATION": "policy violations",
+        "MANIFEST_POSTURE": "suspicious configuration",
+        "CAPTURE_SIGNALS": "screen or input capture",
+    }
+
     def _build_decision_rationale(
         self,
         decision: str,
@@ -450,36 +473,36 @@ class ExplanationBuilder:
         """Build human-readable decision rationale."""
         if decision == "BLOCK":
             if triggered_gates:
+                gate_descriptions = [self.GATE_PLAIN_NAMES.get(g, g) for g in triggered_gates]
                 return (
-                    f"Extension BLOCKED due to triggered security gates: "
-                    f"{', '.join(triggered_gates)}. "
-                    f"Automated analysis detected critical security concerns that "
-                    f"require immediate attention."
+                    f"This extension was blocked because our scan found "
+                    f"{', '.join(gate_descriptions)}. "
+                    f"We recommend not installing it."
                 )
             else:
                 return (
-                    f"Extension BLOCKED due to low overall score ({overall_score}/100). "
-                    f"Multiple risk factors contributed to this decision."
+                    f"This extension was blocked due to a low safety score "
+                    f"({overall_score}/100). Multiple concerns were found."
                 )
         
         elif decision == "NEEDS_REVIEW":
             if triggered_gates:
+                gate_descriptions = [self.GATE_PLAIN_NAMES.get(g, g) for g in triggered_gates]
                 return (
-                    f"Extension requires MANUAL REVIEW. Warning gates triggered: "
-                    f"{', '.join(triggered_gates)}. "
-                    f"A security analyst should review before approval."
+                    f"This extension needs careful review. Our scan flagged "
+                    f"{', '.join(gate_descriptions)}. "
+                    f"Check the details before installing."
                 )
             else:
                 return (
-                    f"Extension requires MANUAL REVIEW due to moderate risk score "
-                    f"({overall_score}/100). Some concerns were identified that "
-                    f"should be evaluated by a human reviewer."
+                    f"This extension needs review (score: {overall_score}/100). "
+                    f"Some concerns were found that you should check before installing."
                 )
         
         else:  # ALLOW
             return (
-                f"Extension APPROVED with score {overall_score}/100. "
-                f"All automated security checks passed. No critical issues detected."
+                f"This extension looks safe (score: {overall_score}/100). "
+                f"No critical issues were found in our security scan."
             )
     
     def get_summary(self, score: int, decision: str) -> str:

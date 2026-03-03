@@ -164,6 +164,74 @@ function severityToFindingLevel(severity: number): FindingSeverity {
   return 'low';
 }
 
+const GATE_HUMAN_TITLE: Record<string, string> = {
+  CRITICAL_SAST: 'Dangerous code pattern detected',
+  SENSITIVE_EXFIL: 'May send your data to external servers',
+  PURPOSE_MISMATCH: "Behavior doesn't match stated purpose",
+  VT_MALWARE: 'Flagged by antivirus engines',
+  TOS_VIOLATION: 'Chrome Web Store policy violation',
+  MANIFEST_POSTURE: 'Suspicious extension configuration',
+  CAPTURE_SIGNALS: 'May capture your screen or input',
+};
+
+const FACTOR_HUMAN_TITLE: Record<string, string> = {
+  SAST: 'Code security scan',
+  VirusTotal: 'Antivirus scan',
+  Entropy: 'Code obfuscation check',
+  ManifestPosture: 'Extension configuration',
+  ChromeStats: 'Chrome Web Store reputation',
+  WebStoreTrust: 'Developer trust signals',
+  MaintenanceHealth: 'Update & maintenance status',
+  PermissionsBaseline: 'Permission risk level',
+  PermissionCombos: 'Risky permission combinations',
+  NetworkExfil: 'Data sent to external servers',
+  CaptureSignals: 'Screen or input capture',
+};
+
+const SAST_HUMAN_TITLE: Record<string, string> = {
+  'extension-detects-incognito': 'Detects private browsing mode',
+  'eval-usage': 'Runs dynamically created code',
+  'dynamic-script-injection': 'Injects scripts into web pages',
+  'remote-code-execution': 'Loads and runs code from the internet',
+  'crypto-mining': 'May use your computer for crypto mining',
+  'keylogger-pattern': 'May record your keystrokes',
+  'data-exfiltration': 'Sends data to external servers',
+  'obfuscated-code': 'Contains hidden or hard-to-read code',
+  'cookie-access': 'Reads your browser cookies',
+  'history-access': 'Reads your browsing history',
+  'clipboard-access': 'Reads your clipboard',
+  'screenshot-capture': 'Can take screenshots',
+  'webcam-access': 'Can access your camera',
+  'microphone-access': 'Can access your microphone',
+  'password-access': 'May access saved passwords',
+  'form-data-access': 'Reads data you type into forms',
+};
+
+function humanizeGateId(gateId: string): string {
+  return GATE_HUMAN_TITLE[gateId] || GATE_HUMAN_TITLE[gateId.toUpperCase()] || gateId.replace(/_/g, ' ').toLowerCase();
+}
+
+function humanizeFactorName(name: string): string {
+  return FACTOR_HUMAN_TITLE[name] || name.replace(/([A-Z])/g, ' $1').trim();
+}
+
+function humanizeSastCheckId(checkId: string): string {
+  return SAST_HUMAN_TITLE[checkId] || checkId.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function humanizeFactorSummary(factor: RawFactorScore, layer: string): string {
+  const name = factor.name || 'Unknown';
+  const severity = factor.severity ?? 0;
+  const details = factor.details || {};
+  const desc = typeof details === 'object' ? (details as any).description : '';
+
+  if (desc) return desc;
+
+  const level = severity >= 0.7 ? 'significant' : severity >= 0.4 ? 'moderate' : 'minor';
+  const humanName = humanizeFactorName(name).toLowerCase();
+  return `${level.charAt(0).toUpperCase() + level.slice(1)} findings in ${humanName}`;
+}
+
 /**
  * Map gate ID to layer classification
  * Used for Key Findings categorization and gate-based band overrides
@@ -233,8 +301,8 @@ export function extractFindingsByLayer(raw: RawScanResult | null | undefined): {
 
             sastFindingsList.push({
               severity: findingSeverity,
-              title: checkId,
-              summary: lineNum ? `${filePath}:${lineNum} - ${message}` : `${filePath} - ${message}`,
+              title: humanizeSastCheckId(checkId),
+              summary: message,
             });
           });
         }
@@ -266,10 +334,10 @@ export function extractFindingsByLayer(raw: RawScanResult | null | undefined): {
       scoringV2.security_layer.factors.forEach((f: RawFactorScore) => {
         if ((f.severity ?? 0) >= 0.3) {
           result.security.push({
-            title: safeGet(f.name, 'Unknown'),
+            title: humanizeFactorName(safeGet(f.name, 'Unknown')),
             severity: severityToFindingLevel(f.severity),
             layer: 'security',
-            summary: `Contribution: ${Math.round((f.contribution || 0) * 100)}%`,
+            summary: humanizeFactorSummary(f, 'security'),
             evidenceIds: safeGet(f.evidence_ids, []),
           });
         }
@@ -281,10 +349,10 @@ export function extractFindingsByLayer(raw: RawScanResult | null | undefined): {
       scoringV2.privacy_layer.factors.forEach((f: RawFactorScore) => {
         if ((f.severity ?? 0) >= 0.3) {
           result.privacy.push({
-            title: safeGet(f.name, 'Unknown'),
+            title: humanizeFactorName(safeGet(f.name, 'Unknown')),
             severity: severityToFindingLevel(f.severity),
             layer: 'privacy',
-            summary: `Contribution: ${Math.round((f.contribution || 0) * 100)}%`,
+            summary: humanizeFactorSummary(f, 'privacy'),
             evidenceIds: safeGet(f.evidence_ids, []),
           });
         }
@@ -296,10 +364,10 @@ export function extractFindingsByLayer(raw: RawScanResult | null | undefined): {
       scoringV2.governance_layer.factors.forEach((f: RawFactorScore) => {
         if ((f.severity ?? 0) >= 0.3) {
           result.governance.push({
-            title: safeGet(f.name, 'Unknown'),
+            title: humanizeFactorName(safeGet(f.name, 'Unknown')),
             severity: severityToFindingLevel(f.severity),
             layer: 'governance',
-            summary: `Contribution: ${Math.round((f.contribution || 0) * 100)}%`,
+            summary: humanizeFactorSummary(f, 'governance'),
             evidenceIds: safeGet(f.evidence_ids, []),
           });
         }
@@ -312,10 +380,10 @@ export function extractFindingsByLayer(raw: RawScanResult | null | undefined): {
       if (gate.triggered) {
         const layer = gateIdToLayer(gate.gate_id);
         result[layer].push({
-          title: gate.gate_id,
+          title: humanizeGateId(gate.gate_id),
           severity: gate.decision === 'BLOCK' ? 'high' : 'medium',
           layer: layer,
-          summary: gate.reasons?.join(', ') || 'Gate triggered',
+          summary: humanizeGateId(gate.gate_id),
           evidenceIds: [],
         });
       }
@@ -324,14 +392,30 @@ export function extractFindingsByLayer(raw: RawScanResult | null | undefined): {
 
   // 3. Extract privacy-specific findings (permissions, exfil)
   if (permsAnalysis) {
+    const PERM_HUMAN: Record<string, string> = {
+      cookies: 'read your cookies',
+      webRequest: 'see your web traffic',
+      webRequestBlocking: 'intercept and modify your web traffic',
+      tabs: 'access all your browser tabs',
+      history: 'read your browsing history',
+      bookmarks: 'read your bookmarks',
+      clipboardRead: 'read your clipboard',
+      downloads: 'access your downloads',
+      management: 'manage other extensions',
+      nativeMessaging: 'communicate with desktop apps',
+      debugger: 'debug pages and extensions',
+      proxy: 'modify proxy settings',
+      geolocation: 'access your location',
+    };
     const permsDetails = permsAnalysis.permissions_details || {};
     Object.entries(permsDetails).forEach(([permName, details]: [string, any]) => {
       if (details && details.is_reasonable === false) {
+        const humanPerm = PERM_HUMAN[permName] || `use "${permName}"`;
         result.privacy.push({
-          title: `Unreasonable permission: ${permName}`,
+          title: `Unnecessary permission to ${humanPerm}`,
           severity: 'medium',
           layer: 'privacy',
-          summary: details.reason || 'Permission may not be necessary for stated functionality',
+          summary: details.reason || `This extension may not need the ability to ${humanPerm}.`,
           evidenceIds: [],
         });
       }
@@ -563,10 +647,10 @@ function buildKeyFindings(
   hardGates.forEach((gate: string) => {
     const layer = gateIdToLayer(gate);
     findings.push({
-      title: gate,
+      title: humanizeGateId(gate),
       severity: 'high',
       layer: layer,
-      summary: `${layer.charAt(0).toUpperCase() + layer.slice(1)} hard gate triggered: ${gate}`,
+      summary: humanizeGateId(gate),
       evidenceIds: [],
     });
   });
@@ -630,11 +714,17 @@ function buildKeyFindings(
     .sort((a, b) => (b.riskContribution ?? 0) - (a.riskContribution ?? 0))
     .slice(0, 3)
     .forEach((factor) => {
+      const humanTitle = humanizeFactorName(factor.name);
+      const details = factor.details || {};
+      const desc = typeof details === 'object' ? (details as any).description : '';
+      const level = factor.severity >= 0.7 ? 'significant' : factor.severity >= 0.4 ? 'moderate' : 'minor';
+      const summary = desc || `${level.charAt(0).toUpperCase() + level.slice(1)} findings in ${humanTitle.toLowerCase()}`;
+
       findings.push({
-        title: factor.name,
+        title: humanTitle,
         severity: severityToFindingLevel(factor.severity),
         layer: factor.layer,
-        summary: `${factor.layer.charAt(0).toUpperCase() + factor.layer.slice(1)} factor: severity ${Math.round(factor.severity * 100)}%, confidence ${Math.round(factor.confidence * 100)}%`,
+        summary,
         evidenceIds: factor.evidenceIds,
       });
     });

@@ -178,35 +178,33 @@ def _fallback_executive_summary(score: int, score_label: str, host_scope_label: 
     what_to_watch.append("Watch for updates that add new permissions or expand site access.")
     what_to_watch = _ensure_max_len(what_to_watch, 2)
 
-    # Human-readable specific points for the fallback
     if score_label == "LOW RISK":
         why_this_score = [
-            "Requested permissions match the stated functionality.",
-            "No high-risk code patterns or malware signatures detected.",
-            "Privacy policy and developer disclosures appear consistent.",
+            "The permissions it requests match what it says it does.",
+            "No dangerous code patterns or malware detected.",
+            "Developer disclosures and privacy policy look consistent.",
         ]
     elif score_label == "HIGH RISK":
         why_this_score = [
-            "Critical security gates triggered during automated scan.",
-            "Static analysis detected high-risk code patterns (SAST).",
-            "Powerful permissions allow access to sensitive user data.",
+            "Our security scan flagged serious concerns.",
+            "The code contains patterns that could put your data at risk.",
+            "It requests powerful permissions that access sensitive data.",
         ]
-    else: # MEDIUM RISK
+    else:
         why_this_score = [
-            "Some powerful permissions requested (e.g. tabs or site access).",
-            "Code patterns require manual review to confirm intent.",
-            "Webstore signals indicate moderate trust level.",
+            "It requests some powerful permissions like tab or site access.",
+            "Some code patterns should be reviewed before trusting this extension.",
+            "The extension has moderate trust signals on the Chrome Web Store.",
         ]
     
-    # Specificity override for host scope
     if host_scope_label == "ALL_WEBSITES":
-        # For ALL_WEBSITES, we should always mention it in Key Points if it's the primary risk
         if score_label == "LOW RISK":
-            why_this_score[0] = "Requests broad access to all websites via manifest permissions."
+            why_this_score[0] = "It can run on all websites you visit."
         else:
-            why_this_score[0] = "Broad host access (*://*/*) allows interaction with most websites."
-    elif host_scope_label == "SINGLE_DOMAIN" or host_scope_label == "MULTI_DOMAIN":
-        why_this_score[0] = f"Host access is limited to specific domains ({host_scope_label.lower()})."
+            why_this_score[0] = "It runs on all websites, which gives it broad access to your browsing."
+    elif host_scope_label in ("SINGLE_DOMAIN", "MULTI_DOMAIN"):
+        scope = "a few specific sites" if host_scope_label == "MULTI_DOMAIN" else "one specific site"
+        why_this_score[0] = f"Its access is limited to {scope}."
     
     why_this_score = _ensure_len(why_this_score, 3)
 
@@ -400,45 +398,49 @@ def build_unified_consumer_summary(
                     governance_findings.extend([p for p in key_points if p])
             
             # From scoring factors (scoring_v2 uses security_layer, privacy_layer, governance_layer)
+            # Map internal factor names to plain English so the LLM prompt
+            # (and any deterministic fallback) never surfaces jargon.
+            _factor_plain_names = {
+                "SAST": "Code security scan",
+                "VirusTotal": "Antivirus scan",
+                "Obfuscation": "Code obfuscation check",
+                "Manifest": "Extension configuration",
+                "ChromeStats": "Chrome Web Store reputation",
+                "Webstore": "Store reputation",
+                "Maintenance": "Update and maintenance status",
+                "PermissionsBaseline": "Permission risk level",
+                "PermissionCombos": "Risky permission combinations",
+                "NetworkExfil": "Data sent to external servers",
+                "CaptureSignals": "Screen or input capture check",
+                "ToSViolations": "Policy compliance",
+                "Consistency": "Behavior consistency check",
+                "DisclosureAlignment": "Privacy disclosure check",
+            }
+
+            def _humanize_factor_finding(factor: dict) -> str:
+                raw_name = factor.get("name", "")
+                human_name = _factor_plain_names.get(raw_name, raw_name)
+                details = factor.get("details", {})
+                if isinstance(details, dict):
+                    desc = details.get("description", "")
+                    if desc:
+                        return f"{human_name}: {desc}"
+                severity = factor.get("severity", 0)
+                level = "Significant" if severity >= 0.7 else "Moderate" if severity >= 0.4 else "Minor"
+                return f"{level} findings in {human_name.lower()}"
+
             if scoring_v2:
-                # Security layer factors
-                sec_layer = scoring_v2.get("security_layer") or {}
-                for factor in sec_layer.get("factors", []):
-                    if isinstance(factor, dict) and factor.get("severity", 0) >= 0.3:
-                        finding = factor.get("name", "")
-                        details = factor.get("details", {})
-                        if isinstance(details, dict):
-                            desc = details.get("description", "")
-                            if desc:
-                                finding = f"{finding}: {desc}"
-                        if finding and finding not in security_findings:
-                            security_findings.append(finding)
-
-                # Privacy layer factors
-                priv_layer = scoring_v2.get("privacy_layer") or {}
-                for factor in priv_layer.get("factors", []):
-                    if isinstance(factor, dict) and factor.get("severity", 0) >= 0.3:
-                        finding = factor.get("name", "")
-                        details = factor.get("details", {})
-                        if isinstance(details, dict):
-                            desc = details.get("description", "")
-                            if desc:
-                                finding = f"{finding}: {desc}"
-                        if finding and finding not in privacy_findings:
-                            privacy_findings.append(finding)
-
-                # Governance layer factors
-                gov_layer = scoring_v2.get("governance_layer") or {}
-                for factor in gov_layer.get("factors", []):
-                    if isinstance(factor, dict) and factor.get("severity", 0) >= 0.3:
-                        finding = factor.get("name", "")
-                        details = factor.get("details", {})
-                        if isinstance(details, dict):
-                            desc = details.get("description", "")
-                            if desc:
-                                finding = f"{finding}: {desc}"
-                        if finding and finding not in governance_findings:
-                            governance_findings.append(finding)
+                for layer_key, findings_list in [
+                    ("security_layer", security_findings),
+                    ("privacy_layer", privacy_findings),
+                    ("governance_layer", governance_findings),
+                ]:
+                    layer_data = scoring_v2.get(layer_key) or {}
+                    for factor in layer_data.get("factors", []):
+                        if isinstance(factor, dict) and factor.get("severity", 0) >= 0.3:
+                            finding = _humanize_factor_finding(factor)
+                            if finding and finding not in findings_list:
+                                findings_list.append(finding)
             
             # Permissions summary
             permissions_data = {
@@ -481,10 +483,19 @@ def build_unified_consumer_summary(
                 + privacy_findings[:3]
                 + governance_findings[:3]
             )
-            # Add hard gates if present
+            # Add hard gates in plain English (avoid raw gate IDs like "SENSITIVE_EXFIL")
+            _gate_plain_names = {
+                "CRITICAL_SAST": "Dangerous code patterns detected",
+                "SENSITIVE_EXFIL": "May send sensitive data to external servers",
+                "PURPOSE_MISMATCH": "Behavior doesn't match its stated purpose",
+                "VT_MALWARE": "Flagged by antivirus engines",
+                "TOS_VIOLATION": "Chrome Web Store policy violation detected",
+                "CAPTURE_SIGNALS": "May capture your screen or input",
+            }
             if scoring_v2:
                 for gate in scoring_v2.get("hard_gates_triggered", [])[:2]:
-                    all_key_findings.insert(0, f"Gate: {gate}")
+                    human_gate = _gate_plain_names.get(gate, gate.replace("_", " ").lower())
+                    all_key_findings.insert(0, human_gate)
 
             # Create prompt - use jinja2 format since YAML templates use {{ variable }} syntax
             template = PromptTemplate(
@@ -631,6 +642,27 @@ def _fallback_unified_consumer_summary(
     if len(tldr) > 300:
         tldr = tldr[:297] + "..."
     
+    # Strip internal IDs from user-facing text (belt-and-suspenders for LLM or
+    # layer_details key_points that still contain raw identifiers).
+    _jargon_replacements = {
+        "SENSITIVE_EXFIL": "sensitive data transfer risk",
+        "CRITICAL_SAST": "dangerous code patterns",
+        "VT_MALWARE": "antivirus flags",
+        "PURPOSE_MISMATCH": "behavior mismatch",
+        "TOS_VIOLATION": "policy violation",
+        "CAPTURE_SIGNALS": "screen or input capture",
+        "CaptureSignals": "screen or input capture check",
+        "NetworkExfil": "data transfer check",
+        "PermissionsBaseline": "permission risk",
+        "PermissionCombos": "permission combinations",
+        "Sensitive permissions:": "Sensitive permissions include",
+    }
+
+    def _sanitize_concern(text: str) -> str:
+        for jargon, plain in _jargon_replacements.items():
+            text = text.replace(jargon, plain)
+        return text
+
     # Concerns - gather from layer details
     concerns = []
     for layer_name in ("security", "privacy", "governance"):
@@ -638,8 +670,10 @@ def _fallback_unified_consumer_summary(
         if isinstance(ld, dict):
             key_points = ld.get("key_points", [])
             for kp in key_points:
-                if kp and isinstance(kp, str) and kp.strip() and kp not in concerns:
-                    concerns.append(kp)
+                if kp and isinstance(kp, str) and kp.strip():
+                    cleaned = _sanitize_concern(kp)
+                    if cleaned not in concerns:
+                        concerns.append(cleaned)
                     if len(concerns) >= 3:
                         break
         if len(concerns) >= 3:
@@ -649,7 +683,7 @@ def _fallback_unified_consumer_summary(
     if not concerns:
         why_this_score = highlights.get("why_this_score", [])
         if isinstance(why_this_score, list):
-            concerns = [str(r) for r in why_this_score if r and str(r).strip()][:3]
+            concerns = [_sanitize_concern(str(r)) for r in why_this_score if r and str(r).strip()][:3]
     
     # Recommendation
     if score_label == "HIGH RISK":
@@ -659,12 +693,16 @@ def _fallback_unified_consumer_summary(
     else:
         recommendation = "Keep the extension updated and review after major version changes."
     
-    # Build unified narrative for consistent display (no separate sections)
+    # Build a flowing narrative that weaves capabilities, concerns, and advice
     narrative_parts = [tldr]
-    if concerns[:3]:
-        narrative_parts.append(" " + " ".join(concerns[:3]))
+    if concerns:
+        # Connect concerns naturally instead of dumping raw bullets
+        concern_text = concerns[0]
+        if len(concerns) > 1:
+            concern_text += " " + concerns[1]
+        narrative_parts.append(" " + concern_text)
     narrative_parts.append(" " + recommendation)
-    narrative = "".join(narrative_parts).strip()
+    narrative = " ".join(narrative_parts).replace("  ", " ").strip()
     if len(narrative) > 400:
         narrative = narrative[:397] + "..."
 

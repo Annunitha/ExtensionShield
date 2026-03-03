@@ -317,7 +317,7 @@ class HardGates:
                 triggered=True,
                 confidence=confidence,
                 reasons=[
-                    f"VirusTotal detected malware: {malicious_count}/{vt.total_engines} engines flagged malicious",
+                    f"Antivirus scan flagged this extension as malware ({malicious_count} of {vt.total_engines} engines)",
                     f"Threat level: {vt.threat_level}",
                 ],
                 evidence_ids=[f"vt:malicious:{malicious_count}"],
@@ -337,8 +337,8 @@ class HardGates:
                 triggered=True,
                 confidence=confidence * 0.8,  # Lower confidence for warn
                 reasons=[
-                    f"VirusTotal flagged by {malicious_count} engine(s) - possible false positive or emerging threat",
-                    "Manual review recommended",
+                    f"Antivirus scan flagged by {malicious_count} engine(s) — may be a false positive",
+                    "Review before installing",
                 ],
                 evidence_ids=[f"vt:suspicious:{malicious_count}"],
                 details={
@@ -438,17 +438,17 @@ class HardGates:
                 evidence_ids.extend([
                     f"sast:critical:{f.check_id}" for f in critical_findings[:3]
                 ])
-                reasons.append(f"{critical_count} critical SAST finding(s) detected")
+                reasons.append(f"Security scan found {critical_count} critical code issue(s)")
             
             if high_count >= self.config.sast_high_block_count:
                 evidence_ids.extend([
                     f"sast:high:{f.check_id}" for f in high_findings[:3]
                 ])
-                reasons.append(f"{high_count} high-severity SAST finding(s) detected")
+                reasons.append(f"Security scan found {high_count} high-risk code pattern(s)")
             
             if critical_high_hits >= 1:
                 reasons.append(
-                    f"Critical HIGH SAST pattern matched in {critical_high_hits} high-severity finding(s)"
+                    f"Dangerous code pattern found in {critical_high_hits} location(s)"
                 )
             
             return GateResult(
@@ -632,22 +632,22 @@ class HardGates:
             or pattern_hits
         ):
             violations.append(
-                "Targets U.S. visa scheduling / travel-docs portals where automated access may violate site Terms (account ban risk)"
+                "Accesses visa scheduling sites where automation may violate their terms of service"
             )
             evidence_ids.append("tos:travel_docs:protected_domain_access")
 
             if has_injection_capability:
-                violations.append("Automation/script injection capability present on protected visa portal domains")
+                violations.append("Can run scripts on protected government visa sites")
                 evidence_ids.append("tos:travel_docs:automation_capability")
 
             if has_capture_capability:
-                violations.append("Screenshot capture patterns/capabilities detected (may capture visa travel documents)")
+                violations.append("Can capture screenshots of visa and travel documents")
                 evidence_ids.append("tos:travel_docs:screenshot_capture")
 
             combined_exfil_hits = list(dict.fromkeys(visa_ecosystem_hits + domain_string_hits))
             if combined_exfil_hits:
                 violations.append(
-                    "Third-party endpoints detected alongside protected visa portals (potential unauthorized processor)"
+                    "Connects to third-party servers alongside government visa sites"
                 )
                 evidence_ids.append("tos:travel_docs:third_party_processor")
         
@@ -755,35 +755,33 @@ class HardGates:
         decision: Literal["ALLOW", "WARN", "BLOCK"] = "ALLOW"
         confidence = 0.8
         
-        # Credential capture on any extension is concerning
         if credential_signals:
             if len(credential_signals) >= 2:
                 decision = "BLOCK"
                 confidence = 0.85
                 mismatch_reasons.append(
-                    f"Multiple credential capture patterns detected: {len(credential_signals)}"
+                    f"May capture your login credentials ({len(credential_signals)} patterns found)"
                 )
             else:
                 decision = "WARN"
-                mismatch_reasons.append("Credential capture pattern detected")
+                mismatch_reasons.append("May capture your login credentials")
         
-        # Benign-claimed extension with concerning capabilities
         if is_benign_claimed:
             if has_network and has_clipboard:
                 decision = "WARN" if decision == "ALLOW" else decision
                 mismatch_reasons.append(
-                    f"'{name}' claims benign purpose but has network + clipboard access"
+                    f"'{name}' says it's simple but can read your clipboard and access the internet"
                 )
             
             if has_capture:
                 decision = "WARN" if decision == "ALLOW" else decision
                 mismatch_reasons.append(
-                    f"'{name}' claims benign purpose but has capture capabilities"
+                    f"'{name}' says it's simple but can capture your screen"
                 )
             
             if tracking_signals:
                 decision = "WARN" if decision == "ALLOW" else decision
-                mismatch_reasons.append("Tracking patterns detected in benign extension")
+                mismatch_reasons.append("Contains tracking code despite being a simple utility")
         
         if mismatch_reasons:
             return GateResult(
@@ -881,20 +879,26 @@ class HardGates:
         risk_factors = 0
         reasons: List[str] = []
         
+        perm_plain = {
+            "cookies": "cookies", "history": "browsing history",
+            "tabs": "tab info", "webRequest": "web traffic",
+            "clipboardRead": "clipboard",
+        }
         if has_sensitive:
             risk_factors += 1
-            reasons.append(f"Sensitive permissions: {', '.join(sensitive_found[:3])}")
+            plain_perms = [perm_plain.get(p, p) for p in sensitive_found[:3]]
+            reasons.append(f"Can access your {', '.join(plain_perms)}")
         
         if has_network or has_network_patterns:
             risk_factors += 1
             if has_network:
-                reasons.append("Has broad network access")
+                reasons.append("Can send data to external servers")
             if has_network_patterns:
-                reasons.append(f"Network patterns in code: {len(network_findings)} findings")
+                reasons.append(f"Code contains patterns that send data externally")
         
         if not has_privacy_policy:
             risk_factors += 1
-            reasons.append("Missing privacy policy")
+            reasons.append("No privacy policy provided")
         
         # WARN if 2+ risk factors (sensitive + network + no privacy)
         if risk_factors >= 2:

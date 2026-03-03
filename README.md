@@ -4,7 +4,7 @@
   <strong>Enterprise Chrome Extension Security & Governance Platform</strong>
 </p>
 
-**Security Policy**: See [docs/SECURITY.md](docs/SECURITY.md)
+**Security Policy**: See [SECURITY.md](SECURITY.md)
 
 ---
 

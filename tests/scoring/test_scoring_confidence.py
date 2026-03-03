@@ -2,12 +2,12 @@
 Scoring Confidence Tests
 
 Tests that confidence is properly handled for missing/incomplete data:
-- Missing VT should not drastically reduce scores (confidence-weighted)
+- Missing VT should not inflate scores (confidence=0 excludes from formula)
 - Explanation should include low confidence when data is missing
 
 Based on normalize_virustotal() behavior:
-- enabled=False → confidence=0.4, severity=0.0
-- total_engines=0 → confidence=0.4 (rate-limited)
+- enabled=False → confidence=0.0, severity=0.0 (excluded from formula)
+- total_engines=0 → confidence=0.0 (rate-limited, excluded)
 - total_engines < 30 → confidence=0.7 (partial scan)
 - total_engines >= 30 → confidence=1.0 (full scan)
 
@@ -34,9 +34,10 @@ from extension_shield.governance.signal_pack import VirusTotalSignalPack
 class TestVirusTotalConfidence:
     """Test VT confidence behavior based on data availability."""
     
-    def test_normalize_virustotal_missing_returns_low_confidence(self):
+    def test_normalize_virustotal_missing_returns_zero_confidence(self):
         """
-        Test: When VT is disabled, normalize_virustotal returns confidence=0.4.
+        Test: When VT is disabled, normalize_virustotal returns confidence=0.0
+        so that the factor is excluded from the weighted formula entirely.
         """
         vt_missing = VirusTotalSignalPack(enabled=False)
         
@@ -45,12 +46,12 @@ class TestVirusTotalConfidence:
         print(f"\nVT disabled: severity={factor.severity}, confidence={factor.confidence}")
         
         assert factor.severity == 0.0, "Missing VT should have severity 0"
-        assert factor.confidence == 0.4, "Missing VT should have confidence 0.4"
-        assert factor.confidence < 0.5, "Missing VT confidence should be < 0.5"
+        assert factor.confidence == 0.0, "Missing VT should have confidence 0.0"
     
-    def test_normalize_virustotal_rate_limited_returns_low_confidence(self):
+    def test_normalize_virustotal_rate_limited_returns_zero_confidence(self):
         """
-        Test: When VT has total_engines=0, confidence is 0.4 (rate-limited).
+        Test: When VT has total_engines=0 (rate-limited), confidence is 0.0
+        so that the factor is excluded from the weighted formula.
         """
         vt_rate_limited = VirusTotalSignalPack(
             enabled=True,
@@ -62,8 +63,7 @@ class TestVirusTotalConfidence:
         
         print(f"\nVT rate-limited: severity={factor.severity}, confidence={factor.confidence}")
         
-        assert factor.confidence == 0.4, "Rate-limited VT should have confidence 0.4"
-        assert factor.confidence < 0.5, "Rate-limited VT confidence should be < 0.5"
+        assert factor.confidence == 0.0, "Rate-limited VT should have confidence 0.0"
     
     def test_normalize_virustotal_partial_scan_returns_medium_confidence(self):
         """

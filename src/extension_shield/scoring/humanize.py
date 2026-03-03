@@ -265,36 +265,30 @@ class LayerHumanizer:
         analysis_results: Dict[str, Any],
         manifest: Dict[str, Any],
     ) -> List[str]:
-        """Generate security layer key points."""
+        """Generate security layer key points in plain English."""
         points = []
         
-        # Add gate-based points
         for gate in security_gates:
-            explanation = cls.GATE_EXPLANATIONS.get(gate.gate_id, gate.gate_id)
-            if gate.reasons:
-                points.append(f"{gate.gate_id}: {gate.reasons[0][:80]}")
-            else:
-                points.append(f"{gate.gate_id}: {explanation}")
+            explanation = cls.GATE_EXPLANATIONS.get(gate.gate_id, "security concern detected")
+            points.append(explanation.capitalize() + ".")
         
-        # Add factor-based points
         high_factors = [f for f in security_factors if f.severity > 0.5]
         for factor in high_factors:
             if len(points) >= 4:
                 break
             explanation = cls.FACTOR_EXPLANATIONS.get(factor.name, factor.name.lower())
-            severity_desc = "high" if factor.severity > 0.8 else "moderate" if factor.severity > 0.6 else "low"
-            points.append(f"{factor.name}: {severity_desc} risk from {explanation}")
+            severity_desc = "Significant" if factor.severity > 0.8 else "Moderate" if factor.severity > 0.6 else "Minor"
+            points.append(f"{severity_desc} issues found in {explanation}.")
         
-        # Add permission-based points if not enough
         if len(points) < 2:
             powerful_perms = cls._get_powerful_permissions(manifest)
             for perm in powerful_perms[:2]:
                 if len(points) >= 4:
                     break
-                explanation = cls.PERMISSION_EXPLANATIONS.get(perm, f"uses {perm} permission")
-                points.append(f"Permission risk: {explanation}")
+                explanation = cls.PERMISSION_EXPLANATIONS.get(perm, f"uses {perm}")
+                points.append(f"This extension {explanation}.")
         
-        return [p for p in points if p]  # Filter empty strings
+        return [p for p in points if p]
 
     @classmethod 
     def _generate_security_what_to_watch(
@@ -368,34 +362,28 @@ class LayerHumanizer:
         analysis_results: Dict[str, Any],
         manifest: Dict[str, Any],
     ) -> List[str]:
-        """Generate privacy layer key points."""
+        """Generate privacy layer key points in plain English."""
         points = []
         
-        # Add gate-based points
         for gate in privacy_gates:
-            explanation = cls.GATE_EXPLANATIONS.get(gate.gate_id, gate.gate_id)
-            if gate.reasons:
-                points.append(f"{gate.gate_id}: {gate.reasons[0][:80]}")
-            else:
-                points.append(f"{gate.gate_id}: {explanation}")
+            explanation = cls.GATE_EXPLANATIONS.get(gate.gate_id, "privacy concern detected")
+            points.append(explanation.capitalize() + ".")
         
-        # Add factor-based points
         high_factors = [f for f in privacy_factors if f.severity > 0.5]
         for factor in high_factors:
             if len(points) >= 4:
                 break
             explanation = cls.FACTOR_EXPLANATIONS.get(factor.name, factor.name.lower())
-            severity_desc = "high" if factor.severity > 0.8 else "moderate" if factor.severity > 0.6 else "low"
-            points.append(f"{factor.name}: {severity_desc} risk in {explanation}")
+            severity_desc = "Significant" if factor.severity > 0.8 else "Moderate" if factor.severity > 0.6 else "Minor"
+            points.append(f"{severity_desc} issues found in {explanation}.")
         
-        # Add data access permissions
         if len(points) < 2:
             data_perms = cls._get_data_permissions(manifest)
             for perm in data_perms[:2]:
                 if len(points) >= 4:
                     break
-                explanation = cls.PERMISSION_EXPLANATIONS.get(perm, f"uses {perm} permission")
-                points.append(f"Data access: {explanation}")
+                explanation = cls.PERMISSION_EXPLANATIONS.get(perm, f"uses {perm}")
+                points.append(f"This extension {explanation}.")
         
         return [p for p in points if p]
 
@@ -459,32 +447,26 @@ class LayerHumanizer:
         analysis_results: Dict[str, Any],
         manifest: Dict[str, Any],
     ) -> List[str]:
-        """Generate governance layer key points."""
+        """Generate governance layer key points in plain English."""
         points = []
         
-        # Add gate-based points
         for gate in governance_gates:
-            explanation = cls.GATE_EXPLANATIONS.get(gate.gate_id, gate.gate_id)
-            if gate.reasons:
-                points.append(f"{gate.gate_id}: {gate.reasons[0][:80]}")
-            else:
-                points.append(f"{gate.gate_id}: {explanation}")
+            explanation = cls.GATE_EXPLANATIONS.get(gate.gate_id, "governance concern detected")
+            points.append(explanation.capitalize() + ".")
         
-        # Add factor-based points
         high_factors = [f for f in governance_factors if f.severity > 0.5]
         for factor in high_factors:
             if len(points) >= 4:
                 break
             explanation = cls.FACTOR_EXPLANATIONS.get(factor.name, factor.name.lower())
-            severity_desc = "high" if factor.severity > 0.8 else "moderate" if factor.severity > 0.6 else "low"
-            points.append(f"{factor.name}: {severity_desc} risk in {explanation}")
+            severity_desc = "Significant" if factor.severity > 0.8 else "Moderate" if factor.severity > 0.6 else "Minor"
+            points.append(f"{severity_desc} issues found in {explanation}.")
         
-        # Add webstore metrics if available
         webstore_analysis = analysis_results.get("webstore_analysis", {})
         if isinstance(webstore_analysis, dict):
             user_count = webstore_analysis.get("user_count", 0)
             if user_count and user_count < 1000:
-                points.append(f"Chrome Web Store: only {user_count:,} users")
+                points.append(f"Very few users on the Chrome Web Store (only {user_count:,}).")
         
         return [p for p in points if p]
 
