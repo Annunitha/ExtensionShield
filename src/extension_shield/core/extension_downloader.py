@@ -42,6 +42,12 @@ class ExtensionDownloader:
         )
         return download_url
 
+    # User-Agent sent when downloading from Chrome Web Store (server IPs often get HTML without it)
+    CHROME_USER_AGENT = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/118.0.0.0 Safari/537.36"
+    )
+
     def _download(self, extension_id: str, download_url: str) -> Optional[Dict]:
         """
         Downloads the extension from the given URL
@@ -60,16 +66,32 @@ class ExtensionDownloader:
 
             # Download the file (SSRF protection: only allow clients2.google.com)
             ALLOWED_HOSTS = {"clients2.google.com"}
-            response = safe_get(download_url, allowed_hosts=ALLOWED_HOSTS, stream=True, timeout=120)
+            headers = {"User-Agent": ExtensionDownloader.CHROME_USER_AGENT}
+            response = safe_get(
+                download_url,
+                allowed_hosts=ALLOWED_HOSTS,
+                stream=True,
+                timeout=120,
+                headers=headers,
+            )
             response.raise_for_status()
 
-            content_type = response.headers.get("content-type", "")
-            if (
-                "application/x-chrome-extension" not in content_type
-                and "application/octet-stream" not in content_type
-            ):
-                logger.warning("Unexpected content type: %s", content_type)
-                return None
+            content_type = (response.headers.get("content-type") or "").split(";")[0].strip().lower()
+            # Chrome Web Store may return CRX, octet-stream, zip, or empty (server IPs often get empty)
+            allowed_types = (
+                "application/x-chrome-extension",
+                "application/octet-stream",
+                "application/zip",
+                "application/crx",
+            )
+            if content_type:
+                if "text/html" in content_type or content_type.startswith("text/"):
+                    logger.warning(
+                        "Unexpected content type: %s (likely blocked or consent page)", content_type
+                    )
+                    return None
+                if not any(t in content_type for t in allowed_types):
+                    logger.warning("Unexpected content type: %s", content_type)
 
             # Save the file
             with open(file_path, "wb") as f:
