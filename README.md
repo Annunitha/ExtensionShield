@@ -5,19 +5,18 @@
   <img src="extension-shield-logo.svg" alt="ExtensionShield" width="98" height="98" />
 
   # ExtensionShield
-
-  **Chrome Extension Security Scanner & Governance Platform**
-
-  [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) · [Security](docs/SECURITY.md) · [Get Started](docs/GET_STARTED.md) · [Contribute](docs/CONTRIBUTING.md)
-
 </div>
+
+**Chrome Extension Security Scanner & Governance Platform**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) · [Security](docs/SECURITY.md) · [Get Started](docs/GET_STARTED.md) · [Contribute](docs/CONTRIBUTING.md)
 
 ---
 
 ExtensionShield scans Chrome extensions (from the Web Store or CRX/ZIP uploads), runs security and privacy analysis, and produces risk scores and AI-powered summaries. The **core** (scanner, CLI, local analysis) is **MIT-licensed** and works without any cloud. Optional **cloud** features (auth, history, team monitoring, community queue) are available via [ExtensionShield Cloud](https://extensionshield.com).
 
-- **Security:** [SECURITY.md](docs/SECURITY.md) — Reporting vulnerabilities, secrets policy  
-- **Open-core:** [OPEN_CORE_BOUNDARIES.md](docs/OPEN_CORE_BOUNDARIES.md) — What's OSS vs Cloud and how it's enforced  
+- **Security**: [SECURITY.md](docs/SECURITY.md) — Reporting vulnerabilities, secrets policy  
+- **Open-core**: [OPEN_CORE_BOUNDARIES.md](docs/OPEN_CORE_BOUNDARIES.md) — What's OSS vs Cloud and how it's enforced  
 
 ---
 
@@ -34,7 +33,7 @@ cd ExtensionShield
 make install && cd frontend && npm install
 ```
 
-> **Tip:** Replace `<your-org>` with your GitHub org or username. Copy the block above and run each line, or run the full snippet in one go.
+> **Tip**: Replace `<your-org>` with your GitHub org or username. Copy the block above and run each line, or run the full snippet in one go.
 </details>
 
 <details>
@@ -107,4 +106,4 @@ Attribution: [NOTICE](docs/NOTICE). Brand: [TRADEMARK.md](docs/TRADEMARK.md). Co
 
 We build ExtensionShield in the open so security tools stay transparent and inspectable. Feedback, issue reports, and small improvements (docs, tests, rule tweaks) are welcome. If it helps you or your organization, consider contributing a PR, sharing your use case, or supporting the project. We run open-source programs and internships when we can—community support helps keep that going.
 
-**Acknowledgments:** ExtensionShield is our own design; we took inspiration from [ThreatXtension](https://github.com/barvhaim/ThreatXtension) in the same space (extension scanning, VirusTotal integration).
+**Acknowledgments**: ExtensionShield is our own design; we took inspiration from [ThreatXtension](https://github.com/barvhaim/ThreatXtension) in the same space (extension scanning, VirusTotal integration).
