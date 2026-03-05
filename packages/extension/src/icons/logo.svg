@@ -1,0 +1,13 @@
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#22c55e" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#16a34a" stop-opacity="0.9" />
+    </linearGradient>
+  </defs>
+  <g transform="translate(50,50) scale(1.22) translate(-50,-47.5)">
+    <path d="M50 10 L75 20 L75 45 Q75 65 50 85 Q25 65 25 45 L25 20 Z" fill="url(#shieldGradient)" stroke="rgba(34, 197, 94, 0.3)" stroke-width="1.5" />
+    <path d="M40 45 L47 52 L60 38" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.95" />
+    <ellipse cx="50" cy="45" rx="15" ry="12" fill="rgba(255, 255, 255, 0.1)" />
+  </g>
+</svg>
