@@ -1288,12 +1288,26 @@ async def run_analysis_workflow(url: str, extension_id: str):
         else:
             scan_status[extension_id] = "failed"
             logger.error("[TIMELINE] scan_failed → extension_id=%s, status=%s, error=%s", extension_id, final_state.get("status"), final_state.get("error"))
-            scan_results[extension_id] = {
+            failed_payload = {
                 "extension_id": extension_id,
+                "extension_name": extension_id,
                 "url": url,
                 "status": "failed",
                 "error": final_state.get("error", "Unknown error"),
+                "metadata": {},
+                "manifest": {},
+                "overall_security_score": 0,
+                "overall_risk": "unknown",
+                "total_findings": 0,
+                "risk_distribution": {"high": 0, "medium": 0, "low": 0},
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
+            scan_results[extension_id] = failed_payload
+            try:
+                db.save_scan_result(failed_payload)
+                logger.info("[TIMELINE] saved failed scan to database → extension_id=%s", extension_id)
+            except Exception as save_err:
+                logger.warning("[TIMELINE] failed to save failed scan to database → extension_id=%s, error=%s", extension_id, save_err)
 
     except Exception as e:
         scan_status[extension_id] = "failed"
@@ -1337,11 +1351,24 @@ async def run_analysis_workflow(url: str, extension_id: str):
         
         scan_results[extension_id] = {
             "extension_id": extension_id,
+            "extension_name": extension_id,
             "url": url,
             "status": "failed",
             "error": error_message,
             "error_code": error_code,
+            "metadata": {},
+            "manifest": {},
+            "overall_security_score": 0,
+            "overall_risk": "unknown",
+            "total_findings": 0,
+            "risk_distribution": {"high": 0, "medium": 0, "low": 0},
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
+        try:
+            db.save_scan_result(scan_results[extension_id])
+            logger.info("[TIMELINE] saved failed scan to database → extension_id=%s", extension_id)
+        except Exception as save_err:
+            logger.warning("[TIMELINE] failed to save failed scan to database → extension_id=%s, error=%s", extension_id, save_err)
 
 
 def get_extracted_files(extracted_path: Optional[str]) -> list[str]:
@@ -2607,9 +2634,13 @@ async def track_pageview(event: PageViewEvent):
     In OSS mode: enabled only when OSS_TELEMETRY_ENABLED=true; stores in SQLite (local metrics only, no outbound).
     In Cloud mode: stores in configured backend (Supabase or SQLite).
     - No IP storage, no user identifier; server computes day in UTC.
+    When telemetry is not enabled, returns 200 with no-op so the UI does not break (fail open).
     """
     if not is_oss_telemetry_allowed():
-        require_cloud("telemetry")  # Raises 501 in OSS when OSS_TELEMETRY_ENABLED is false
+        # Fail open: return success without persisting so frontend does not see 501
+        day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        path = (event.path or "/").strip()
+        return {"day": day, "path": path if path.startswith("/") else f"/{path}", "count": 0}
     day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     path = (event.path or "/").strip()
     try:
@@ -2626,9 +2657,10 @@ async def track_custom_event(event: CustomTelemetryEvent):
     Log a custom frontend event (e.g. enterprise_custom_extension_cta_click).
     In OSS: enabled only when OSS_TELEMETRY_ENABLED=true; local only (no outbound).
     No PII; fails silently if backend has no storage for events.
+    When telemetry is not enabled, returns 200 with no-op so the UI does not break (fail open).
     """
     if not is_oss_telemetry_allowed():
-        require_cloud("telemetry")  # Raises 501 in OSS when OSS_TELEMETRY_ENABLED is false
+        return {"ok": True}
     name = (event.event or "").strip()
     if name:
         logger.info("Telemetry event: %s", name)

@@ -316,8 +316,8 @@ class TestTelemetrySummaryEndpoint:
 class TestPageviewEndpoint:
     """Tests for POST /api/telemetry/pageview endpoint."""
 
-    def test_pageview_oss_without_oss_telemetry_returns_501(self, client):
-        """In OSS mode with OSS_TELEMETRY_ENABLED=false, pageview returns 501."""
+    def test_pageview_oss_without_oss_telemetry_returns_200_noop(self, client):
+        """In OSS mode with OSS_TELEMETRY_ENABLED=false, pageview returns 200 (fail open) so UI does not break."""
         with patch("extension_shield.utils.mode.get_feature_flags") as mock_flags:
             from unittest.mock import MagicMock
             flags = MagicMock()
@@ -329,10 +329,11 @@ class TestPageviewEndpoint:
                 "/api/telemetry/pageview",
                 json={"path": "/test"}
             )
-            assert response.status_code == 501
+            assert response.status_code == 200
             data = response.json()
-            assert data.get("detail", {}).get("error") == "not_implemented"
-            assert data.get("detail", {}).get("mode") == "oss"
+            assert "day" in data
+            assert data.get("path") == "/test"
+            assert data.get("count") == 0
 
     def test_pageview_succeeds_when_oss_telemetry_enabled(self, client):
         """POST /api/telemetry/pageview succeeds when OSS_TELEMETRY_ENABLED=true (or cloud)."""

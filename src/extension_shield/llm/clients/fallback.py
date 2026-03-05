@@ -176,7 +176,9 @@ def _get_provider_model_name(provider: LLMProviderType, model_name: str) -> str:
     # Model name mappings per provider
     provider_models = {
         LLMProviderType.GROQ: {
-            # Map common model names to Groq equivalents
+            # Map common model names to Groq equivalents (see https://console.groq.com/docs/models)
+            "gpt-4o": "llama-3.3-70b-versatile",  # Groq production 70B
+            "gpt-4o-mini": "llama-3.1-8b-instant",
             "meta-llama/llama-3-3-70b-instruct": "llama-3.1-8b-instant",  # Fast, free tier
             "meta-llama/llama-3-1-70b": "llama-3.1-8b-instant",
             "llama-3.1-70b-versatile": "llama-3.1-8b-instant",  # Decommissioned -> instant

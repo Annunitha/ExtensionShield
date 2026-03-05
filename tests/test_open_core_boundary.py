@@ -4,7 +4,7 @@ Open-core boundary tests.
 Prove that in OSS mode:
 - Trust-layer endpoints (scan, results, report, feedback, recent, statistics, health) return 200.
 - Cloud/ops endpoints return 501 before any cloud logic runs.
-- Telemetry in OSS: when OSS_TELEMETRY_ENABLED=false, pageview/event return 501;
+- Telemetry in OSS: when OSS_TELEMETRY_ENABLED=false, pageview/event return 200 (fail open) so UI does not break.
   when true, only SQLite is used (no outbound).
 """
 
@@ -140,17 +140,19 @@ class TestOSSModeCloudEndpointsReturn501:
 class TestOSSTelemetryGating:
     """Telemetry endpoints in OSS: gated by OSS_TELEMETRY_ENABLED; when enabled, local only."""
 
-    def test_pageview_returns_501_when_oss_telemetry_disabled(self, client, force_oss_mode):
+    def test_pageview_returns_200_noop_when_oss_telemetry_disabled(self, client, force_oss_mode):
+        """When OSS telemetry is disabled, pageview returns 200 with count=0 (fail open) so UI does not break."""
         force_oss_mode.return_value = _oss_flags()
         r = client.post("/api/telemetry/pageview", json={"path": "/test"})
-        assert r.status_code == 501
-        assert r.json().get("detail", {}).get("error") == "not_implemented"
+        assert r.status_code == 200
+        assert r.json().get("count") == 0
 
-    def test_event_returns_501_when_oss_telemetry_disabled(self, client, force_oss_mode):
+    def test_event_returns_200_ok_when_oss_telemetry_disabled(self, client, force_oss_mode):
+        """When OSS telemetry is disabled, event returns 200 ok (fail open) so UI does not break."""
         force_oss_mode.return_value = _oss_flags()
         r = client.post("/api/telemetry/event", json={"event": "test_event"})
-        assert r.status_code == 501
-        assert r.json().get("detail", {}).get("error") == "not_implemented"
+        assert r.status_code == 200
+        assert r.json().get("ok") is True
 
     def test_pageview_writes_to_sqlite_when_oss_telemetry_enabled(self, client, force_oss_mode):
         force_oss_mode.return_value = _oss_flags_with_local_telemetry()
