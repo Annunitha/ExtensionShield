@@ -23,6 +23,18 @@ class ExtensionDownloader:
         self.extension_storage_path = get_settings().extension_storage_path
 
     @staticmethod
+    def _get_chrome_headers() -> Dict[str, str]:
+        """Chrome-like headers required by clients2.google.com to avoid blocking/HTML error pages."""
+        return {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/131.0.0.0 Safari/537.36"
+            ),
+            "Accept": "application/x-chrome-extension,*/*",
+        }
+
+    @staticmethod
     def _get_download_url(extension_id: str) -> str:
         """
         Constructs the download URL for the given extension ID
@@ -33,7 +45,7 @@ class ExtensionDownloader:
         Returns:
             str: The download URL for the extension
         """
-        chrome_version = os.getenv("CHROME_VERSION", "118.0")
+        chrome_version = os.getenv("CHROME_VERSION", "131.0.0.0")
         download_url = (
             "https://clients2.google.com/service/update2/crx"
             f"?response=redirect&prodversion={chrome_version}"
@@ -65,6 +77,7 @@ class ExtensionDownloader:
             os.makedirs(self.extension_storage_path, exist_ok=True)
 
             # Download the file (SSRF protection: only allow clients2.google.com)
+            # Chrome-like headers are required; Google returns HTML/204 without them
             ALLOWED_HOSTS = {"clients2.google.com"}
             headers = {"User-Agent": ExtensionDownloader.CHROME_USER_AGENT}
             response = safe_get(
@@ -104,7 +117,8 @@ class ExtensionDownloader:
             # Validate file size - Chrome extensions should be at least a few KB
             if file_size < 1024:
                 logger.error(
-                    "Downloaded file too small (%s bytes) - likely not a valid extension", file_size
+                    "Downloaded file too small (%s bytes) for %s - likely HTML error page or 204. "
+                    "Check CHROME_VERSION and User-Agent.", file_size, extension_id,
                 )
                 if os.path.exists(file_path):
                     os.remove(file_path)

@@ -3,6 +3,29 @@
  */
 
 /**
+ * Returns true if scanning should require authentication.
+ * Skip auth (return false) for: localhost, dev, stage environments.
+ * Require auth (return true) only for production.
+ */
+export function requiresAuthForScan() {
+  // Explicit override: skip auth when VITE_REQUIRE_AUTH_FOR_SCAN is false
+  if (import.meta.env.VITE_REQUIRE_AUTH_FOR_SCAN === "false") {
+    return false;
+  }
+  // Skip auth on localhost
+  if (typeof window !== "undefined") {
+    const h = (window.location.hostname || "").toLowerCase();
+    if (h === "localhost" || h === "127.0.0.1") return false;
+    if (h.startsWith("dev.") || h.startsWith("stage.") || h.includes(".dev.") || h.includes(".stage.")) return false;
+  }
+  // Skip auth in Vite dev mode or when MODE is development/stage
+  if (import.meta.env.DEV) return false;
+  if (import.meta.env.MODE === "development" || import.meta.env.MODE === "stage") return false;
+  // Production: require auth
+  return true;
+}
+
+/**
  * Checks if a string contains control characters or null bytes
  */
 const hasControlChars = (str) => {

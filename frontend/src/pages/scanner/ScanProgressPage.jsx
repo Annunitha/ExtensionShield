@@ -99,6 +99,13 @@ const ScanProgressPage = () => {
         if (status.status === "failed") {
           if (status.error) setError(status.error);
           if (intervalId) { clearInterval(intervalId); intervalId = null; }
+          // Fetch partial results when available (API returns scoring_v2, report_view_model even on failure)
+          try {
+            const results = await realScanService.getRealScanResults(scanId);
+            if (!cancelled && results) setScanResults(results);
+          } catch (_e) {
+            // Results may not be ready yet
+          }
           return;
         }
 
@@ -305,6 +312,15 @@ const ScanProgressPage = () => {
               <div className="scan-progress-inline-error-actions">
                 <Button onClick={handleDismissError} variant="default">
                   Dismiss
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowErrorModal(false);
+                    navigate(getScanResultsRoute(scanId));
+                  }}
+                  variant="secondary"
+                >
+                  View Partial Report
                 </Button>
                 <Button onClick={() => navigate("/scan")} variant="outline">
                   Go to Scanner

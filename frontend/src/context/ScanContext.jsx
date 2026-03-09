@@ -5,6 +5,7 @@ import databaseService from "../services/databaseService";
 import { normalizeExtensionId } from "../utils/extensionId";
 import { getScanResultsRoute } from "../utils/slug";
 import { useAuth } from "./AuthContext";
+import { requiresAuthForScan } from "../utils/authUtils";
 
 // User-friendly message for service unavailability (matches backend)
 const SERVICE_UNAVAILABLE_MESSAGE = "ExtensionShield is temporarily unavailable. We're working to restore service and will be back shortly. Please try again in a few minutes.";

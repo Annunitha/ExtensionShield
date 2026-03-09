@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Download } from "lucide-react";
 import { useScan } from "../context/ScanContext";
 import { useAuth } from "../context/AuthContext";
+import { requiresAuthForScan } from "../utils/authUtils";
 import databaseService from "../services/databaseService";
 import SEOHead from "../components/SEOHead";
 import { HeroOrbitalCarousel } from "../components/hero";

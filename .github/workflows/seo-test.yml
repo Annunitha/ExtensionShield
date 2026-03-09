@@ -1,14 +1,6 @@
 name: SEO Smoke Test
 
 on:
-  pull_request:
-    branches:
-      - main
-      - master
-    paths:
-      - 'frontend/**'
-      - 'src/extension_shield/api/main.py'
-      - '.github/workflows/seo-test.yml'
   push:
     branches:
       - main
