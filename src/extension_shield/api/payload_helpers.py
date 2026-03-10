@@ -385,6 +385,14 @@ def _is_i18n_placeholder(text: Any) -> bool:
     return bool(re.match(r"^__MSG_[A-Za-z0-9@_]+__$", text.strip()))
 
 
+def _is_extension_id(text: Any) -> bool:
+    """True if text looks like a Chrome extension ID (32 lowercase a-p)."""
+    if not isinstance(text, str):
+        return False
+    s = text.strip()
+    return len(s) == 32 and all(c in "abcdefghijklmnop" for c in s.lower())
+
+
 def ensure_description_in_meta(payload: Dict[str, Any]) -> None:
     """Populate meta.description from manifest/metadata when missing (legacy Supabase fix)."""
     rvm = payload.get("report_view_model")
@@ -421,7 +429,7 @@ def ensure_name_in_payload(payload: Dict[str, Any]) -> None:
     ]
     resolved = next(
         (n for n in candidates if n and isinstance(n, str) and n.strip()
-         and n.strip() != "Unknown" and not _is_i18n_placeholder(n)),
+         and n.strip() != "Unknown" and not _is_i18n_placeholder(n) and not _is_extension_id(n)),
         None,
     )
     if resolved:

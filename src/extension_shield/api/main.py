@@ -596,6 +596,10 @@ def _hydrate_db_scan_result(results: Dict[str, Any], identifier: str) -> Dict[st
             db_manifest = {}
 
     db_chrome_stats = db_metadata.get("chrome_stats") or {}
+    def _is_extension_id_like(s):
+        if not s or not isinstance(s, str):
+            return False
+        return len(s.strip()) == 32 and all(c in "abcdefghijklmnop" for c in s.strip().lower())
     name_candidates = [
         results.get("extension_name"),
         db_metadata.get("title"),
@@ -604,7 +608,7 @@ def _hydrate_db_scan_result(results: Dict[str, Any], identifier: str) -> Dict[st
         db_manifest.get("name"),
     ]
     resolved_extension_name = next(
-        (n for n in name_candidates if n and isinstance(n, str) and n.strip() and n.strip() != "Unknown"),
+        (n for n in name_candidates if n and isinstance(n, str) and n.strip() and n.strip() != "Unknown" and not _is_extension_id_like(n)),
         results.get("extension_id") or identifier,
     )
 

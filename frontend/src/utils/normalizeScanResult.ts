@@ -852,11 +852,47 @@ export function normalizeScanResult(raw: RawScanResult): ReportViewModel {
     securityScore?: number;
     riskLevel?: string;
   };
-  
+
+  // Chrome extension IDs are exactly 32 lowercase letters [a-p] - don't use as display name
+  function looksLikeExtensionId(s: string | undefined | null): boolean {
+    if (!s || typeof s !== 'string') return false;
+    return /^[a-p]{32}$/.test(s.trim());
+  }
+
+  const nameCandidates = [
+    raw.extension_name,
+    formatted.name,
+    raw.metadata?.title,
+    raw.metadata?.name,
+    (raw.metadata as { chrome_stats?: { name?: string } })?.chrome_stats?.name,
+    raw.manifest?.name,
+  ].filter((n): n is string => typeof n === 'string' && n.trim() !== '' && !looksLikeExtensionId(n));
+
+  let resolvedName = nameCandidates[0] || null;
+
+  // Fallback: derive name from one-liner/summary when it's in the form "Extension Name appears safe for general use"
+  if (!resolvedName) {
+    const oneLiner =
+      (raw.report_view_model as { scorecard?: { one_liner?: string }; summary?: string })?.scorecard?.one_liner
+      || (raw.report_view_model as { summary?: string })?.summary
+      || (raw.summary as { one_liner?: string; summary?: string })?.one_liner
+      || (raw.summary as { summary?: string })?.summary;
+    if (typeof oneLiner === 'string' && oneLiner.trim()) {
+      const match = oneLiner.match(/^(.+?)\s+(?:appears|is)\s+(?:safe|unsafe|not safe|for general use)/i)
+        || oneLiner.match(/^(.+?)\s+for general use/i);
+      if (match && match[1]) {
+        const extracted = match[1].trim();
+        if (extracted.length > 1 && !looksLikeExtensionId(extracted)) {
+          resolvedName = extracted;
+        }
+      }
+    }
+  }
+
   // Build meta information (icon URL: use getExtensionIconUrl(extensionId) at display time)
   const meta: MetaVM = {
     extensionId,
-    name: raw.extension_name || formatted.name || raw.metadata?.title || raw.metadata?.name || raw.manifest?.name || 'Unknown Extension',
+    name: resolvedName || 'Unknown Extension',
     version: raw.metadata?.version || raw.manifest?.version || formatted.version,
     updatedAt: raw.metadata?.last_updated,
     users: raw.metadata?.user_count,

@@ -567,7 +567,7 @@ const ScanResultsPageV2 = () => {
                   <div className="extension-card-details">
                     <span className="ext-detail">
                       {showHeroIcon && heroIconUrl && (
-                        <img src={heroIconUrl} alt="" className="ext-detail-icon" onError={(e) => { e.target.style.display = 'none'; }} />
+                        <img src={heroIconUrl} alt="" className="ext-detail-icon" onError={(e) => { e.target.onerror = null; e.target.src = EXTENSION_ICON_PLACEHOLDER; }} />
                       )}
                       {meta?.name || "Extension"}
                     </span>
