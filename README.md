@@ -16,16 +16,13 @@
 
 ExtensionShield helps you check Chrome extensions in a simple and clear way.
 
-It scans extensions from the **Chrome Web Store** or from **CRX/ZIP uploads**, shows risk scores, and helps you understand what an extension can access.
-
-The **core scanner, CLI, and local analysis** are **MIT-licensed** and work without any cloud dependency.
+It scans extensions from the **Chrome Web Store** or from **CRX/ZIP uploads**, shows risk scores, and helps you understand what an extension can access. The **core scanner, CLI, and local analysis** are **MIT-licensed** and work without any cloud dependency.
 
 
 <table>
 <tr>
 <td width="56%" valign="middle">
-<h2 style="margin-bottom: 0.4rem; border:none !important"><strong>Get the Chrome extension</strong></h2>
-<br> </br>
+<h2><strong>Get the Chrome extension</strong></h2>
   
 Install the **ExtensionShield Chrome extension** to manage your extensions from **My Extensions**, check their **security audit score**, and spot risky extensions before they become a problem.
 
@@ -39,9 +36,6 @@ Install the **ExtensionShield Chrome extension** to manage your extensions from 
          alt="Get it on Chrome Web Store" />
   </a>
 </p>
-
-- **Security**: <a href="docs/SECURITY.md" style="color:#2ea043;">SECURITY.md</a> — Reporting vulnerabilities and secrets policy  
-- **Open-core**: <a href="docs/OPEN_CORE_BOUNDARIES.md" style="color:#2ea043;">OPEN_CORE_BOUNDARIES.md</a> — What is OSS vs Cloud and how it is enforced  
 
 </td>
 <td width="44%" align="center" valign="middle">
@@ -67,13 +61,6 @@ Optional cloud features such as auth, history, team monitoring, and community qu
 
 ---
 
-## **Get started**
-
-For setup, local development, Docker, and CLI usage, see <a href="docs/GET_STARTED.md" style="color:#2ea043;"><strong>GET_STARTED.md</strong></a>.  
-For deployment and developer scripts, see <a href="scripts/README.md" style="color:#2ea043;"><strong>scripts/README.md</strong></a>.
-
----
-
 ## **What ExtensionShield does**
 
 | Feature | Description |
@@ -85,7 +72,7 @@ For deployment and developer scripts, see <a href="scripts/README.md" style="col
 
 In **OSS mode** you get the scanner, CLI, local SQLite storage, and report UI with no cloud required.
 
-In **Cloud mode** you also get auth, scan history, telemetry, and enterprise features. See <a href="docs/GET_STARTED.md#enabling-cloud-mode" style="color:#2ea043;">GET_STARTED.md</a> and <a href="docs/OPEN_CORE_BOUNDARIES.md" style="color:#2ea043;">OPEN_CORE_BOUNDARIES.md</a>.
+In **Cloud mode** you also get auth, scan history, telemetry, and enterprise features.
 
 ---
 
@@ -109,10 +96,6 @@ In **Cloud mode** you also get auth, scan history, telemetry, and enterprise fea
 
 - **Core** (scanner, CLI, local analysis): **MIT** — see <a href="LICENSE" style="color:#2ea043;">LICENSE</a>  
 - **Cloud** (auth, Supabase, telemetry admin, community queue, enterprise forms): **proprietary**, available via <a href="https://extensionshield.com" style="color:#2ea043;">ExtensionShield Cloud</a>  
-
-Attribution: <a href="docs/NOTICE" style="color:#2ea043;">NOTICE</a>  
-Brand: <a href="docs/TRADEMARK.md" style="color:#2ea043;">TRADEMARK.md</a>  
-Commercial use: <a href="docs/COMMERCIAL.md" style="color:#2ea043;">COMMERCIAL.md</a>
 
 ---
 
