@@ -3,138 +3,122 @@
   <img src="frontend/public/extension-shield-logo.svg" alt="ExtensionShield" width="98" height="98" />
 
   # ExtensionShield
+
+  **Chrome Extension Security Scanner & Governance Platform**
+
+  [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) · <a href="docs/SECURITY.md" style="color:#2ea043;">Security</a> · <a href="docs/GET_STARTED.md" style="color:#2ea043;">Get Started</a> · <a href="docs/CONTRIBUTING.md" style="color:#2ea043;">Contribute</a>
+
 </div>
 
-**Chrome Extension Security Scanner & Governance Platform**
+<br />
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) · [Security](docs/SECURITY.md) · [Get Started](docs/GET_STARTED.md) · [Contribute](docs/CONTRIBUTING.md)
+## **Manage and audit Chrome extensions with confidence**
 
----
+ExtensionShield helps you check Chrome extensions in a simple and clear way.
 
-ExtensionShield scans Chrome extensions (from the Web Store or CRX/ZIP uploads), runs security and privacy analysis, and produces risk scores
-and summary reports. The **core** (scanner, CLI, local analysis) is **MIT-licensed** and works without any cloud. Optional **cloud** features
-(auth, history, team monitoring, community queue) are available via [ExtensionShield Cloud](https://extensionshield.com).
+It scans extensions from the **Chrome Web Store** or from **CRX/ZIP uploads**, shows risk scores, and helps you understand what an extension can access.
 
-- **Security**: [SECURITY.md](docs/SECURITY.md) — Reporting vulnerabilities, secrets policy  
-- **Open-core**: [OPEN_CORE_BOUNDARIES.md](docs/OPEN_CORE_BOUNDARIES.md) — What's OSS vs Cloud and how it's enforced  
+The **core scanner, CLI, and local analysis** are **MIT-licensed** and work without any cloud dependency.
 
----
 
-## Quick start
+<table>
+<tr>
+<td width="56%" valign="middle">
+<h2 style="margin-bottom: 0.4rem; border:none !important"><strong>Get the Chrome extension</strong></h2>
+<br> </br>
+  
+Install the **ExtensionShield Chrome extension** to manage your extensions from **My Extensions**, check their **security audit score**, and spot risky extensions before they become a problem.
 
-Follow these steps in order. You need **two terminals** for running the app (one for the API, one for the frontend).
+- Manage installed extensions in one place  
+- Review labels like **Safe**, **Review**, and **Unknown**  
+- Stay safer while browsing with better extension visibility  
 
-<details open>
-<summary><strong>Step 1 — Clone and install dependencies</strong></summary>
+<p>
+  <a href="https://chromewebstore.google.com/">
+    <img src="https://img.shields.io/badge/Get%20it%20on-Chrome%20Web%20Store-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Get it on Chrome Web Store" />
+  </a>
+</p>
 
-Clone the repository and install backend (Python) and frontend (Node) dependencies.
+- **Security**: <a href="docs/SECURITY.md" style="color:#2ea043;">SECURITY.md</a> — Reporting vulnerabilities and secrets policy  
+- **Open-core**: <a href="docs/OPEN_CORE_BOUNDARIES.md" style="color:#2ea043;">OPEN_CORE_BOUNDARIES.md</a> — What is OSS vs Cloud and how it is enforced  
 
-```bash
-git clone git@github.com:Stanzin7/ExtensionShield.git
-```
+</td>
+<td width="44%" align="center" valign="middle">
 
-```bash
-cd ExtensionShield
-```
+<!-- <img src="images/extensionshield-my-extensions.png" alt="ExtensionShield Chrome extension - My Extensions security audit view" width="100%" /> -->
+<img width="438" height="530" alt="Screenshot 2026-03-12 at 1 51 23 PM" src="https://github.com/user-attachments/assets/2ef32c2c-7930-4dfe-b787-45039d789043" />
 
-```bash
-make install
-```
-Installs Python dependencies (uv sync).
 
-```bash
-cd frontend && npm install
-```
-Installs frontend dependencies.
 
-> **Tip**: Use your own fork URL if you cloned from a fork. Replace `Stanzin7/ExtensionShield` with your GitHub org or username.
-</details>
+<br />
 
-<details>
-<summary><strong>Step 2 — Configure environment</strong></summary>
-
-Copy the example env files and add your API key for summary reports (OSS mode is the default).
-
-```bash
-cp .env.example .env
-```
-Edit `.env` and set `OPENAI_API_KEY` (needed for summary reports).
-
-```bash
-cp frontend/.env.example frontend/.env
-```
-No changes needed for OSS mode; adjust if using Cloud features.
-</details>
-
-<details>
-<summary><strong>Step 3 — Run the application</strong></summary>
-
-Start the **backend** and **frontend** in **two separate terminals**. Each command starts a long-running server.
-
-**Terminal 1 — Backend API**
-
-```bash
-make api
-```
-API will be available at **http://localhost:8007**.
-
-**Terminal 2 — Frontend UI**
-
-```bash
-make frontend
-```
-UI will be available at **http://localhost:5173**.
-
-Open **http://localhost:5173** in your browser to use ExtensionShield.
-
-> **Note**: Do not run `make api && make frontend` in a single terminal. The API runs until you stop it, so the frontend would never start. Use two terminals.
-</details>
-
-Full setup (Docker, CLI, Cloud mode, Make commands): **[GET_STARTED.md](docs/GET_STARTED.md)**.  
-Deployment and dev scripts (Railway, Supabase, CSP): **[scripts/README.md](scripts/README.md)**.
+</td>
+</tr>
+</table>
 
 ---
 
-## What ExtensionShield does
+## **Overview**
+
+ExtensionShield scans Chrome extensions, runs security and privacy analysis, and produces risk scores and summary reports.
+
+Optional cloud features such as auth, history, team monitoring, and community queue are available via <a href="https://extensionshield.com" style="color:#2ea043;">ExtensionShield Cloud</a>.
+
+---
+
+## **Get started**
+
+For setup, local development, Docker, and CLI usage, see <a href="docs/GET_STARTED.md" style="color:#2ea043;"><strong>GET_STARTED.md</strong></a>.  
+For deployment and developer scripts, see <a href="scripts/README.md" style="color:#2ea043;"><strong>scripts/README.md</strong></a>.
+
+---
+
+## **What ExtensionShield does**
 
 | Feature | Description |
 |--------|-------------|
-| **Scan** | Extensions from the Chrome Web Store or by uploading CRX/ZIP files |
-| **Analyze** | Permissions, SAST, entropy, and optional VirusTotal integration |
-| **Score** | Security and privacy risk with generated reports |
-| **Summarize** | Written summary of findings (optional) |
+| **Scan** | Scan extensions from the Chrome Web Store or by uploading CRX/ZIP files |
+| **Analyze** | Review permissions, SAST, entropy, and optional VirusTotal integration |
+| **Score** | Generate security and privacy risk scores with reports |
+| **Summarize** | Create written summaries of findings when enabled |
 
-In **OSS mode** (default) you get the full scanner, CLI, local SQLite storage, and report UI—no cloud required. **Cloud mode** adds auth, scan history, telemetry, and enterprise features; see [GET_STARTED.md#enabling-cloud-mode](docs/GET_STARTED.md#enabling-cloud-mode) and [OPEN_CORE_BOUNDARIES.md](docs/OPEN_CORE_BOUNDARIES.md).
+In **OSS mode** you get the scanner, CLI, local SQLite storage, and report UI with no cloud required.
+
+In **Cloud mode** you also get auth, scan history, telemetry, and enterprise features. See <a href="docs/GET_STARTED.md#enabling-cloud-mode" style="color:#2ea043;">GET_STARTED.md</a> and <a href="docs/OPEN_CORE_BOUNDARIES.md" style="color:#2ea043;">OPEN_CORE_BOUNDARIES.md</a>.
 
 ---
 
-## Documentation
+## **Documentation**
 
 | Document | Description |
 |----------|-------------|
-| [GET_STARTED.md](docs/GET_STARTED.md) | Setup, config, Docker, CLI, OSS vs Cloud, Make commands |
-| [scripts/README.md](scripts/README.md) | What each script does and when to run it |
-| [OPEN_CORE_BOUNDARIES.md](docs/OPEN_CORE_BOUNDARIES.md) | OSS vs Cloud; enforcement; configuration |
-| [CONTRIBUTING.md](docs/CONTRIBUTING.md) | How to contribute |
-| [SECURITY.md](docs/SECURITY.md) | Reporting vulnerabilities; secrets policy |
-| [COMMERCIAL.md](docs/COMMERCIAL.md) | Commercial use (non-binding) |
-| [TRADEMARK.md](docs/TRADEMARK.md) | Brand usage guidelines |
-| [CODE_OF_CONDUCT.md](docs/CODE_OF_CONDUCT.md) | Community standards |
-| [NOTICE](docs/NOTICE) | Third-party attributions |
+| <a href="docs/GET_STARTED.md" style="color:#2ea043;">GET_STARTED.md</a> | Setup, config, Docker, CLI, OSS vs Cloud, and Make commands |
+| <a href="scripts/README.md" style="color:#2ea043;">scripts/README.md</a> | What each script does and when to run it |
+| <a href="docs/OPEN_CORE_BOUNDARIES.md" style="color:#2ea043;">OPEN_CORE_BOUNDARIES.md</a> | OSS vs Cloud, enforcement, and configuration |
+| <a href="docs/CONTRIBUTING.md" style="color:#2ea043;">CONTRIBUTING.md</a> | How to contribute |
+| <a href="docs/SECURITY.md" style="color:#2ea043;">SECURITY.md</a> | Reporting vulnerabilities and secrets policy |
+| <a href="docs/COMMERCIAL.md" style="color:#2ea043;">COMMERCIAL.md</a> | Commercial use guidance |
+| <a href="docs/TRADEMARK.md" style="color:#2ea043;">TRADEMARK.md</a> | Brand usage guidelines |
+| <a href="docs/CODE_OF_CONDUCT.md" style="color:#2ea043;">CODE_OF_CONDUCT.md</a> | Community standards |
+| <a href="docs/NOTICE" style="color:#2ea043;">NOTICE</a> | Third-party attributions |
 
 ---
 
-## License & attribution
+## **License & attribution**
 
-- **Core** (scanner, CLI, local analysis): **MIT** — see [LICENSE](LICENSE).  
-- **Cloud** (auth, Supabase, telemetry admin, community queue, enterprise forms): **proprietary**, available via [ExtensionShield Cloud](https://extensionshield.com).  
+- **Core** (scanner, CLI, local analysis): **MIT** — see <a href="LICENSE" style="color:#2ea043;">LICENSE</a>  
+- **Cloud** (auth, Supabase, telemetry admin, community queue, enterprise forms): **proprietary**, available via <a href="https://extensionshield.com" style="color:#2ea043;">ExtensionShield Cloud</a>  
 
-Attribution: [NOTICE](docs/NOTICE). Brand: [TRADEMARK.md](docs/TRADEMARK.md). Commercial use: [COMMERCIAL.md](docs/COMMERCIAL.md) (non-binding).
+Attribution: <a href="docs/NOTICE" style="color:#2ea043;">NOTICE</a>  
+Brand: <a href="docs/TRADEMARK.md" style="color:#2ea043;">TRADEMARK.md</a>  
+Commercial use: <a href="docs/COMMERCIAL.md" style="color:#2ea043;">COMMERCIAL.md</a>
 
 ---
 
-## Community
+## **Community**
 
-We build ExtensionShield in the open so security tools stay transparent and inspectable. Feedback, issue reports, and small improvements (docs, tests, rule tweaks) are welcome. If it helps you or your organization, consider contributing a PR, sharing your use case, or supporting the project. We run open-source programs and internships when we can—community support helps keep that going.
+We build ExtensionShield in the open so security tools stay transparent and easy to inspect.
 
-**Acknowledgments**: ExtensionShield is our own design; we took inspiration from [ThreatXtension](https://github.com/barvhaim/ThreatXtension) in the same space (extension scanning, VirusTotal integration).
+Feedback, issue reports, docs fixes, tests, and rule improvements are welcome. If ExtensionShield helps you, consider opening a PR, sharing your use case, or supporting the project.
+
+**Acknowledgments**: ExtensionShield is our own design. We took inspiration from <a href="https://github.com/barvhaim/ThreatXtension" style="color:#2ea043;">ThreatXtension</a> in the extension scanning space.
