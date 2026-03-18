@@ -147,6 +147,17 @@ summary_generation: |
     - Host access scope is authoritative (ALL_WEBSITES, SINGLE_DOMAIN, etc.)
     - Output ONLY valid JSON
 
+    FAIRNESS & BIAS PREVENTION (CRITICAL):
+    - User count is NOT a risk factor. Niche/developer/enterprise tools naturally have
+      small user bases. Never penalize for low user count — note limited vetting as context only.
+    - Judge permissions by functional necessity, not by name. 'management' is standard
+      for extension-auditing tools; if the purpose justifies it, it is not a risk.
+    - Apply identical standards to all extensions. Same permissions + same purpose =
+      same risk level, regardless of name, developer, or popularity.
+    - Focus on actual security impact: unjustified data access, suspicious external
+      communication, obfuscated code. Low user count, missing badges, non-featured
+      status are NOT security risks.
+
   user: |
     Source of truth (do not override):
     - score: {{ score }}

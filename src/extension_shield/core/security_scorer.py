@@ -41,10 +41,13 @@ class SecurityScorer:
         'manifest': 5,         # Manifest issues
     }
 
-    # High-risk permissions that warrant extra scrutiny
+    # High-risk permissions that warrant extra scrutiny.
+    # Note: 'management' is excluded because it is commonly used by legitimate
+    # extension management/auditing tools. Its risk depends on context (assessed
+    # by the LLM permission analyzer), not a blanket penalty.
     HIGH_RISK_PERMISSIONS = {
         'debugger', 'webRequest', 'webRequestBlocking', 'cookies',
-        'clipboardRead', 'nativeMessaging', 'proxy', 'management',
+        'clipboardRead', 'nativeMessaging', 'proxy',
         'desktopCapture', 'tabCapture', 'browsingData', 'history'
     }
 
@@ -320,12 +323,14 @@ class SecurityScorer:
             except (ValueError, TypeError):
                 pass
 
+        # User count is a weak signal — niche/developer tools naturally have
+        # small user bases. Only penalize in extreme cases (no users at all).
         if user_count is not None:
             try:
                 user_count_int = int(user_count)
-                if user_count_int < 100:
-                    users_risk = 2
-                    risk += 2
+                if user_count_int == 0:
+                    users_risk = 1
+                    risk += 1
             except (ValueError, TypeError):
                 pass
 

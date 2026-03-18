@@ -28,7 +28,13 @@ class WebstoreAnalyzer(BaseAnalyzer):
 
     @staticmethod
     def _check_user_engagement_patterns(metadata: Dict) -> List[str]:
-        """Check user engagement patterns for suspicious indicators."""
+        """Check user engagement patterns for suspicious indicators.
+
+        Fairness note: User count is a weak signal. Many legitimate niche tools,
+        developer utilities, and enterprise extensions naturally have small user
+        bases. We flag only extreme cases and always note the context to avoid
+        penalizing extensions solely for being specialized or new.
+        """
         flags = []
 
         user_count = metadata.get("user_count")
@@ -43,27 +49,32 @@ class WebstoreAnalyzer(BaseAnalyzer):
         if rating is None:
             rating = 0.0
 
-        # Low review ratio (fewer than 1% of users reviewed)
-        if user_count > 0 and ratings_count > 0:
+        # Low review ratio — only flag for extensions with enough users to
+        # expect reviews (>1000), otherwise low ratio is normal for niche tools
+        if user_count > 1000 and ratings_count > 0:
             review_ratio = ratings_count / user_count
             if review_ratio < 0.01:
                 flags.append(f"Review ratio lower than 1%. ({review_ratio:.4f} < 0.01)")
 
-        # Low user count (< 1,000 users)
-        if user_count < 1000:
-            flags.append(f"Low user count: {user_count} users (< 1,000)")
-
-        # Low ratings count (< 50 ratings)
-        if 0 < ratings_count < 50:
-            flags.append(f"Low ratings count: {ratings_count} ratings (< 50)")
+        # Contextual note for small user base — informational, not a risk flag.
+        # Only flag if fewer than 50 users (very new/experimental).
+        if 0 < user_count < 50:
+            flags.append(
+                f"Very small user base ({user_count} users). "
+                "This is common for new or niche developer tools and is not inherently risky."
+            )
 
         # No ratings at all
         if ratings_count == 0:
-            flags.append("No ratings at all")
+            flags.append("No ratings yet — less community vetting available")
 
-        # Low average rating (< 3.5)
-        if 0 < rating < 3.5:
-            flags.append(f"Low average rating: {rating} (< 3.5)")
+        # Low ratings count — only flag if there are enough users to expect ratings
+        elif 0 < ratings_count < 10 and user_count > 500:
+            flags.append(f"Low ratings count relative to users: {ratings_count} ratings")
+
+        # Low average rating — objective quality signal
+        if 0 < rating < 3.0:
+            flags.append(f"Low average rating: {rating} (< 3.0)")
 
         return flags
 

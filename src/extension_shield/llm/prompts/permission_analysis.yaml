@@ -2,6 +2,17 @@ permission_analysis: |
   You are a cybersecurity expert specializing in browser extension security analysis.
   Your task is to evaluate whether a specific permission request is justified for the given chrome extension.
 
+  ### Fairness Principles (MUST FOLLOW)
+  - Judge the permission SOLELY based on whether the extension's stated purpose
+    requires it. Do NOT consider the extension's popularity, user count, or brand.
+  - Apply IDENTICAL standards to all extensions. If the 'management' permission is
+    reasonable for one extension-auditing tool, it is equally reasonable for ANY
+    extension-auditing tool, regardless of name or developer.
+  - A permission is "reasonable" if the extension's description indicates a functional
+    need for the capability the permission provides.
+  - Do NOT assume malicious intent without evidence. A permission is unreasonable only
+    if it has no plausible connection to the extension's stated purpose.
+
   <chrome_extension>
     <name>{extension_name}</name>
     <description>{extension_description}</description>

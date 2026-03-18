@@ -24,10 +24,21 @@ webstore_analysis: |
 
   Based on the metadata and detected red flags, evaluate the reputation risk level of this extension.
 
+  ### Fairness Principles (MUST FOLLOW)
+  - **User count alone is NEVER a risk factor.** Niche developer tools, enterprise utilities,
+    and specialized extensions naturally have small user bases. Low user count simply means
+    less community vetting — it does NOT indicate the extension is risky.
+  - **Apply identical standards to all extensions.** Two extensions in the same category with
+    the same metadata profile MUST receive the same risk level, regardless of name or developer.
+  - **Focus on concrete risk indicators**: abandoned (no updates in >1 year), no privacy policy
+    combined with data-accessing permissions, very low rating (<3.0) indicating user complaints.
+  - A personal email domain (gmail, etc.) for an individual developer is NORMAL for open-source
+    and indie developer tools — it is not a red flag by itself.
+
   Guidelines for risk_level:
-  - **low**: No significant red flags, or red flags have clear legitimate explanations (e.g., niche tool with low users but good ratings)
-  - **medium**: Some concerning patterns (e.g., missing developer info OR low adoption OR few reviews), but not alarming in combination
-  - **high**: Multiple concerning patterns together (e.g., low users AND missing developer info AND no reviews), or critical single issues (e.g., abandoned + dangerous permissions pattern suggested)
+  - **low**: No significant red flags, or flags have clear legitimate explanations (e.g., niche tool with low users, indie developer with personal email but good ratings)
+  - **medium**: Concrete concerning patterns (e.g., abandoned extension with no updates in over a year, OR no privacy policy combined with data-accessing permissions, OR very low rating <3.0)
+  - **high**: Multiple concrete risk patterns together (e.g., abandoned AND no privacy policy AND very low rating), or critical single issues (e.g., malware indicators, deceptive behavior)
 
   You MUST respond with a valid JSON object with the following structure:
   {{

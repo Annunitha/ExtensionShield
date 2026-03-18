@@ -591,23 +591,30 @@ class SignalExtractor:
         return signals
     
     def _extract_webstore_signals(self, signal_pack: "SignalPack") -> List[Signal]:
-        """Extract signals from webstore stats in SignalPack."""
+        """Extract signals from webstore stats in SignalPack.
+
+        Fairness: User count alone is NOT a trust signal. Niche developer tools,
+        enterprise extensions, and specialized utilities naturally have small user
+        bases. We only flag concrete quality/compliance issues.
+        """
         signals = []
         stats = signal_pack.webstore_stats
         reviews = signal_pack.webstore_reviews
-        
-        # Low trust indicators
+
+        # Low trust indicators — only concrete quality/compliance gaps
         low_trust_reasons = []
-        
-        if stats.installs is not None and stats.installs < 1000:
-            low_trust_reasons.append(f"low installs ({stats.installs})")
-        
-        if stats.rating_avg is not None and stats.rating_avg < 3.5:
+
+        # Low rating is an objective quality signal from actual users
+        if stats.rating_avg is not None and stats.rating_avg < 3.0:
             low_trust_reasons.append(f"low rating ({stats.rating_avg})")
-        
+
+        # Missing privacy policy is a concrete compliance gap
         if not stats.has_privacy_policy:
             low_trust_reasons.append("no privacy policy")
-        
+
+        # NOTE: Low user count is NOT included as a trust signal.
+        # Many legitimate extensions have small user bases.
+
         if len(low_trust_reasons) >= 2:
             signals.append(Signal(
                 signal_id=self._next_signal_id(),

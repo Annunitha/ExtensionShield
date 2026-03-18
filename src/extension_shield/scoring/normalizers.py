@@ -530,70 +530,82 @@ def normalize_chromestats(chromestats: ChromeStatsSignalPack) -> FactorScore:
 def normalize_webstore_trust(stats: WebstoreStatsSignalPack) -> FactorScore:
     """
     Normalize webstore trust signals to severity and confidence.
-    
+
+    Fairness principles:
+        - User count is a WEAK signal: many legitimate niche/developer/enterprise
+          tools have small user bases. Low user count alone should never
+          significantly impact the score.
+        - Rating quality matters more than popularity.
+        - Missing privacy policy is a concrete compliance gap.
+        - Severity from user count is capped low and affects CONFIDENCE
+          (less community vetting) rather than implying the extension is dangerous.
+
     Formula:
-        - Low rating (<3.0) → higher severity
-        - Low users (<1000) → higher severity
-        - Missing privacy policy → +0.2
-        - confidence = low if no data available
-    
+        - Low rating (<3.0) → higher severity (objective quality signal)
+        - Very low users (<50) → minor severity bump (less vetting, not inherently risky)
+        - Missing privacy policy → +0.15
+        - confidence = lower when less community data available
+
     Args:
         stats: Webstore stats signal pack
-        
+
     Returns:
         FactorScore with normalized severity and confidence
     """
     severity = 0.0
     issues: List[str] = []
-    
-    # Rating-based severity
+
+    # Rating-based severity — objective quality signal
     if stats.rating_avg is not None:
         if stats.rating_avg < 2.0:
-            severity += 0.4
+            severity += 0.35
             issues.append("very_low_rating")
         elif stats.rating_avg < 3.0:
-            severity += 0.3
+            severity += 0.25
             issues.append("low_rating")
         elif stats.rating_avg < 3.5:
-            severity += 0.15
+            severity += 0.1
             issues.append("below_average_rating")
     else:
-        severity += 0.1  # Missing rating is slightly concerning
+        severity += 0.05  # Missing rating — not alarming, just less data
         issues.append("no_rating")
-    
-    # User count-based severity
+
+    # User count — WEAK signal, affects confidence more than severity.
+    # Many legitimate developer tools, enterprise extensions, and niche utilities
+    # naturally have small user bases. A low user count does NOT imply risk —
+    # it means less community vetting, which we reflect in confidence.
     if stats.installs is not None:
-        if stats.installs < 100:
-            severity += 0.3
+        if stats.installs < 50:
+            severity += 0.1  # Very new/niche — slightly less vetted
             issues.append("very_low_users")
-        elif stats.installs < 1000:
-            severity += 0.2
-            issues.append("low_users")
-        elif stats.installs < 10000:
-            severity += 0.1
-            issues.append("moderate_users")
+        # No penalty for < 1000 or < 10000 — these are normal for niche tools
     else:
-        severity += 0.15  # Unknown user count
+        severity += 0.05  # Unknown user count
         issues.append("unknown_users")
-    
-    # Privacy policy check
+
+    # Privacy policy check — concrete compliance gap
     if not stats.has_privacy_policy:
-        severity += 0.2
+        severity += 0.15
         issues.append("no_privacy_policy")
-    
+
     # Cap at 1.0
     severity = min(1.0, severity)
-    
-    # Confidence based on data availability
+
+    # Confidence based on data availability.
+    # Low user count = less community vetting = lower confidence in the
+    # absence of risk, NOT higher assumed risk.
     has_rating = stats.rating_avg is not None
     has_users = stats.installs is not None
     if has_rating and has_users:
-        confidence = 0.9
+        if stats.installs is not None and stats.installs < 100:
+            confidence = 0.7  # Less community vetting, lower confidence
+        else:
+            confidence = 0.9
     elif has_rating or has_users:
         confidence = 0.6
     else:
         confidence = 0.3  # No data, low confidence
-    
+
     return FactorScore(
         name=SecurityFactors.WEBSTORE,
         severity=round(severity, 4),
